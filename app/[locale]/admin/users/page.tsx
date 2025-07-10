@@ -20,6 +20,18 @@ const roleBadge = (role: string) => {
   }
 }
 
+const statusBadge = (status: string) => {
+  const base = "inline-block px-2 py-1 rounded text-xs font-semibold";
+  switch (status) {
+    case "active":
+      return <span className={clsx(base, "bg-green-100 text-green-800 border border-green-300")}>Active</span>;
+    case "inactive":
+      return <span className={clsx(base, "bg-gray-100 text-gray-800 border border-gray-300")}>Inactive</span>;
+    default:
+      return <span className={clsx(base, "bg-yellow-100 text-yellow-800 border border-yellow-300")}>{status || "-"}</span>;
+  }
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -28,7 +40,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('users').select('id, email, role').then(({ data, error }) => {
+    supabase.from('profiles').select('id, email, full_name, role, created_at, org_id, avatar_url, status, last_login').then(({ data, error }) => {
       if (error) setError(error.message)
       setUsers(data || [])
       setLoading(false)
@@ -36,7 +48,7 @@ export default function AdminUsersPage() {
   }, [])
 
   const updateRole = async (id: string) => {
-    await supabase.from('users').update({ role: newRole }).eq('id', id)
+    await supabase.from('profiles').update({ role: newRole }).eq('id', id)
     setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u))
     setEditing(null)
   }
@@ -45,7 +57,7 @@ export default function AdminUsersPage() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
+    <div className="max-w-6xl mx-auto p-8">
       <Card>
         <CardHeader>
           <CardTitle>User Role Management</CardTitle>
@@ -55,9 +67,14 @@ export default function AdminUsersPage() {
             <table className="min-w-full border text-sm bg-white rounded-lg shadow">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-3 border-b text-left font-semibold">User</th>
+                  <th className="p-3 border-b text-left font-semibold">Avatar</th>
                   <th className="p-3 border-b text-left font-semibold">Email</th>
+                  <th className="p-3 border-b text-left font-semibold">Full Name</th>
                   <th className="p-3 border-b text-left font-semibold">Role</th>
+                  <th className="p-3 border-b text-left font-semibold">Status</th>
+                  <th className="p-3 border-b text-left font-semibold">Org</th>
+                  <th className="p-3 border-b text-left font-semibold">Last Login</th>
+                  <th className="p-3 border-b text-left font-semibold">Created</th>
                   <th className="p-3 border-b text-left font-semibold">Change</th>
                 </tr>
               </thead>
@@ -65,15 +82,21 @@ export default function AdminUsersPage() {
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50 transition">
                     <td className="p-3 border-b">
-                      <div className="flex items-center gap-2">
+                      {u.avatar_url ? (
+                        <img src={u.avatar_url} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
                           <Icons.user className="w-5 h-5 text-gray-500" />
                         </span>
-                        <span className="font-medium">{u.email?.split("@")[0] || "-"}</span>
-                      </div>
+                      )}
                     </td>
-                    <td className="p-3 border-b">{u.email}</td>
+                    <td className="p-3 border-b">{u.email || <span className="text-gray-400 italic">(none)</span>}</td>
+                    <td className="p-3 border-b">{u.full_name || <span className="text-gray-400 italic">(none)</span>}</td>
                     <td className="p-3 border-b">{roleBadge(u.role)}</td>
+                    <td className="p-3 border-b">{statusBadge(u.status)}</td>
+                    <td className="p-3 border-b">{u.org_id || <span className="text-gray-400 italic">-</span>}</td>
+                    <td className="p-3 border-b">{u.last_login ? new Date(u.last_login).toLocaleString() : <span className="text-gray-400 italic">-</span>}</td>
+                    <td className="p-3 border-b">{u.created_at ? new Date(u.created_at).toLocaleString() : "-"}</td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
                         <div className="flex gap-2">
