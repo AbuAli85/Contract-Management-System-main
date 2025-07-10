@@ -183,6 +183,9 @@ export default function AuthForm({ locale }: AuthFormProps) {
             </Button>
           </div>
         </form>
+        <div className="text-sm text-center mt-4">
+          <a href="/login/forgot-password" className="text-blue-600 hover:underline">Forgot password?</a>
+        </div>
       </CardContent>
     </Card>
   )
