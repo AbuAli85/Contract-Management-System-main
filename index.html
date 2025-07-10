@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate Contract</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+          "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        margin: 0;
+        padding: 20px;
+        background-color: #f7f7f7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+      }
+      .form-container {
+        background-color: #fff;
+        padding: 25px 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+      input[type="email"],
+      input[type="text"] {
+        width: calc(100% - 24px);
+        padding: 10px 12px;
+        margin-bottom: 18px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        width: 100%;
+        transition: background-color 0.2s ease-in-out;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <!-- action URL should match MAKE_WEBHOOK_URL -->
+      <form action="__MAKE_WEBHOOK_URL__" method="POST" target="_blank">
+        <h2>Contract Generation Request</h2>
+        <div>
+          <label for="email">Email address:</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required />
+        </div>
+        <div>
+          <label for="first_party_name_en">First Party Name (English):</label>
+          <input
+            type="text"
+            id="first_party_name_en"
+            name="first_party_name_en"
+            placeholder="Enter first party name"
+            required
+          />
+        </div>
+        <div>
+          <label for="second_party_name_en">Second Party Name (English):</label>
+          <input
+            type="text"
+            id="second_party_name_en"
+            name="second_party_name_en"
+            placeholder="Enter second party name"
+            required
+          />
+        </div>
+        <button type="submit">Generate Contract</button>
+      </form>
+    </div>
+  </body>
+</html>
