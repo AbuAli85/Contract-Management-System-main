@@ -215,7 +215,7 @@ export default function AdminUsersPage() {
     // Instead, update only existing fields or handle permissions elsewhere
     setPermLoading(false)
     if (error) {
-      setPermError(error.message)
+      setPermError(error)
     } else {
       setPermSuccess('Permissions updated!')
       setShowPermissions(null)
@@ -301,7 +301,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <select className="border rounded px-2 py-1" value={editFields.status} onChange={e => handleEditChange('status', e.target.value)}>
+                        <select className="border rounded px-2 py-1" value={editFields.status} onChange={e => handleEditChange('status', e.target.value)} title="Status">
                           {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                       ) : (
@@ -332,7 +332,15 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <input type="checkbox" checked={!!editFields.is_premium} onChange={handleEditPremium} />
+                        <label className="flex items-center gap-2" title="Premium User">
+                          <input
+                            type="checkbox"
+                            checked={!!editFields.is_premium}
+                            onChange={handleEditPremium}
+                            aria-label="Premium User"
+                          />
+                          Premium User
+                        </label>
                       ) : (
                         u.is_premium ? <span className="text-yellow-600 font-bold">Yes</span> : <span className="text-gray-400">No</span>
                       )}
