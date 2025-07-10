@@ -35,6 +35,7 @@ export default function ClientLayout({
         {/* Include font links if not handled by next/font automatically for all weights */}
       </head>
       <body
+        suppressHydrationWarning={true}
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontInter.variable,
