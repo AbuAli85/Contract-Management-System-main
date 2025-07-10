@@ -5,6 +5,16 @@ import { setUserActiveStatus, resetUserPassword } from './actions'
 
 const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
+// Helper: check if user has a specific permission
+async function hasPermission(userId: string, permission: string) {
+  const { data, error } = await supabase
+    .from('user_permissions')
+    .select('permission_id, permissions(name)')
+    .eq('user_id', userId)
+  if (error) return false
+  return (data || []).some((p: any) => p.permissions?.name === permission)
+}
+
 // GET: List all users with roles and status
 export async function GET() {
   try {
@@ -33,12 +43,18 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   try {
     const { user_id, is_active, reset_password, new_password, admin_id } = await req.json()
+    // --- Permission check ---
+    if (!admin_id || !(await hasPermission(admin_id, 'manage_users'))) {
+      return NextResponse.json({ error: 'Forbidden: missing permission' }, { status: 403 })
+    }
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+    const userAgent = req.headers.get('user-agent') || ''
     if (typeof is_active === 'boolean') {
-      await setUserActiveStatus(user_id, is_active, admin_id)
+      await setUserActiveStatus(user_id, is_active, admin_id, ip, userAgent)
       return NextResponse.json({ success: true, is_active })
     }
     if (reset_password && new_password) {
-      await resetUserPassword(user_id, new_password, admin_id)
+      await resetUserPassword(user_id, new_password, admin_id, ip, userAgent)
       return NextResponse.json({ success: true, reset_password: true })
     }
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
