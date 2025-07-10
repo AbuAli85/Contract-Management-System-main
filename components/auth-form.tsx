@@ -205,13 +205,13 @@ export default function AuthForm({ locale }: AuthFormProps) {
               className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4" />}
               Sign Up
             </Button>
           </div>
         </form>
         <div className="text-sm text-center mt-4">
-          <a href="/login/forgot-password" className="text-blue-600 hover:underline">Forgot password?</a>
+          <a href="/forgot-password" className="text-blue-600 hover:underline">Forgot password?</a>
         </div>
         <div className="flex flex-col gap-2 mt-4">
           <Button type="button" variant="outline" onClick={() => handleSocialLogin("google")}
