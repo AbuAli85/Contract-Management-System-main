@@ -15,16 +15,24 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 // GET: List all users with roles and status
 export async function GET() {
-  // Join profiles, user_roles, and roles tables
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, is_active, user_roles(role_id, roles(name))')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  // Map roles to array of names
-  const users = (data || []).map((u: any) => ({
-    ...u,
-    roles: u.user_roles?.map((ur: any) => ur.roles?.name).filter(Boolean) || [],
-    is_active: u.is_active ?? true // fallback to true if not present
-  }))
-  return NextResponse.json({ users })
+  try {
+    // Join profiles, user_roles, and roles tables
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`id, email, is_active, user_roles: user_roles!inner(role_id, roles: roles!inner(name))`)
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+    }
+    // Map roles to array of names
+    const users = (data || []).map((u: any) => ({
+      ...u,
+      roles: u.user_roles?.map((ur: any) => ur.roles?.name).filter(Boolean) || [],
+      is_active: u.is_active ?? true // fallback to true if not present
+    }))
+    return NextResponse.json({ users })
+  } catch (err: any) {
+    console.error('API error:', err)
+    return NextResponse.json({ error: 'Internal Server Error', details: err?.message || err }, { status: 500 })
+  }
 }
