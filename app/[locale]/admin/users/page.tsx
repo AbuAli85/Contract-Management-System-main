@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('profiles').select('id, email, full_name, role, created_at, org_id, avatar_url, status, last_login').then(({ data, error }) => {
+    supabase.from('profiles').select('id, role, created_at').then(({ data, error }) => {
       if (error) setError(error.message)
       setUsers(data || [])
       setLoading(false)
@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-3xl mx-auto p-8">
       <Card>
         <CardHeader>
           <CardTitle>User Role Management</CardTitle>
@@ -67,13 +67,8 @@ export default function AdminUsersPage() {
             <table className="min-w-full border text-sm bg-white rounded-lg shadow">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-3 border-b text-left font-semibold">Avatar</th>
-                  <th className="p-3 border-b text-left font-semibold">Email</th>
-                  <th className="p-3 border-b text-left font-semibold">Full Name</th>
+                  <th className="p-3 border-b text-left font-semibold">User ID</th>
                   <th className="p-3 border-b text-left font-semibold">Role</th>
-                  <th className="p-3 border-b text-left font-semibold">Status</th>
-                  <th className="p-3 border-b text-left font-semibold">Org</th>
-                  <th className="p-3 border-b text-left font-semibold">Last Login</th>
                   <th className="p-3 border-b text-left font-semibold">Created</th>
                   <th className="p-3 border-b text-left font-semibold">Change</th>
                 </tr>
@@ -82,20 +77,14 @@ export default function AdminUsersPage() {
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50 transition">
                     <td className="p-3 border-b">
-                      {u.avatar_url ? (
-                        <img src={u.avatar_url} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
-                      ) : (
+                      <div className="flex items-center gap-2">
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-200">
                           <Icons.user className="w-5 h-5 text-gray-500" />
                         </span>
-                      )}
+                        <span className="font-mono text-xs">{u.id.slice(0, 8)}...</span>
+                      </div>
                     </td>
-                    <td className="p-3 border-b">{u.email || <span className="text-gray-400 italic">(none)</span>}</td>
-                    <td className="p-3 border-b">{u.full_name || <span className="text-gray-400 italic">(none)</span>}</td>
                     <td className="p-3 border-b">{roleBadge(u.role)}</td>
-                    <td className="p-3 border-b">{statusBadge(u.status)}</td>
-                    <td className="p-3 border-b">{u.org_id || <span className="text-gray-400 italic">-</span>}</td>
-                    <td className="p-3 border-b">{u.last_login ? new Date(u.last_login).toLocaleString() : <span className="text-gray-400 italic">-</span>}</td>
                     <td className="p-3 border-b">{u.created_at ? new Date(u.created_at).toLocaleString() : "-"}</td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
@@ -112,6 +101,7 @@ export default function AdminUsersPage() {
                 ))}
               </tbody>
             </table>
+            <div className="text-xs text-gray-500 mt-2">To display more user info, add columns to your <code>profiles</code> table.</div>
           </div>
         </CardContent>
       </Card>
