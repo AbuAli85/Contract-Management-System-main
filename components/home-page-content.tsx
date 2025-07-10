@@ -166,13 +166,13 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     )
   }
 
-  if (!user || userRole !== 'premium') {
+  if (!user || (userRole !== 'premium' && userRole !== 'admin')) {
     return (
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
         <AuthStatus />
         <div className="mt-8 p-6 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-center max-w-lg">
           <h2 className="text-2xl font-bold mb-2">Premium Access Required</h2>
-          <p className="mb-4">You must have a <span className="font-semibold">premium</span> account to access the contract management features.</p>
+          <p className="mb-4">You must have a <span className="font-semibold">premium</span> or <span className="font-semibold">admin</span> account to access the contract management features.</p>
           <p>If you believe this is a mistake or want to upgrade, please contact support.</p>
         </div>
       </div>
