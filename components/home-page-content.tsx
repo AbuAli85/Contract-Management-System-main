@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useTheme } from 'next-themes'
+import { useTranslations } from 'next-intl'
 
 interface HomePageContentProps {
   locale: string
@@ -27,6 +29,8 @@ interface Stats {
 }
 
 export function HomePageContent({ locale }: HomePageContentProps) {
+  const t = useTranslations('Home')
+  const { theme, setTheme } = useTheme()
   const [stats, setStats] = useState<Stats>({
     contracts: 0,
     parties: 0,
@@ -87,29 +91,29 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   const quickActions = [
     {
-      title: 'Generate Contract',
-      description: 'Create a new contract with automated document generation',
+      title: t('generateContract'),
+      description: t('generateContractDesc'),
       icon: <Plus className="h-6 w-6" />,
       href: `/${locale}/generate-contract`,
       color: 'bg-blue-500'
     },
     {
-      title: 'View Contracts',
-      description: 'Browse and manage all contracts',
+      title: t('viewContracts'),
+      description: t('viewContractsDesc'),
       icon: <FileText className="h-6 w-6" />,
       href: `/${locale}/contracts`,
       color: 'bg-green-500'
     },
     {
-      title: 'Manage Parties',
-      description: 'Add and manage contract parties',
+      title: t('manageParties'),
+      description: t('managePartiesDesc'),
       icon: <Users className="h-6 w-6" />,
       href: `/${locale}/manage-parties`,
       color: 'bg-purple-500'
     },
     {
-      title: 'Analytics',
-      description: 'View contract analytics and insights',
+      title: t('analytics'),
+      description: t('analyticsDesc'),
       icon: <BarChart3 className="h-6 w-6" />,
       href: `/${locale}/dashboard`,
       color: 'bg-orange-500'
@@ -118,28 +122,28 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   const statsCards = [
     {
-      title: 'Total Contracts',
+      title: t('totalContracts'),
       value: stats.contracts,
       icon: <FileText className="h-8 w-8 text-blue-600" />,
-      description: 'All contracts in the system'
+      description: t('allContracts')
     },
     {
-      title: 'Active Contracts',
+      title: t('activeContracts'),
       value: stats.activeContracts,
       icon: <TrendingUp className="h-8 w-8 text-green-600" />,
-      description: 'Currently active contracts'
+      description: t('currentlyActive')
     },
     {
-      title: 'Total Parties',
+      title: t('totalParties'),
       value: stats.parties,
       icon: <Users className="h-8 w-8 text-purple-600" />,
-      description: 'Registered parties'
+      description: t('registeredParties')
     },
     {
-      title: 'Promoters',
+      title: t('promoters'),
       value: stats.promoters,
       icon: <Users className="h-8 w-8 text-orange-600" />,
-      description: 'Active promoters'
+      description: t('activePromoters')
     }
   ]
 
@@ -162,23 +166,33 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Dark mode toggle */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          aria-label={theme === 'dark' ? t('lightMode') : t('darkMode')}
+        >
+          {theme === 'dark' ? t('lightMode') : t('darkMode')}
+        </button>
+      </div>
       {/* Header */}
       <header className="mb-8" aria-label="Page header">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Contract Management System</h1>
-        <p className="text-xl text-gray-600">Streamline your contract generation and management process</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300">{t('subtitle')}</p>
       </header>
 
       {/* Stats Cards */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="System statistics">
         {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow" tabIndex={0} aria-label={stat.title}>
+          <Card key={index} className="hover:shadow-lg transition-shadow dark:bg-gray-800" tabIndex={0} aria-label={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</CardTitle>
               {stat.icon}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</div>
-              <p className="text-xs text-gray-500">{stat.description}</p>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value.toLocaleString()}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -186,11 +200,11 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
       {/* Quick Actions */}
       <section className="mb-8" aria-label="Quick actions">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">{t('quickActions')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => (
             <Link key={index} href={action.href} aria-label={action.title} tabIndex={0}>
-              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer focus:ring-2 focus:ring-blue-400 focus:outline-none" tabIndex={-1}>
+              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer focus:ring-2 focus:ring-blue-400 focus:outline-none dark:bg-gray-800" tabIndex={-1}>
                 <CardHeader>
                   <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white mb-4`} aria-hidden="true">
                     {action.icon}
@@ -206,38 +220,38 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
       {/* Recent Activity */}
       <section aria-label="System overview">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />System Overview</CardTitle>
-            <CardDescription>Get started with contract management</CardDescription>
+            <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />{t('systemOverview')}</CardTitle>
+            <CardDescription>{t('getStarted')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div>
-                  <h4 className="font-medium">Contract Generation</h4>
-                  <p className="text-sm text-gray-600">Automated document generation with image processing</p>
+                  <h4 className="font-medium">{t('contractGeneration')}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('contractGenerationDesc')}</p>
                 </div>
-                <Link href={`/${locale}/generate-contract`} aria-label="Get started with contract generation">
-                  <Button>Get Started</Button>
+                <Link href={`/${locale}/generate-contract`} aria-label={t('getStartedContractGeneration')}>
+                  <Button>{t('getStarted')}</Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div>
-                  <h4 className="font-medium">Party Management</h4>
-                  <p className="text-sm text-gray-600">Manage contract parties and promoters</p>
+                  <h4 className="font-medium">{t('partyManagement')}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('partyManagementDesc')}</p>
                 </div>
-                <Link href={`/${locale}/manage-parties`} aria-label="Manage contract parties">
-                  <Button variant="outline">Manage</Button>
+                <Link href={`/${locale}/manage-parties`} aria-label={t('manageContractParties')}>
+                  <Button variant="outline">{t('manage')}</Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div>
-                  <h4 className="font-medium">Analytics Dashboard</h4>
-                  <p className="text-sm text-gray-600">View insights and analytics for your contracts</p>
+                  <h4 className="font-medium">{t('analyticsDashboard')}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('analyticsDashboardDesc')}</p>
                 </div>
-                <Link href={`/${locale}/dashboard`} aria-label="View analytics dashboard">
-                  <Button variant="outline">View Analytics</Button>
+                <Link href={`/${locale}/dashboard`} aria-label={t('viewAnalyticsDashboard')}>
+                  <Button variant="outline">{t('viewAnalytics')}</Button>
                 </Link>
               </div>
             </div>
