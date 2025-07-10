@@ -13,9 +13,11 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
+import AuthStatus from "@/components/auth-status"
 
 interface HomePageContentProps {
   locale: string
@@ -38,55 +40,55 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     activeContracts: 0
   })
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
-    async function fetchStats() {
-      try {
-        // Fetch contracts count
-        const { count: contractsCount } = await supabase
-          .from('contracts')
-          .select('*', { count: 'exact', head: true })
+    async function fetchUserAndStats() {
+      // Fetch user session and role
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+      setUser(currentUser)
+      setUserRole(currentUser?.role || null)
 
-        // Fetch parties count
-        const { count: partiesCount } = await supabase
-          .from('parties')
-          .select('*', { count: 'exact', head: true })
-
-        // Fetch promoters count
-        const { count: promotersCount } = await supabase
-          .from('promoters')
-          .select('*', { count: 'exact', head: true })
-
-        // Fetch active contracts count
-        const { count: activeContractsCount } = await supabase
-          .from('contracts')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active')
-
-        if (isMounted) {
-          setStats({
-            contracts: contractsCount || 0,
-            parties: partiesCount || 0,
-            promoters: promotersCount || 0,
-            activeContracts: activeContractsCount || 0
-          })
-          setLoading(false)
+      // Fetch stats only if user is premium
+      if (currentUser?.role === 'premium') {
+        try {
+          const { count: contractsCount } = await supabase
+            .from('contracts')
+            .select('*', { count: 'exact', head: true })
+          const { count: partiesCount } = await supabase
+            .from('parties')
+            .select('*', { count: 'exact', head: true })
+          const { count: promotersCount } = await supabase
+            .from('promoters')
+            .select('*', { count: 'exact', head: true })
+          const { count: activeContractsCount } = await supabase
+            .from('contracts')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'active')
+          if (isMounted) {
+            setStats({
+              contracts: contractsCount || 0,
+              parties: partiesCount || 0,
+              promoters: promotersCount || 0,
+              activeContracts: activeContractsCount || 0
+            })
+            setLoading(false)
+          }
+        } catch (error) {
+          console.error('Error fetching stats:', error)
+          if (isMounted) setLoading(false)
         }
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-        if (isMounted) {
-          setLoading(false)
-        }
+      } else {
+        setLoading(false)
       }
     }
 
-    fetchStats()
-
-    return () => {
-      isMounted = false
-    }
+    fetchUserAndStats()
+    return () => { isMounted = false }
   }, [])
 
   const quickActions = [
@@ -164,8 +166,25 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     )
   }
 
+  if (!user || userRole !== 'premium') {
+    return (
+      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+        <AuthStatus />
+        <div className="mt-8 p-6 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-center max-w-lg">
+          <h2 className="text-2xl font-bold mb-2">Premium Access Required</h2>
+          <p className="mb-4">You must have a <span className="font-semibold">premium</span> account to access the contract management features.</p>
+          <p>If you believe this is a mistake or want to upgrade, please contact support.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* AuthStatus: show user info and role at the top */}
+      <div className="mb-6">
+        <AuthStatus />
+      </div>
       {/* Dark mode toggle */}
       <div className="flex justify-end mb-4">
         <button
