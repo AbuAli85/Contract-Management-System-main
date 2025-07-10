@@ -144,10 +144,17 @@ export function HomePageContent({ locale }: HomePageContentProps) {
   ]
 
   if (loading) {
+    // Skeleton loader for stats
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-100 rounded-lg h-32 w-full flex flex-col justify-center items-center">
+              <div className="h-8 w-8 bg-gray-300 rounded-full mb-2" aria-hidden="true"></div>
+              <div className="h-4 w-1/2 bg-gray-300 rounded mb-1" aria-hidden="true"></div>
+              <div className="h-3 w-1/3 bg-gray-200 rounded" aria-hidden="true"></div>
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -156,46 +163,36 @@ export function HomePageContent({ locale }: HomePageContentProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Contract Management System
-        </h1>
-        <p className="text-xl text-gray-600">
-          Streamline your contract generation and management process
-        </p>
-      </div>
+      <header className="mb-8" aria-label="Page header">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Contract Management System</h1>
+        <p className="text-xl text-gray-600">Streamline your contract generation and management process</p>
+      </header>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="System statistics">
         {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow">
+          <Card key={index} className="hover:shadow-lg transition-shadow" tabIndex={0} aria-label={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.title}
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
               {stat.icon}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
-                {stat.value.toLocaleString()}
-              </div>
-              <p className="text-xs text-gray-500">
-                {stat.description}
-              </p>
+              <div className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</div>
+              <p className="text-xs text-gray-500">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </section>
 
       {/* Quick Actions */}
-      <div className="mb-8">
+      <section className="mb-8" aria-label="Quick actions">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => (
-            <Link key={index} href={action.href}>
-              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
+            <Link key={index} href={action.href} aria-label={action.title} tabIndex={0}>
+              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer focus:ring-2 focus:ring-blue-400 focus:outline-none" tabIndex={-1}>
                 <CardHeader>
-                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white mb-4`}>
+                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white mb-4`} aria-hidden="true">
                     {action.icon}
                   </div>
                   <CardTitle className="text-lg">{action.title}</CardTitle>
@@ -205,59 +202,48 @@ export function HomePageContent({ locale }: HomePageContentProps) {
             </Link>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            System Overview
-          </CardTitle>
-          <CardDescription>
-            Get started with contract management
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-medium">Contract Generation</h4>
-                <p className="text-sm text-gray-600">
-                  Automated document generation with image processing
-                </p>
+      <section aria-label="System overview">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />System Overview</CardTitle>
+            <CardDescription>Get started with contract management</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium">Contract Generation</h4>
+                  <p className="text-sm text-gray-600">Automated document generation with image processing</p>
+                </div>
+                <Link href={`/${locale}/generate-contract`} aria-label="Get started with contract generation">
+                  <Button>Get Started</Button>
+                </Link>
               </div>
-              <Link href={`/${locale}/generate-contract`}>
-                <Button>Get Started</Button>
-              </Link>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-medium">Party Management</h4>
-                <p className="text-sm text-gray-600">
-                  Manage contract parties and promoters
-                </p>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium">Party Management</h4>
+                  <p className="text-sm text-gray-600">Manage contract parties and promoters</p>
+                </div>
+                <Link href={`/${locale}/manage-parties`} aria-label="Manage contract parties">
+                  <Button variant="outline">Manage</Button>
+                </Link>
               </div>
-              <Link href={`/${locale}/manage-parties`}>
-                <Button variant="outline">Manage</Button>
-              </Link>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-medium">Analytics Dashboard</h4>
-                <p className="text-sm text-gray-600">
-                  View insights and analytics for your contracts
-                </p>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium">Analytics Dashboard</h4>
+                  <p className="text-sm text-gray-600">View insights and analytics for your contracts</p>
+                </div>
+                <Link href={`/${locale}/dashboard`} aria-label="View analytics dashboard">
+                  <Button variant="outline">View Analytics</Button>
+                </Link>
               </div>
-              <Link href={`/${locale}/dashboard`}>
-                <Button variant="outline">View Analytics</Button>
-              </Link>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   )
 }
