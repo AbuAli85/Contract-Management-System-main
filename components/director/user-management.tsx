@@ -10,6 +10,7 @@ export const UserManagement = () => {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<string | null>(null)
   const [newRole, setNewRole] = useState("")
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -28,6 +29,29 @@ export const UserManagement = () => {
     })
     setUsers(users.map(u => u.id === id ? { ...u, roles: [newRole] } : u))
     setEditing(null)
+  }
+
+  const setActive = async (id: string, isActive: boolean) => {
+    setActionLoading(id + '-active')
+    await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: id, is_active: isActive, admin_id: 'ADMIN_ID' }) // TODO: Replace with real admin id
+    })
+    setUsers(users.map(u => u.id === id ? { ...u, is_active: isActive } : u))
+    setActionLoading(null)
+  }
+
+  const resetPassword = async (id: string) => {
+    setActionLoading(id + '-reset')
+    const newPassword = prompt('Enter new password for user:')
+    if (!newPassword) return setActionLoading(null)
+    await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: id, reset_password: true, new_password: newPassword, admin_id: 'ADMIN_ID' }) // TODO: Replace with real admin id
+    })
+    setActionLoading(null)
   }
 
   return (
@@ -72,7 +96,15 @@ export const UserManagement = () => {
                         <Button onClick={() => setEditing(null)} size="sm" variant="outline">Cancel</Button>
                       </div>
                     ) : (
-                      <Button onClick={() => { setEditing(u.id); setNewRole(u.roles?.[0] || "") }} size="sm">Edit</Button>
+                      <div className="flex gap-2">
+                        <Button onClick={() => { setEditing(u.id); setNewRole(u.roles?.[0] || "") }} size="sm">Edit</Button>
+                        <Button onClick={() => setActive(u.id, !u.is_active)} size="sm" variant={u.is_active ? "destructive" : "default"} disabled={actionLoading === u.id + '-active'}>
+                          {u.is_active ? 'Disable' : 'Enable'}
+                        </Button>
+                        <Button onClick={() => resetPassword(u.id)} size="sm" variant="outline" disabled={actionLoading === u.id + '-reset'}>
+                          Reset Password
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
