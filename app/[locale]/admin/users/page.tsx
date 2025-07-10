@@ -54,6 +54,7 @@ const emptyUser = {
   org_id: '',
   last_login: '',
   permissions: [],
+  is_premium: false,
 }
 
 export default function AdminUsersPage() {
@@ -105,7 +106,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true)
-    const { data, error } = await supabase.from('profiles').select('id, email, full_name, role, status, avatar_url, org_id, last_login, created_at, permissions')
+    const { data, error } = await supabase.from('profiles').select('id, email, full_name, role, status, avatar_url, org_id, last_login, created_at, permissions, is_premium')
     if (error) setError(error.message)
     setUsers(data || [])
     setLoading(false)
@@ -128,6 +129,12 @@ export default function AdminUsersPage() {
         : [...perms, perm],
     });
   }
+  const handleEditPremium = () => {
+    setEditFields({ ...editFields, is_premium: !editFields.is_premium })
+  }
+  const handleAddPremium = () => {
+    setAddFields({ ...addFields, is_premium: !addFields.is_premium })
+  }
   const handleAddPermission = (perm: string) => {
     const perms = addFields.permissions || [];
     setAddFields({
@@ -140,6 +147,12 @@ export default function AdminUsersPage() {
 
   const saveEdit = async (id: string) => {
     setActionLoading(true)
+    // Prevent self-demotion
+    if (authUser && authUser.id === id && editFields.role !== 'admin') {
+      setError("You cannot remove your own admin role.")
+      setActionLoading(false)
+      return
+    }
     await supabase.from('profiles').update(editFields).eq('id', id)
     setEditing(null)
     setActionLoading(false)
@@ -197,7 +210,7 @@ export default function AdminUsersPage() {
   const savePermissions = async () => {
     setPermLoading(true)
     const id = permUserRef.current.id
-    const { error } = await supabase.from('profiles').update({ permissions: permFields }).eq('id', id)
+    const { error } = await supabase.from('profiles').update({ permissions: permFields as any }).eq('id', id)
     setPermLoading(false)
     if (error) {
       setPermError(error.message)
@@ -240,13 +253,14 @@ export default function AdminUsersPage() {
                   <th className="p-3 border-b text-left font-semibold">Last Login</th>
                   <th className="p-3 border-b text-left font-semibold">Created</th>
                   <th className="p-3 border-b text-left font-semibold">Permissions</th>
+                  <th className="p-3 border-b text-left font-semibold">Premium</th>
                   <th className="p-3 border-b text-left font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="text-center text-gray-400 py-8">No users found.</td>
+                    <td colSpan={12} className="text-center text-gray-400 py-8">No users found.</td>
                   </tr>
                 )}
                 {users.map(u => (
@@ -314,6 +328,13 @@ export default function AdminUsersPage() {
                           : <span className="italic text-gray-400">No permissions</span>}
                       </div>
                     </td>
+                    <td className="p-3 border-b">
+                      {editing === u.id ? (
+                        <input type="checkbox" checked={!!editFields.is_premium} onChange={handleEditPremium} />
+                      ) : (
+                        u.is_premium ? <span className="text-yellow-600 font-bold">Yes</span> : <span className="text-gray-400">No</span>
+                      )}
+                    </td>
                     <td className="p-3 border-b flex gap-2">
                       <Button onClick={() => handleEdit(u)} size="sm">Edit</Button>
                       <Button onClick={() => setShowDelete(u.id)} size="sm" variant="destructive">Delete</Button>
@@ -338,6 +359,10 @@ export default function AdminUsersPage() {
               <Input placeholder="Avatar URL" value={addFields.avatar_url ?? ""} onChange={e => handleAddChange('avatar_url', e.target.value)} />
               <Input placeholder="Org ID" value={addFields.org_id ?? ""} onChange={e => handleAddChange('org_id', e.target.value)} />
               <Input placeholder="Last Login" value={addFields.last_login ?? ""} onChange={e => handleAddChange('last_login', e.target.value)} />
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={!!addFields.is_premium} onChange={handleAddPremium} />
+                Premium User
+              </label>
               <div className="mt-2">
                 <div className="font-medium mb-1">Permissions</div>
                 <div className="flex flex-wrap gap-2">
