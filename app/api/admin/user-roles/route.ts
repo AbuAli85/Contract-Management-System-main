@@ -43,6 +43,16 @@ export async function POST(request: NextRequest) {
   const { user_id, role_id } = await request.json()
   const { data, error } = await supabase.from('user_roles').insert([{ user_id, role_id }]).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  // Create notification
+  await supabase.from('notifications').insert([
+    {
+      type: 'role_assigned',
+      message: `Role assigned (role_id: ${role_id}) to user_id: ${user_id}`,
+      user_id,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    }
+  ])
   return NextResponse.json({ user_role: data })
 }
 
@@ -54,6 +64,16 @@ export async function DELETE(request: NextRequest) {
   const { user_id, role_id } = await request.json()
   const { error } = await supabase.from('user_roles').delete().eq('user_id', user_id).eq('role_id', role_id)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  // Create notification
+  await supabase.from('notifications').insert([
+    {
+      type: 'role_removed',
+      message: `Role removed (role_id: ${role_id}) from user_id: ${user_id}`,
+      user_id,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    }
+  ])
   return NextResponse.json({ success: true })
 }
 
