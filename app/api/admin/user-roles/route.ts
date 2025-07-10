@@ -28,3 +28,10 @@ export async function DELETE(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ success: true })
 }
+
+// GET: List all user_roles
+export async function GET() {
+  const { data, error } = await supabase.from('user_roles').select('user_id, role_id')
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ user_roles: data })
+}
