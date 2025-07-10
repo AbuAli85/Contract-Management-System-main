@@ -416,5 +416,24 @@
     "viewAnalytics": "View Analytics",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode"
+  },
+  "MainNav": {
+    "gettingStarted": "Getting Started",
+    "mainNavDescription": "All your contract management tools in one place.",
+    "generateContract": "Generate Contract",
+    "generateContractDescription": "Create a new contract with automated document generation.",
+    "viewContracts": "View Contracts",
+    "viewContractsDescription": "Browse and manage all contracts.",
+    "dashboard": "Dashboard",
+    "dashboardDescription": "View analytics and insights for your contracts.",
+    "components": "Components",
+    "manageParties": "Manage Parties",
+    "managePromoters": "Manage Promoters"
+  },
+  "ThemeToggle": {
+    "toggleTheme": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

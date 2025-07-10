@@ -3,7 +3,6 @@ import { Inter, Lexend } from "next/font/google" // Lexend as display font
 import { Suspense } from "react"
 import Loading from "./loading"
 import { ClientProviders } from "@/components/client-providers"
-import { ClientHeader } from "@/components/client-header"
 import { ClientFooter } from "@/components/client-footer"
 import { cn } from "@/lib/utils"
 
@@ -43,7 +42,7 @@ export default function ClientLayout({
         )}
       >
         <ClientProviders>
-          <ClientHeader locale={locale} />
+          {/* Remove ClientHeader to avoid duplicate nav bar, since MainNav is now in RootLayout */}
           <Suspense fallback={<Loading />}>{children}</Suspense>
           <ClientFooter />
         </ClientProviders>
