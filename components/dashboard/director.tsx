@@ -1,6 +1,7 @@
 import React from "react"
 import { UserManagement } from "@/components/director/user-management"
 import AuditLogs from "@/components/dashboard/audit-logs"
+import { PermissionManagement } from "@/components/director/permission-management"
 // Import any workflow-related hooks, types, and utilities as needed
 
 // Example props, adjust as needed for your app
@@ -19,6 +20,7 @@ export const Director: React.FC<DirectorProps> = (props) => {
         <p className="text-muted-foreground">All workflow management is now unified here. Implement your workflow logic and UI in this component.</p>
       </div>
       <UserManagement />
+      <PermissionManagement />
       <AuditLogs />
     </div>
   )
