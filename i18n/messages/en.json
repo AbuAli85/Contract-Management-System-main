@@ -435,5 +435,25 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "Profile": {
+    "title": "Profile",
+    "description": "View and update your profile information.",
+    "email": "Email",
+    "fullName": "Full Name",
+    "save": "Save",
+    "saving": "Saving...",
+    "loading": "Loading...",
+    "formAriaLabel": "Profile update form",
+    "error": {
+      "notLoggedIn": "Please log in to view your profile.",
+      "fetchUser": "Could not fetch user information.",
+      "fetchProfile": "Could not fetch profile information.",
+      "fullNameRequired": "Full name is required.",
+      "updateFailed": "Failed to update profile. Please try again."
+    },
+    "success": {
+      "updated": "Profile updated successfully."
+    }
   }
 }
