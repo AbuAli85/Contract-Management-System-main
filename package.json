@@ -23,6 +23,7 @@
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",
     "@googleapis/drive": "latest",
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "latest",
     "@jest/globals": "latest",
     "@radix-ui/react-accordion": "latest",

@@ -7,9 +7,11 @@ import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { LogInIcon, LogOutIcon, UserCircle } from "lucide-react"
+import { BadgeCheck, ShieldCheck, Calendar, User as UserIcon } from "lucide-react"
 
 export default function AuthStatus() {
   const [user, setUser] = useState<User | null>(null)
+  const [userDetails, setUserDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
@@ -22,6 +24,17 @@ export default function AuthStatus() {
         data: { session },
       } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
+      if (session?.user) {
+        // Fetch more user details (role, created_at, last_sign_in_at, email_confirmed_at)
+        setUserDetails({
+          role: session.user.role || "user",
+          created_at: session.user.created_at,
+          last_sign_in_at: session.user.last_sign_in_at,
+          email_confirmed_at: session.user.email_confirmed_at
+        })
+      } else {
+        setUserDetails(null)
+      }
       setLoading(false)
     }
     getSession()
@@ -49,14 +62,23 @@ export default function AuthStatus() {
   }
 
   return (
-    <div className="flex items-center gap-4 border-b p-4">
+    <div className="flex flex-col gap-2 border-b p-4">
       {user ? (
         <>
           <div className="flex items-center gap-2">
             <UserCircle className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">{user.email}</span>
+            {userDetails?.email_confirmed_at && <BadgeCheck className="h-4 w-4 text-green-500" title="Email Verified" />}
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <ShieldCheck className="h-4 w-4" />
+            <span>Role: <span className="font-semibold capitalize">{userDetails?.role}</span></span>
+            <Calendar className="h-4 w-4 ml-4" />
+            <span>Created: {userDetails?.created_at ? new Date(userDetails.created_at).toLocaleDateString() : "-"}</span>
+            <UserIcon className="h-4 w-4 ml-4" />
+            <span>Last Sign In: {userDetails?.last_sign_in_at ? new Date(userDetails.last_sign_in_at).toLocaleString() : "-"}</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleLogout} className="mt-2">
             <LogOutIcon className="mr-2 h-4 w-4" />
             Logout
           </Button>
