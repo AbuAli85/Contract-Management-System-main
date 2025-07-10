@@ -377,6 +377,12 @@ export default function AdminUsersPage() {
                     </label>
                   ))}
                 </div>
+                {/* Show summary of selected permissions */}
+                {addFields.permissions && addFields.permissions.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    Selected: {addFields.permissions.map((p: string) => featureOptions.find(f => f.key === p)?.label || p).join(', ')}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2 justify-end mt-4">
