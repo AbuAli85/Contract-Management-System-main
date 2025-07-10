@@ -11,6 +11,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
+import { Github, LucideIcon } from "lucide-react"
+
+// Custom Google icon for social login
+const Google = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clipPath="url(#clip0_9914_10)">
+      <path d="M23.766 12.276c0-.818-.074-1.604-.213-2.356H12.24v4.451h6.484a5.54 5.54 0 0 1-2.4 3.637v3.017h3.877c2.27-2.09 3.565-5.17 3.565-8.749z" fill="#4285F4"/>
+      <path d="M12.24 24c3.24 0 5.963-1.07 7.95-2.91l-3.877-3.017c-1.08.726-2.462 1.16-4.073 1.16-3.13 0-5.78-2.11-6.73-4.946H1.53v3.09A11.997 11.997 0 0 0 12.24 24z" fill="#34A853"/>
+      <path d="M5.51 14.287a7.19 7.19 0 0 1 0-4.574V6.623H1.53a12.004 12.004 0 0 0 0 10.754l3.98-3.09z" fill="#FBBC05"/>
+      <path d="M12.24 4.77c1.77 0 3.35.61 4.6 1.81l3.43-3.43C18.2 1.07 15.48 0 12.24 0A11.997 11.997 0 0 0 1.53 6.623l3.98 3.09c.95-2.836 3.6-4.946 6.73-4.946z" fill="#EA4335"/>
+    </g>
+    <defs>
+      <clipPath id="clip0_9914_10">
+        <rect width="24" height="24" fill="white"/>
+      </clipPath>
+    </defs>
+  </svg>
+)
 
 interface AuthFormProps {
   locale?: string
@@ -133,6 +151,15 @@ export default function AuthForm({ locale }: AuthFormProps) {
     }
   }
 
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    setIsSubmitting(true)
+    const { error } = await supabase.auth.signInWithOAuth({ provider })
+    if (error) {
+      toast({ title: "Social Login Error", description: error.message, variant: "destructive" })
+    }
+    setIsSubmitting(false)
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -185,6 +212,16 @@ export default function AuthForm({ locale }: AuthFormProps) {
         </form>
         <div className="text-sm text-center mt-4">
           <a href="/login/forgot-password" className="text-blue-600 hover:underline">Forgot password?</a>
+        </div>
+        <div className="flex flex-col gap-2 mt-4">
+          <Button type="button" variant="outline" onClick={() => handleSocialLogin("google")}
+            disabled={isSubmitting} className="w-full flex items-center justify-center">
+            <Google className="mr-2 h-4 w-4" /> Continue with Google
+          </Button>
+          <Button type="button" variant="outline" onClick={() => handleSocialLogin("github")}
+            disabled={isSubmitting} className="w-full flex items-center justify-center">
+            <Github className="mr-2 h-4 w-4" /> Continue with GitHub
+          </Button>
         </div>
       </CardContent>
     </Card>
