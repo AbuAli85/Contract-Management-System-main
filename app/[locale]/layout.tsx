@@ -11,16 +11,17 @@ export default async function LocaleLayout({
   children: React.ReactNode
   params: { locale: string }
 }) {
+  const awaitedParams = await params;
   let messages
   try {
-    messages = (await import(`../../i18n/messages/${params.locale}.json`)).default
+    messages = (await import(`../../i18n/messages/${awaitedParams.locale}.json`)).default
   } catch (error) {
     notFound()
   }
 
   return (
-    <NextIntlClientProvider locale={params.locale} messages={messages}>
-      <ClientLayout locale={params.locale}>{children}</ClientLayout>
+    <NextIntlClientProvider locale={awaitedParams.locale} messages={messages}>
+      <ClientLayout locale={awaitedParams.locale}>{children}</ClientLayout>
     </NextIntlClientProvider>
   )
 }
