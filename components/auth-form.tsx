@@ -1,8 +1,11 @@
 "use client"
 
-import type React from "react"
-import { useState, useCallback, useMemo } from "react"
+import React, { useState, useCallback, useMemo, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -10,11 +13,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react"
-import { Github } from "lucide-react"
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form"
+import { Loader2, Eye, EyeOff, Mail, Lock, Github } from "lucide-react"
 
-// Enhanced Google icon with better accessibility
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+// Enhanced Google icon component
+const GoogleIcon = React.memo((props: React.SVGProps<SVGSVGElement>) => (
   <svg 
     {...props} 
     viewBox="0 0 24 24" 
@@ -47,254 +57,255 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
       </clipPath>
     </defs>
   </svg>
-)
+))
+GoogleIcon.displayName = "GoogleIcon"
+
+// Enhanced validation schema with better error messages
+const authFormSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address")
+    .max(255, "Email is too long"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters")
+    .max(128, "Password is too long")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
+})
 
 // Types
 interface AuthFormProps {
   locale?: string
   className?: string
+  redirectTo?: string
 }
 
-interface FormData {
-  email: string
-  password: string
-}
-
-interface ValidationErrors {
-  email?: string
-  password?: string
-}
-
+type AuthFormValues = z.infer<typeof authFormSchema>
 type AuthMode = "signin" | "signup"
 type SocialProvider = "google" | "github"
 
-// Constants
-const MIN_PASSWORD_LENGTH = 6
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Social login button component
+const SocialLoginButton = React.memo(({ 
+  provider, 
+  onClick, 
+  disabled, 
+  children 
+}: {
+  provider: SocialProvider
+  onClick: () => void
+  disabled: boolean
+  children: React.ReactNode
+}) => (
+  <Button
+    type="button"
+    variant="outline"
+    onClick={onClick}
+    disabled={disabled}
+    className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+    aria-label={`Sign in with ${provider}`}
+  >
+    {children}
+  </Button>
+))
+SocialLoginButton.displayName = "SocialLoginButton"
 
-export default function AuthForm({ locale, className }: AuthFormProps) {
+// Password input component
+const PasswordInput = React.memo(({ 
+  field, 
+  showPassword, 
+  onToggleVisibility, 
+  disabled, 
+  error 
+}: {
+  field: any
+  showPassword: boolean
+  onToggleVisibility: () => void
+  disabled: boolean
+  error?: string
+}) => (
+  <div className="relative">
+    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+    <Input
+      {...field}
+      type={showPassword ? "text" : "password"}
+      placeholder="Enter your password"
+      className={`pl-10 pr-12 transition-colors ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+      disabled={disabled}
+      aria-invalid={!!error}
+      autoComplete="current-password"
+    />
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+      onClick={onToggleVisibility}
+      disabled={disabled}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+      tabIndex={-1}
+    >
+      {showPassword ? (
+        <EyeOff className="h-4 w-4 text-muted-foreground" />
+      ) : (
+        <Eye className="h-4 w-4 text-muted-foreground" />
+      )}
+    </Button>
+  </div>
+))
+PasswordInput.displayName = "PasswordInput"
+
+export default function AuthForm({ 
+  locale, 
+  className, 
+  redirectTo = "/generate-contract" 
+}: AuthFormProps) {
   // State management
   const [authMode, setAuthMode] = useState<AuthMode>("signin")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState<FormData>({
-    email: "",
-    password: ""
-  })
-  const [errors, setErrors] = useState<ValidationErrors>({})
+  const [isPending, startTransition] = useTransition()
 
   // Hooks
   const router = useRouter()
   const { toast } = useToast()
 
+  // Form setup with react-hook-form and zod
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onBlur",
+  })
+
   // Memoized values
   const isSignUp = useMemo(() => authMode === "signup", [authMode])
-  const isFormValid = useMemo(() => {
-    return formData.email.trim() && 
-           formData.password.trim() && 
-           Object.keys(errors).length === 0
-  }, [formData, errors])
+  const isFormValid = useMemo(() => form.formState.isValid, [form.formState.isValid])
 
-  // Enhanced validation with real-time feedback
-  const validateField = useCallback((field: keyof FormData, value: string): string | undefined => {
-    switch (field) {
-      case "email":
-        if (!value.trim()) return "Email is required"
-        if (!EMAIL_REGEX.test(value)) return "Please enter a valid email address"
-        return undefined
-      case "password":
-        if (!value.trim()) return "Password is required"
-        if (value.length < MIN_PASSWORD_LENGTH) {
-          return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
-        }
-        return undefined
-      default:
-        return undefined
-    }
-  }, [])
+  // Navigation helper
+  const navigateToApp = useCallback(() => {
+    const path = locale ? `/${locale}${redirectTo}` : redirectTo
+    router.push(path)
+    router.refresh()
+  }, [locale, redirectTo, router])
 
-  const validateForm = useCallback((): boolean => {
-    const newErrors: ValidationErrors = {}
-    
-    Object.entries(formData).forEach(([key, value]) => {
-      const error = validateField(key as keyof FormData, value)
-      if (error) newErrors[key as keyof ValidationErrors] = error
-    })
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }, [formData, validateField])
-
-  // Form handlers
-  const handleInputChange = useCallback((field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value
-    setFormData(prev => ({ ...prev, [field]: value }))
-    
-    // Real-time validation
-    const error = validateField(field, value)
-    setErrors(prev => ({
-      ...prev,
-      [field]: error
-    }))
-  }, [validateField])
-
+  // Event handlers
   const togglePasswordVisibility = useCallback(() => {
     setShowPassword(prev => !prev)
   }, [])
 
   const toggleAuthMode = useCallback(() => {
     setAuthMode(prev => prev === "signin" ? "signup" : "signin")
-    setErrors({})
-  }, [])
-
-  // Navigation helper
-  const navigateToApp = useCallback(() => {
-    const path = locale ? `/${locale}/generate-contract` : "/generate-contract"
-    router.push(path)
-    router.refresh()
-  }, [locale, router])
+    form.reset()
+    setShowPassword(false)
+  }, [form])
 
   // Authentication handlers
-  const handleSignIn = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password.trim()
-      })
-
-      if (error) {
-        console.error("Sign in error:", error)
-        toast({
-          title: "Sign In Failed",
-          description: error.message,
-          variant: "destructive"
-        })
-      } else {
-        toast({
-          title: "Welcome back!",
-          description: "You have been signed in successfully."
-        })
-        navigateToApp()
-      }
-    } catch (error) {
-      console.error("Unexpected sign in error:", error)
-      toast({
-        title: "Unexpected Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [formData, validateForm, toast, navigateToApp])
-
-  const handleSignUp = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
-    
-    try {
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email: formData.email.trim(),
-        password: formData.password.trim()
-      })
-
-      if (error) {
-        console.error("Sign up error:", error)
-        toast({
-          title: "Sign Up Failed",
-          description: error.message,
-          variant: "destructive"
-        })
-      } else if (user) {
-        // Create user profile
-        const fullName = formData.email.split('@')[0]
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: user.id,
-            full_name: fullName,
-            role: 'user'
-          }])
-
-        if (profileError) {
-          console.error("Profile creation error:", profileError)
-          toast({
-            title: "Profile Creation Failed",
-            description: profileError.message,
-            variant: "destructive"
+  const handleEmailAuth = useCallback(async (data: AuthFormValues) => {
+    startTransition(async () => {
+      try {
+        if (isSignUp) {
+          const { data: authData, error } = await supabase.auth.signUp({
+            email: data.email.trim(),
+            password: data.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}${locale ? `/${locale}` : ""}${redirectTo}`
+            }
           })
+
+          if (error) throw error
+
+          if (authData.user) {
+            // Create user profile
+            const fullName = data.email.split('@')[0]
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert([{
+                id: authData.user.id,
+                full_name: fullName,
+                role: 'user'
+              }])
+
+            if (profileError) {
+              console.error("Profile creation error:", profileError)
+            }
+
+            toast({
+              title: "Account Created Successfully!",
+              description: "Please check your email to confirm your account.",
+            })
+            
+            // If email confirmation is disabled, navigate immediately
+            if (authData.session) {
+              navigateToApp()
+            }
+          }
         } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: data.email.trim(),
+            password: data.password,
+          })
+
+          if (error) throw error
+
           toast({
-            title: "Account Created!",
-            description: "Please check your email to confirm your account."
+            title: "Welcome back!",
+            description: "You have been signed in successfully.",
           })
           navigateToApp()
         }
+      } catch (error: any) {
+        console.error("Authentication error:", error)
+        toast({
+          title: isSignUp ? "Sign Up Failed" : "Sign In Failed",
+          description: error.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        })
       }
-    } catch (error) {
-      console.error("Unexpected sign up error:", error)
-      toast({
-        title: "Unexpected Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [formData, validateForm, toast, navigateToApp])
+    })
+  }, [isSignUp, locale, redirectTo, toast, navigateToApp])
 
   const handleSocialLogin = useCallback(async (provider: SocialProvider) => {
-    setIsSubmitting(true)
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}${locale ? `/${locale}` : ""}/generate-contract`
-        }
-      })
+    startTransition(async () => {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}${locale ? `/${locale}` : ""}${redirectTo}`,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            }
+          }
+        })
 
-      if (error) {
+        if (error) throw error
+      } catch (error: any) {
         console.error("Social login error:", error)
         toast({
           title: "Social Login Failed",
-          description: error.message,
-          variant: "destructive"
+          description: error.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
         })
       }
-    } catch (error) {
-      console.error("Unexpected social login error:", error)
-      toast({
-        title: "Unexpected Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [locale, toast])
+    })
+  }, [locale, redirectTo, toast])
 
   return (
-    <Card className={`w-full max-w-md mx-auto shadow-lg ${className || ""}`}>
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">
+    <Card className={`w-full max-w-md mx-auto shadow-xl border-0 bg-card/50 backdrop-blur-sm ${className || ""}`}>
+      <CardHeader className="space-y-2 text-center pb-6">
+        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-base">
           {isSignUp 
-            ? "Create a new account to get started" 
-            : "Sign in to your account to continue"
+            ? "Create a new account to get started with our platform" 
+            : "Sign in to your account to continue where you left off"
           }
         </CardDescription>
       </CardHeader>
@@ -302,26 +313,22 @@ export default function AuthForm({ locale, className }: AuthFormProps) {
       <CardContent className="space-y-6">
         {/* Social Login Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="outline"
+          <SocialLoginButton
+            provider="google"
             onClick={() => handleSocialLogin("google")}
-            disabled={isSubmitting}
-            className="w-full"
+            disabled={isPending}
           >
             <GoogleIcon className="mr-2 h-4 w-4" />
             Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
+          </SocialLoginButton>
+          <SocialLoginButton
+            provider="github"
             onClick={() => handleSocialLogin("github")}
-            disabled={isSubmitting}
-            className="w-full"
+            disabled={isPending}
           >
             <Github className="mr-2 h-4 w-4" />
             GitHub
-          </Button>
+          </SocialLoginButton>
         </div>
 
         <div className="relative">
@@ -329,103 +336,91 @@ export default function AuthForm({ locale, className }: AuthFormProps) {
             <Separator className="w-full" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-background px-3 text-muted-foreground font-medium">
               Or continue with email
             </span>
           </div>
         </div>
 
         {/* Email/Password Form */}
-        <form 
-          className="space-y-4" 
-          onSubmit={isSignUp ? handleSignUp : handleSignIn}
-          noValidate
-        >
-          {/* Email Field */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">
-              Email Address
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange("email")}
-                placeholder="you@example.com"
-                className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
-                disabled={isSubmitting}
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? "email-error" : undefined}
-              />
-            </div>
-            {errors.email && (
-              <p id="email-error" className="text-sm text-destructive">
-                {errors.email}
-              </p>
-            )}
-          </div>
-
-          {/* Password Field */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleInputChange("password")}
-                placeholder="••••••••"
-                className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
-                disabled={isSubmitting}
-                aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? "password-error" : undefined}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={togglePasswordVisibility}
-                disabled={isSubmitting}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
-            </div>
-            {errors.password && (
-              <p id="password-error" className="text-sm text-destructive">
-                {errors.password}
-              </p>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting || !isFormValid}
+        <Form {...form}>
+          <form 
+            onSubmit={form.handleSubmit(handleEmailAuth)}
+            className="space-y-5"
+            noValidate
           >
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSignUp ? "Create Account" : "Sign In"}
-          </Button>
-        </form>
+            {/* Email Field */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Email Address</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="you@example.com"
+                        className="pl-10 transition-colors"
+                        disabled={isPending}
+                        autoComplete="email"
+                        aria-describedby="email-description"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Password Field */}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput
+                      field={field}
+                      showPassword={showPassword}
+                      onToggleVisibility={togglePasswordVisibility}
+                      disabled={isPending}
+                      error={form.formState.errors.password?.message}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {isSignUp && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Password must contain uppercase, lowercase, and number
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              disabled={isPending || !isFormValid}
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSignUp ? "Create Account" : "Sign In"}
+            </Button>
+          </form>
+        </Form>
 
         {/* Forgot Password Link (only for sign in) */}
         {!isSignUp && (
           <div className="text-center">
             <Button
               variant="link"
-              className="text-sm text-muted-foreground hover:text-primary"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
               onClick={() => router.push("/forgot-password")}
+              disabled={isPending}
             >
               Forgot your password?
             </Button>
@@ -433,15 +428,15 @@ export default function AuthForm({ locale, className }: AuthFormProps) {
         )}
 
         {/* Toggle Auth Mode */}
-        <div className="text-center text-sm">
+        <div className="text-center text-sm border-t pt-6">
           <span className="text-muted-foreground">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}
           </span>{" "}
           <Button
             variant="link"
-            className="p-0 h-auto font-semibold"
+            className="p-0 h-auto font-semibold text-primary hover:text-primary/80 transition-colors"
             onClick={toggleAuthMode}
-            disabled={isSubmitting}
+            disabled={isPending}
           >
             {isSignUp ? "Sign in" : "Sign up"}
           </Button>
