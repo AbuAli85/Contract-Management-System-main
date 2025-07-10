@@ -211,8 +211,8 @@ export default function AdminUsersPage() {
   if (loading) return <div className="p-8 text-center">Loading...</div>
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
   if (authLoading) return <div className="p-8 text-center">Checking permissions...</div>
-  if (!authUser || (authUser.role !== 'admin' && !(authUser.permissions || []).includes('access_admin'))) {
-    return <div className="p-8 text-center text-red-500 font-semibold">Access denied. You do not have permission to view this page.</div>
+  if (!authUser || authUser.role !== 'admin') {
+    return <div className="p-8 text-center text-red-500 font-semibold">Access denied. Only admins can view and manage users and permissions.</div>
   }
 
   return (
@@ -317,7 +317,7 @@ export default function AdminUsersPage() {
                     <td className="p-3 border-b flex gap-2">
                       <Button onClick={() => handleEdit(u)} size="sm">Edit</Button>
                       <Button onClick={() => setShowDelete(u.id)} size="sm" variant="destructive">Delete</Button>
-                      <Button onClick={() => openPermissions(u)} size="sm" variant="outline" disabled={!u.email}>Edit Permissions</Button>
+                      <Button onClick={() => openPermissions(u)} size="sm" variant="outline" disabled={authUser.role !== 'admin' || !u.email}>Edit Permissions</Button>
                     </td>
                   </tr>
                 ))}
@@ -378,14 +378,14 @@ export default function AdminUsersPage() {
                     type="checkbox"
                     checked={permFields.includes(f.key)}
                     onChange={() => handlePermChange(f.key)}
-                    disabled={permLoading}
+                    disabled={permLoading || authUser.role !== 'admin'}
                   />
                   {f.label}
                 </label>
               ))}
             </div>
             <div className="flex gap-2 justify-end">
-              <Button onClick={savePermissions} size="sm" disabled={permLoading}>{permLoading ? 'Saving...' : 'Save'}</Button>
+              <Button onClick={savePermissions} size="sm" disabled={permLoading || authUser.role !== 'admin'}>{permLoading ? 'Saving...' : 'Save'}</Button>
               <Button onClick={() => setShowPermissions(null)} size="sm" variant="outline" disabled={permLoading}>Cancel</Button>
             </div>
           </Modal>
