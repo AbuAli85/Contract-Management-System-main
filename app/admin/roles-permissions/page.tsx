@@ -1,5 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react"
+import { useAuth } from "@/hooks/use-auth"
+import { supabase } from "@/lib/supabase"
 
 interface Role { id: string; name: string; description?: string }
 interface Permission { id: string; name: string; description?: string }
@@ -14,6 +16,8 @@ interface UserPermission {
 }
 
 export default function RolesPermissionsAdminPage() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [users, setUsers] = useState<User[]>([])
@@ -24,6 +28,23 @@ export default function RolesPermissionsAdminPage() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
   const [assigning, setAssigning] = useState(false)
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+    // Fetch user role from users table
+    async function checkAdmin() {
+      const { data, error } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+      setIsAdmin(!error && data?.role === "admin")
+    }
+    checkAdmin()
+  }, [user])
 
   useEffect(() => {
     async function fetchData() {
@@ -111,6 +132,9 @@ export default function RolesPermissionsAdminPage() {
     setAssigning(false)
     setRolePermissions(await fetch("/api/admin/role-permissions").then(r => r.json()).then(res => res.role_permissions || []))
   }
+
+  if (authLoading || isAdmin === null) return <div className="p-8 text-center">Loading...</div>
+  if (!isAdmin) return <div className="p-8 text-center text-red-600 font-bold">Access Denied</div>
 
   if (loading) return <div className="p-8 text-center">Loading...</div>
 
