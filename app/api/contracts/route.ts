@@ -7,6 +7,17 @@ import type { BilingualPdfData } from "@/lib/types"
 import type { Database } from "@/types/supabase"
 import { format } from "date-fns"
 
+// Robust environment variable checks for Supabase admin
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl) {
+  throw new Error("Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL.")
+}
+if (!supabaseServiceRoleKey) {
+  throw new Error("Supabase Service Role Key is required. Please set SUPABASE_SERVICE_ROLE_KEY.")
+}
+
 // Placeholder for your PDF generation logic (e.g., calling Google Docs API via Make.com)
 async function generateBilingualPdf(
   contractData: BilingualPdfData,
