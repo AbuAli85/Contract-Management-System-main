@@ -262,14 +262,14 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <Input value={editFields.email} onChange={e => handleEditChange('email', e.target.value)} />
+                        <Input value={editFields.email ?? ""} onChange={e => handleEditChange('email', e.target.value)} />
                       ) : (
                         u.email || <span className="text-gray-400 italic">(none)</span>
                       )}
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <Input value={editFields.full_name} onChange={e => handleEditChange('full_name', e.target.value)} />
+                        <Input value={editFields.full_name ?? ""} onChange={e => handleEditChange('full_name', e.target.value)} />
                       ) : (
                         u.full_name || <span className="text-gray-400 italic">(none)</span>
                       )}
@@ -294,14 +294,14 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <Input value={editFields.org_id} onChange={e => handleEditChange('org_id', e.target.value)} />
+                        <Input value={editFields.org_id ?? ""} onChange={e => handleEditChange('org_id', e.target.value)} />
                       ) : (
                         u.org_id || <span className="text-gray-400 italic">-</span>
                       )}
                     </td>
                     <td className="p-3 border-b">
                       {editing === u.id ? (
-                        <Input value={editFields.last_login} onChange={e => handleEditChange('last_login', e.target.value)} />
+                        <Input value={editFields.last_login ?? ""} onChange={e => handleEditChange('last_login', e.target.value)} />
                       ) : (
                         u.last_login ? new Date(u.last_login).toLocaleString() : <span className="text-gray-400 italic">-</span>
                       )}
@@ -327,17 +327,17 @@ export default function AdminUsersPage() {
           <Modal open={adding} onClose={() => setAdding(false)}>
             <div className="text-lg font-semibold mb-4">Add User</div>
             <div className="flex flex-col gap-2">
-              <Input placeholder="Email" value={addFields.email} onChange={e => handleAddChange('email', e.target.value)} />
-              <Input placeholder="Full Name" value={addFields.full_name} onChange={e => handleAddChange('full_name', e.target.value)} />
+              <Input placeholder="Email" value={addFields.email ?? ""} onChange={e => handleAddChange('email', e.target.value)} />
+              <Input placeholder="Full Name" value={addFields.full_name ?? ""} onChange={e => handleAddChange('full_name', e.target.value)} />
               <select className="border rounded px-2 py-1" value={addFields.role} onChange={e => handleAddChange('role', e.target.value)} title="Role">
                 {roleOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
               <select className="border rounded px-2 py-1" value={addFields.status} onChange={e => handleAddChange('status', e.target.value)} title="Status">
                 {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <Input placeholder="Avatar URL" value={addFields.avatar_url} onChange={e => handleAddChange('avatar_url', e.target.value)} />
-              <Input placeholder="Org ID" value={addFields.org_id} onChange={e => handleAddChange('org_id', e.target.value)} />
-              <Input placeholder="Last Login" value={addFields.last_login} onChange={e => handleAddChange('last_login', e.target.value)} />
+              <Input placeholder="Avatar URL" value={addFields.avatar_url ?? ""} onChange={e => handleAddChange('avatar_url', e.target.value)} />
+              <Input placeholder="Org ID" value={addFields.org_id ?? ""} onChange={e => handleAddChange('org_id', e.target.value)} />
+              <Input placeholder="Last Login" value={addFields.last_login ?? ""} onChange={e => handleAddChange('last_login', e.target.value)} />
               <div className="mt-2">
                 <div className="font-medium mb-1">Permissions</div>
                 <div className="flex flex-wrap gap-2">
