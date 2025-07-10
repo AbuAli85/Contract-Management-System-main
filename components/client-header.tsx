@@ -13,7 +13,7 @@ const navItems = [
 	{ title: "View History", href: "/contracts" },
 	{ title: "Manage Parties", href: "/manage-parties" },
 	{ title: "Manage Promoters", href: "/manage-promoters" },
-	{ title: "Roles & Permissions", href: "/admin/roles-permissions" }, // <-- Add admin UI link
+	{ title: "Director", href: "/dashboard/director" }, // Unified admin UI
 ]
 
 interface ClientHeaderProps {

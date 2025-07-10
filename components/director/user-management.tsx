@@ -12,7 +12,7 @@ export const UserManagement = () => {
   const [newRole, setNewRole] = useState("")
 
   useEffect(() => {
-    fetch("/api/users")
+    fetch("/api/admin/users")
       .then(res => res.json())
       .then(data => {
         setUsers(data.users || [])
