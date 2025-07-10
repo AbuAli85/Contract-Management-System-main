@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { saveAs } from 'file-saver'
+import DashboardNotifications from './dashboard-notifications'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFE', '#FF6699']
 
@@ -31,7 +32,7 @@ function exportCSV(data: any[], filename: string) {
   saveAs(blob, filename)
 }
 
-export default function Dashboard() {
+export default function Dashboard({ userId, isAdmin }: { userId?: string; isAdmin?: boolean }) {
   const [stats, setStats] = useState<Stats>({ parties: 0, files: 0, notes: 0 })
   const [recent, setRecent] = useState<Activity[]>([])
   const [statusData, setStatusData] = useState<ChartData[]>([])
@@ -67,6 +68,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
+      <DashboardNotifications userId={userId} isAdmin={isAdmin} />
       <div style={{ display: 'flex', gap: 32 }}>
         <div>
           <h2>Total Parties</h2>
@@ -134,4 +136,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-} 
+}
