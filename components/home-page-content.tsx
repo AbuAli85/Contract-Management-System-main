@@ -19,6 +19,12 @@ import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
 import AuthStatus from "@/components/auth-status"
 
+// --- Types ---
+interface Profile {
+  role: string | null;
+  is_premium: boolean | null;
+}
+
 interface HomePageContentProps {
   locale: string
 }
@@ -30,6 +36,65 @@ interface Stats {
   activeContracts: number
 }
 
+// --- Static Data (outside component for performance) ---
+const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => [
+  {
+    title: t('generateContract'),
+    description: t('generateContractDesc'),
+    icon: <Plus className="h-6 w-6" />,
+    href: `/${locale}/generate-contract`,
+    color: 'bg-blue-500'
+  },
+  {
+    title: t('viewContracts'),
+    description: t('viewContractsDesc'),
+    icon: <FileText className="h-6 w-6" />,
+    href: `/${locale}/contracts`,
+    color: 'bg-green-500'
+  },
+  {
+    title: t('manageParties'),
+    description: t('managePartiesDesc'),
+    icon: <Users className="h-6 w-6" />,
+    href: `/${locale}/manage-parties`,
+    color: 'bg-purple-500'
+  },
+  {
+    title: t('analytics'),
+    description: t('analyticsDesc'),
+    icon: <BarChart3 className="h-6 w-6" />,
+    href: `/${locale}/dashboard`,
+    color: 'bg-orange-500'
+  }
+];
+
+const getStatsCards = (t: ReturnType<typeof useTranslations>, stats: Stats) => [
+  {
+    title: t('totalContracts'),
+    value: stats.contracts,
+    icon: <FileText className="h-8 w-8 text-blue-600" />,
+    description: t('allContracts')
+  },
+  {
+    title: t('activeContracts'),
+    value: stats.activeContracts,
+    icon: <TrendingUp className="h-8 w-8 text-green-600" />,
+    description: t('currentlyActive')
+  },
+  {
+    title: t('totalParties'),
+    value: stats.parties,
+    icon: <Users className="h-8 w-8 text-purple-600" />,
+    description: t('registeredParties')
+  },
+  {
+    title: t('promoters'),
+    value: stats.promoters,
+    icon: <Users className="h-8 w-8 text-orange-600" />,
+    description: t('activePromoters')
+  }
+];
+
 export function HomePageContent({ locale }: HomePageContentProps) {
   const t = useTranslations('Home')
   const { theme, setTheme } = useTheme()
@@ -40,9 +105,10 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     activeContracts: 0
   })
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<import('@supabase/supabase-js').User | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isPremium, setIsPremium] = useState<boolean>(false)
+  const [statsError, setStatsError] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -50,7 +116,7 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     async function fetchUserAndStats() {
       // Fetch user session
       const { data: { session } } = await supabase.auth.getSession()
-      const currentUser = session?.user
+      const currentUser = session?.user ?? null
       setUser(currentUser)
 
       if (!currentUser) {
@@ -65,16 +131,17 @@ export function HomePageContent({ locale }: HomePageContentProps) {
         .from('profiles')
         .select('role, is_premium')
         .eq('id', currentUser.id)
-        .single()
+        .single<Profile>()
 
-      if (error || !profile) {
+      if (error || !profile || 'code' in profile) {
         setUserRole(null)
         setIsPremium(false)
         setLoading(false)
+        setStatsError('Could not load user profile.')
         return
       }
 
-      setUserRole(profile.role)
+      setUserRole(profile.role ?? null)
       setIsPremium(!!profile.is_premium)
 
       // Fetch stats if user is admin or premium
@@ -101,10 +168,14 @@ export function HomePageContent({ locale }: HomePageContentProps) {
               activeContracts: activeContractsCount || 0
             })
             setLoading(false)
+            setStatsError(null)
           }
         } catch (error) {
           console.error('Error fetching stats:', error)
-          if (isMounted) setLoading(false)
+          if (isMounted) {
+            setStatsError('Failed to load statistics.')
+            setLoading(false)
+          }
         }
       } else {
         setLoading(false)
@@ -115,63 +186,8 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     return () => { isMounted = false }
   }, [])
 
-  const quickActions = [
-    {
-      title: t('generateContract'),
-      description: t('generateContractDesc'),
-      icon: <Plus className="h-6 w-6" />,
-      href: `/${locale}/generate-contract`,
-      color: 'bg-blue-500'
-    },
-    {
-      title: t('viewContracts'),
-      description: t('viewContractsDesc'),
-      icon: <FileText className="h-6 w-6" />,
-      href: `/${locale}/contracts`,
-      color: 'bg-green-500'
-    },
-    {
-      title: t('manageParties'),
-      description: t('managePartiesDesc'),
-      icon: <Users className="h-6 w-6" />,
-      href: `/${locale}/manage-parties`,
-      color: 'bg-purple-500'
-    },
-    {
-      title: t('analytics'),
-      description: t('analyticsDesc'),
-      icon: <BarChart3 className="h-6 w-6" />,
-      href: `/${locale}/dashboard`,
-      color: 'bg-orange-500'
-    }
-  ]
-
-  const statsCards = [
-    {
-      title: t('totalContracts'),
-      value: stats.contracts,
-      icon: <FileText className="h-8 w-8 text-blue-600" />,
-      description: t('allContracts')
-    },
-    {
-      title: t('activeContracts'),
-      value: stats.activeContracts,
-      icon: <TrendingUp className="h-8 w-8 text-green-600" />,
-      description: t('currentlyActive')
-    },
-    {
-      title: t('totalParties'),
-      value: stats.parties,
-      icon: <Users className="h-8 w-8 text-purple-600" />,
-      description: t('registeredParties')
-    },
-    {
-      title: t('promoters'),
-      value: stats.promoters,
-      icon: <Users className="h-8 w-8 text-orange-600" />,
-      description: t('activePromoters')
-    }
-  ]
+  const quickActions = getQuickActions(t, locale)
+  const statsCards = getStatsCards(t, stats)
 
   if (loading) {
     // Skeleton loader for stats
@@ -185,6 +201,18 @@ export function HomePageContent({ locale }: HomePageContentProps) {
               <div className="h-3 w-1/3 bg-gray-200 rounded" aria-hidden="true"></div>
             </div>
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (statsError) {
+    return (
+      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+        <AuthStatus />
+        <div className="mt-8 p-6 bg-red-100 border border-red-300 rounded-lg text-red-800 text-center max-w-lg">
+          <h2 className="text-2xl font-bold mb-2">Error</h2>
+          <p className="mb-4">{statsError}</p>
         </div>
       </div>
     )

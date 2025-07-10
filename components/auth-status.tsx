@@ -61,6 +61,12 @@ export default function AuthStatus() {
     return <div className="h-10 w-24 animate-pulse rounded-md bg-muted/50" />
   }
 
+  // Email verification enforcement
+  if (user && userDetails && !userDetails.email_confirmed_at) {
+    const VerifyEmailNotice = require('./verify-email-notice').default
+    return <VerifyEmailNotice email={user.email} />
+  }
+
   return (
     <div className="flex flex-col gap-2 border-b p-4">
       {user ? (
@@ -68,7 +74,7 @@ export default function AuthStatus() {
           <div className="flex items-center gap-2">
             <UserCircle className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">{user.email}</span>
-            {userDetails?.email_confirmed_at && <BadgeCheck className="h-4 w-4 text-green-500" title="Email Verified" />}
+            {userDetails?.email_confirmed_at && <BadgeCheck className="h-4 w-4 text-green-500" aria-label="Email Verified" />}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4" />

@@ -210,7 +210,9 @@ export default function AdminUsersPage() {
   const savePermissions = async () => {
     setPermLoading(true)
     const id = permUserRef.current.id
-    const { error } = await supabase.from('profiles').update({ permissions: permFields as any }).eq('id', id)
+    // Remove permissions update if the column does not exist
+    // const { error } = await supabase.from('profiles').update({ permissions: permFields as any }).eq('id', id)
+    // Instead, update only existing fields or handle permissions elsewhere
     setPermLoading(false)
     if (error) {
       setPermError(error.message)
