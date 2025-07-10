@@ -34,6 +34,7 @@ import {
   File
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 interface DashboardContentProps {
   locale?: string
@@ -52,8 +53,26 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
   const [stats, setStats] = useState<ContractStats>(initialStats)
   const [loadingStats, setLoadingStats] = useState(true)
   const { toast } = useToast()
-  // Removed useTranslations for now to fix context issue
-  // const t = useTranslations("DashboardContent")
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifLoading, setNotifLoading] = useState(true)
+  const [notifSettings, setNotifSettings] = useState({
+    email_notifications: true,
+    push_notifications: true,
+    slack_notifications: false,
+    notification_types: {
+      contract_updates: true,
+      payment_reminders: true,
+      deadline_alerts: true,
+      workflow_updates: true,
+      system_updates: false
+    },
+    quiet_hours: {
+      enabled: false,
+      start_time: "22:00",
+      end_time: "08:00"
+    }
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -127,6 +146,38 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
       isMounted = false
     }
   }, [toast])
+
+  useEffect(() => {
+    if (!user) return
+    setNotifLoading(true)
+    fetch(`/api/notifications?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(res => setNotifications(res.notifications || []))
+      .finally(() => setNotifLoading(false))
+  }, [user])
+
+  const handleMarkAsRead = async (id: string) => {
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    setNotifications(notifications => notifications.map(n => n.id === id ? { ...n, is_read: true } : n))
+  }
+  const handleMarkAllAsRead = async () => {
+    // Optionally implement bulk mark as read
+    for (const n of notifications.filter(n => !n.is_read)) {
+      await handleMarkAsRead(n.id)
+    }
+  }
+  const handleDeleteNotification = async (id: string) => {
+    // Optionally implement delete in API
+    setNotifications(notifications => notifications.filter(n => n.id !== id))
+  }
+  const handleUpdateSettings = (settings: any) => {
+    setNotifSettings((prev: any) => ({ ...prev, ...settings }))
+    // Optionally persist settings to DB
+  }
 
   const summaryData: SummaryWidgetData[] = [
     {
@@ -298,30 +349,27 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
-            <NotificationCenter
-              notifications={[]}
-              settings={{
-                email_notifications: true,
-                push_notifications: true,
-                slack_notifications: false,
-                notification_types: {
-                  contract_updates: true,
-                  payment_reminders: true,
-                  deadline_alerts: true,
-                  workflow_updates: true,
-                  system_updates: false
-                },
-                quiet_hours: {
-                  enabled: false,
-                  start_time: "22:00",
-                  end_time: "08:00"
-                }
-              }}
-              onMarkAsRead={(notificationId) => console.log("Marking as read:", notificationId)}
-              onMarkAllAsRead={() => console.log("Marking all as read")}
-              onDeleteNotification={(notificationId) => console.log("Deleting notification:", notificationId)}
-              onUpdateSettings={(settings) => console.log("Updating settings:", settings)}
-            />
+            {notifLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading notifications...</div>
+            ) : (
+              <NotificationCenter
+                notifications={notifications.map(n => ({
+                  id: n.id,
+                  type: n.type || 'system_update',
+                  title: n.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Notification',
+                  message: n.message,
+                  priority: n.priority || 'medium',
+                  read: n.is_read,
+                  created_at: n.created_at,
+                  user_id: n.user_id,
+                }))}
+                settings={notifSettings}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDeleteNotification={handleDeleteNotification}
+                onUpdateSettings={handleUpdateSettings}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="integrations" className="space-y-6">
