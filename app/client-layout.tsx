@@ -20,12 +20,11 @@ const fontLexend = Lexend({
 
 export default function ClientLayout({
   children,
-  params,
+  locale,
 }: {
   children: React.ReactNode
-  params: { locale: string }
+  locale: string
 }) {
-  const { locale } = params
   const dir = locale === "ar" ? "rtl" : "ltr"
 
   return (
