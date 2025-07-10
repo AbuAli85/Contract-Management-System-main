@@ -42,19 +42,43 @@ export function HomePageContent({ locale }: HomePageContentProps) {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [isPremium, setIsPremium] = useState<boolean>(false)
 
   useEffect(() => {
     let isMounted = true
 
     async function fetchUserAndStats() {
-      // Fetch user session and role
+      // Fetch user session
       const { data: { session } } = await supabase.auth.getSession()
       const currentUser = session?.user
       setUser(currentUser)
-      setUserRole(currentUser?.role || null)
 
-      // Fetch stats only if user is premium
-      if (currentUser?.role === 'premium') {
+      if (!currentUser) {
+        setUserRole(null)
+        setIsPremium(false)
+        setLoading(false)
+        return
+      }
+
+      // Fetch user profile from 'profiles' table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role, is_premium')
+        .eq('id', currentUser.id)
+        .single()
+
+      if (error || !profile) {
+        setUserRole(null)
+        setIsPremium(false)
+        setLoading(false)
+        return
+      }
+
+      setUserRole(profile.role)
+      setIsPremium(!!profile.is_premium)
+
+      // Fetch stats if user is admin or premium
+      if (profile.role === 'admin' || profile.is_premium) {
         try {
           const { count: contractsCount } = await supabase
             .from('contracts')
@@ -166,7 +190,7 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     )
   }
 
-  if (!user || (userRole !== 'premium' && userRole !== 'admin')) {
+  if (!user || (userRole !== 'admin' && !isPremium)) {
     return (
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
         <AuthStatus />
