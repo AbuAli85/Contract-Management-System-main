@@ -9,7 +9,7 @@ import NotificationSystem from "@/components/dashboard/notification-system"
 import AdminTools from "@/components/dashboard/admin-tools"
 import { EnhancedAnalytics } from "@/components/dashboard/enhanced-analytics"
 import { SmartTemplateManager } from "@/components/dashboard/smart-template-manager"
-import { WorkflowManager } from "@/components/dashboard/workflow-manager"
+import { Director } from "@/components/dashboard/director"
 import { NotificationCenter } from "@/components/dashboard/notification-center"
 import { IntegrationManager } from "@/components/dashboard/integration-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -27,11 +27,11 @@ import {
   Users, 
   Building, 
   BarChart3,
-  Workflow,
   Bell,
   Settings,
   Zap,
-  File
+  File,
+  Workflow as WorkflowIcon
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
@@ -262,7 +262,7 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
               <span>Templates</span>
             </TabsTrigger>
             <TabsTrigger value="workflows" className="flex items-center space-x-2">
-              <Workflow className="h-4 w-4" />
+              <WorkflowIcon className="h-4 w-4" />
               <span>Workflows</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center space-x-2">
@@ -336,16 +336,7 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
           </TabsContent>
 
           <TabsContent value="workflows" className="space-y-6">
-            <WorkflowManager
-              workflows={[]}
-              onApproveStep={(workflowId, stepId, notes) => console.log("Approving step:", workflowId, stepId, notes)}
-              onRejectStep={(workflowId, stepId, notes) => console.log("Rejecting step:", workflowId, stepId, notes)}
-              onSkipStep={(workflowId, stepId, notes) => console.log("Skipping step:", workflowId, stepId, notes)}
-              onAddComment={(workflowId, message) => console.log("Adding comment:", workflowId, message)}
-              onPauseWorkflow={(workflowId) => console.log("Pausing workflow:", workflowId)}
-              onResumeWorkflow={(workflowId) => console.log("Resuming workflow:", workflowId)}
-              onCancelWorkflow={(workflowId) => console.log("Cancelling workflow:", workflowId)}
-            />
+            <Director />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
@@ -356,7 +347,7 @@ export default function DashboardContent({ locale }: DashboardContentProps) {
                 notifications={notifications.map(n => ({
                   id: n.id,
                   type: n.type || 'system_update',
-                  title: n.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Notification',
+                  title: n.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Notification',
                   message: n.message,
                   priority: n.priority || 'medium',
                   read: n.is_read,
