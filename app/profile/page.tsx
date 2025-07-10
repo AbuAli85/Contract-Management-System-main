@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
+import RequireAuth from "@/components/require-auth"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
@@ -41,24 +42,26 @@ export default function ProfilePage() {
   if (!user) return <div>Please log in to view your profile.</div>
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-12">
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>View and update your profile information.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={handleUpdate}>
-          <div>
-            <label htmlFor="email">Email</label>
-            <Input id="email" value={user.email} disabled />
-          </div>
-          <div>
-            <label htmlFor="fullName">Full Name</label>
-            <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} />
-          </div>
-          <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-        </form>
-      </CardContent>
-    </Card>
+    <RequireAuth>
+      <Card className="w-full max-w-md mx-auto mt-12">
+        <CardHeader>
+          <CardTitle>Profile</CardTitle>
+          <CardDescription>View and update your profile information.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleUpdate}>
+            <div>
+              <label htmlFor="email">Email</label>
+              <Input id="email" value={user.email} disabled />
+            </div>
+            <div>
+              <label htmlFor="fullName">Full Name</label>
+              <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} />
+            </div>
+            <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+          </form>
+        </CardContent>
+      </Card>
+    </RequireAuth>
   )
 }
