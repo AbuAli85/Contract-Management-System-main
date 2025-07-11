@@ -8,7 +8,7 @@ import { getTemplateById } from "@/lib/contract-templates"
 export type ContractInsert = {
   first_party_id: string
   second_party_id: string
-  promoter_id: string
+  promoter_id?: string | null
   contract_start_date: string
   contract_end_date: string
   contract_value?: number | null
@@ -28,7 +28,7 @@ async function generateContractNumber(): Promise<string> {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, "0")
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get the count of contracts this month
   const startOfMonth = new Date(year, date.getMonth(), 1).toISOString()
@@ -49,87 +49,119 @@ async function generateContractNumber(): Promise<string> {
  * Create a new contract
  */
 export async function createContract(data: ContractInsert) {
-  const supabase = createClient()
+  try {
+    const supabase = await createClient()
 
-  // Get current user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error("Authentication required")
-  }
+    // Verify auth is available
+    if (!supabase.auth) {
+      throw new Error("Supabase auth is not available")
+    }
 
-  // Generate contract number
-  const contractNumber = await generateContractNumber()
+    // Get current user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-  // Prepare contract data
-  const contractData = {
-    ...data,
-    contract_number: contractNumber,
-    status: "draft",
-    created_by: user.id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
+    if (userError) {
+      console.error("Auth error:", userError)
+      throw new Error(`Authentication error: ${userError.message}`)
+    }
 
-  // Insert contract
-  const { data: contract, error } = await supabase
-    .from("contracts")
-    .insert(contractData)
-    .select()
-    .single()
+    if (!user) {
+      throw new Error("Authentication required - no user found")
+    }
 
-  if (error) {
-    console.error("Contract creation error:", error)
-    throw new Error("Failed to create contract")
-  }
+    // Generate contract number
+    const contractNumber = await generateContractNumber()
 
-  // If template is specified, trigger document generation
-  if (data.template_id) {
-    const template = getTemplateById(data.template_id)
+    // Prepare contract data - ensure empty strings are converted to null
+    const contractData = {
+      ...data,
+      promoter_id: data.promoter_id || null, // Convert empty string to null
+      contract_number: contractNumber,
+      status: "draft",
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
 
-    if (template?.makeScenarioId) {
-      // Fetch related data for document generation
-      const [firstParty, secondParty, promoter] = await Promise.all([
-        supabase.from("parties").select("*").eq("id", data.first_party_id).single(),
-        supabase.from("parties").select("*").eq("id", data.second_party_id).single(),
-        supabase.from("promoters").select("*").eq("id", data.promoter_id).single(),
-      ])
+    // Insert contract
+    const { data: contract, error } = await supabase
+      .from("contracts")
+      .insert(contractData)
+      .select()
+      .single()
 
-      if (firstParty.data && secondParty.data && promoter.data) {
-        // Trigger Make.com webhook
-        const result = await makeIntegration.generateDocument(
-          contract.id,
-          data.template_id,
-          contract,
-          {
-            first: firstParty.data,
-            second: secondParty.data,
-          },
-          promoter.data
-        )
+    if (error) {
+      console.error("Contract creation error:", error)
+      throw new Error("Failed to create contract")
+    }
 
-        if (!result.success) {
-          console.error("Document generation failed:", result.error)
-          // Don't throw - contract is created, just document generation failed
+    // If template is specified, trigger document generation
+    if (data.template_id) {
+      const template = getTemplateById(data.template_id)
+
+      if (template?.makeScenarioId) {
+        // Fetch related data for document generation
+        const [firstParty, secondParty] = await Promise.all([
+          supabase.from("parties").select("*").eq("id", data.first_party_id).single(),
+          supabase.from("parties").select("*").eq("id", data.second_party_id).single(),
+        ])
+
+        // Only fetch promoter if promoter_id is provided
+        let promoter = null
+        if (data.promoter_id) {
+          const promoterResult = await supabase
+            .from("promoters")
+            .select("*")
+            .eq("id", data.promoter_id)
+            .single()
+          promoter = promoterResult.data
+        }
+
+        if (firstParty.data && secondParty.data) {
+          // Trigger Make.com webhook
+          const result = await makeIntegration.generateDocument(
+            contract.id,
+            data.template_id,
+            contract,
+            {
+              first: firstParty.data,
+              second: secondParty.data,
+            },
+            promoter
+          )
+
+          if (!result.success) {
+            console.error("Document generation failed:", result.error)
+            // Don't throw - contract is created, just document generation failed
+          }
         }
       }
     }
+
+    // Revalidate contracts page
+    revalidatePath("/contracts")
+    revalidatePath("/generate-contract")
+
+    // Ensure we return serializable data
+    return JSON.parse(JSON.stringify(contract))
+  } catch (error) {
+    console.error("Error in createContract:", error)
+    // Return a proper error response instead of throwing
+    if (error instanceof Error) {
+      throw new Error(error.message)
+    }
+    throw new Error("An unexpected error occurred while creating the contract")
   }
-
-  // Revalidate contracts page
-  revalidatePath("/contracts")
-  revalidatePath("/generate-contract")
-
-  return contract
 }
 
 /**
  * Update an existing contract
  */
 export async function updateContract(id: string, data: ContractUpdate) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const {
@@ -176,7 +208,7 @@ export async function updateContract(id: string, data: ContractUpdate) {
  * Delete a contract
  */
 export async function deleteContract(id: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get current user
   const {
@@ -212,7 +244,7 @@ export async function deleteContract(id: string) {
  * Generate document for a contract
  */
 export async function generateContractDocument(contractId: string, templateId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get contract and related data
   const { data: contract, error: contractError } = await supabase

@@ -81,7 +81,7 @@ import {
   Activity,
 } from "lucide-react"
 import { format, parseISO, differenceInDays, isPast, isAfter, isBefore, subDays } from "date-fns"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { LoadingSpinner, ContractCardSkeleton } from "@/components/ui/skeletons"
 import type { Promoter } from "@/lib/types"
 
@@ -154,6 +154,8 @@ export function PromoterManagement() {
     try {
       setLoading(true)
       setError(null)
+
+      const supabase = createClient()
 
       // Fetch promoters
       const { data: promotersData, error: promotersError } = await supabase
@@ -235,6 +237,8 @@ export function PromoterManagement() {
   }
 
   const setupRealtimeSubscription = () => {
+    const supabase = createClient()
+
     const promotersChannel = supabase
       .channel("promoters_realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () => {
