@@ -126,7 +126,7 @@ interface DashboardStats {
 
 type ContractStatus = 'all' | 'draft' | 'pending' | 'generated' | 'active' | 'expired' | 'soon-to-expire'
 
-export default function ContractsTable() {
+export default function ContractsTableClean() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const { toast } = useToast()
   
