@@ -1,17 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from '@supabase/ssr'
 
-const locales = ["en", "ar"]
-const defaultLocale = "en"
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip static assets and API routes completely
+  // Skip static assets, API routes, and auth-related routes
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/assets') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/verify-email') ||
     pathname.includes('.') // Any file with extension
   ) {
     return NextResponse.next()
@@ -71,62 +72,54 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Protect admin routes
-  if (pathname.startsWith('/admin') || pathname.includes('/admin')) {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error || !session?.user) {
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
+  // Define protected routes (routes that require authentication)
+  const protectedRoutes = [
+    '/dashboard',
+    '/contracts',
+    '/generate-contract',
+    '/manage-parties',
+    '/manage-promoters',
+    '/profile',
+    '/admin',
+    '/promoters',
+    '/promoter-analysis'
+  ]
 
-      // Check if user has admin role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profile?.role !== 'admin') {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error)
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
-  // Protect other authenticated routes
-  if (/^\/(dashboard|contracts|manage-)/.test(pathname)) {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error || !session?.user) {
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
-
-      // Optionally, enforce email verification
-      if (!session.user.email_confirmed_at) {
-        return NextResponse.redirect(new URL('/verify-email', request.url))
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error)
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
-  // Handle locale routing
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+  // Check if current path is a protected route
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route) || pathname === route
   )
 
-  if (pathnameHasLocale) {
-    return response
+  if (isProtectedRoute) {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error || !session?.user) {
+        console.log('No valid session, redirecting to login')
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+
+      // For admin routes, check admin role
+      if (pathname.startsWith('/admin')) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile?.role !== 'admin') {
+          return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+      }
+
+      console.log('Valid session found, allowing access to:', pathname)
+    } catch (error) {
+      console.error('Middleware auth error:', error)
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
-  // If no locale, redirect to the default locale
-  request.nextUrl.pathname = `/${defaultLocale}${pathname}`
-  return NextResponse.redirect(request.nextUrl)
+  return response
 }
 
 export const config = {

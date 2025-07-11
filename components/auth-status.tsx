@@ -4,51 +4,35 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import type { User } from "@supabase/supabase-js"
+
+import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { LogInIcon, LogOutIcon, UserCircle } from "lucide-react"
 import { BadgeCheck, ShieldCheck, Calendar, User as UserIcon } from "lucide-react"
 
 export default function AuthStatus() {
-  const [user, setUser] = useState<User | null>(null)
+  const { user, isAuthenticated, loading } = useAuth()
   const [userDetails, setUserDetails] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
-    
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        // Fetch more user details (role, created_at, last_sign_in_at, email_confirmed_at)
-        setUserDetails({
-          role: session.user.role || "user",
-          created_at: session.user.created_at,
-          last_sign_in_at: session.user.last_sign_in_at,
-          email_confirmed_at: session.user.email_confirmed_at
-        })
-      } else {
-        setUserDetails(null)
-      }
-      setLoading(false)
-    }
-    getSession()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      // Fetch more user details (role, created_at, last_sign_in_at, email_confirmed_at)
+      setUserDetails({
+        role: user.role || "user",
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        email_confirmed_at: user.email_confirmed_at
+      })
+    } else {
+      setUserDetails(null)
+    }
+  }, [user])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -61,15 +45,9 @@ export default function AuthStatus() {
     return <div className="h-10 w-24 animate-pulse rounded-md bg-muted/50" />
   }
 
-  // Email verification enforcement
-  if (user && userDetails && !userDetails.email_confirmed_at) {
-    const VerifyEmailNotice = require('./verify-email-notice').default
-    return <VerifyEmailNotice email={user.email} />
-  }
-
   return (
     <div className="flex flex-col gap-2 border-b p-4">
-      {user ? (
+      {isAuthenticated && user ? (
         <>
           <div className="flex items-center gap-2">
             <UserCircle className="h-5 w-5 text-muted-foreground" />
