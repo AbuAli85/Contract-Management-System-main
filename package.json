@@ -18,7 +18,15 @@
     "webhook:test": "node test-webhook.js",
     "health-check": "node health-check.js",
     "dev:full": "pnpm run db:setup && pnpm run dev",
-    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run test:watch\" --names \"DEV,TEST\" --prefix-colors \"green,yellow\""
+    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run test:watch\" --names \"DEV,TEST\" --prefix-colors \"green,yellow\"",
+    "prepare": "husky install",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pre-commit": "lint-staged",
+    "security:check": "npm audit --audit-level=moderate",
+    "db:migrate": "node scripts/run-migrations.js",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",
@@ -114,5 +122,19 @@
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.1.2",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   }
 }
