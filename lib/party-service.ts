@@ -66,45 +66,47 @@ export async function deleteParties(partyIds: string[]): Promise<void> {
 }
 
 /**
- * Update party status - DISABLED: status field not available in current schema
- * TODO: Add status field to parties table or remove this function
+ * Update party status
  */
 export async function updatePartyStatus(
   partyId: string, 
-  status: string
+  status: "Active" | "Inactive" | "Suspended"
 ): Promise<void> {
-  // Commented out until status field is added to database schema
-  // const { error } = await supabase
-  //   .from("parties")
-  //   .update({ status: status as "Active" | "Inactive" | "Suspended" })
-  //   .eq("id", partyId)
+  try {
+    const { error } = await supabase
+      .from("parties")
+      .update({ status })
+      .eq("id", partyId)
 
-  // if (error) {
-  //   throw new Error(`Error updating party status: ${error.message}`)
-  // }
-  
-  console.warn("updatePartyStatus is disabled - status field not available in database schema")
+    if (error) {
+      throw new Error(`Error updating party status: ${error.message}`)
+    }
+  } catch (error) {
+    console.error("Error updating party status:", error)
+    throw error
+  }
 }
 
 /**
- * Bulk update party statuses - DISABLED: status field not available in current schema  
- * TODO: Add status field to parties table or remove this function
+ * Bulk update party statuses
  */
 export async function bulkUpdatePartyStatus(
   partyIds: string[], 
-  status: string
+  status: "Active" | "Inactive" | "Suspended"
 ): Promise<void> {
-  // Commented out until status field is added to database schema
-  // const { error } = await supabase
-  //   .from("parties")
-  //   .update({ status: status as "Active" | "Inactive" | "Suspended" })
-  //   .in("id", partyIds)
+  try {
+    const { error } = await supabase
+      .from("parties")
+      .update({ status })
+      .in("id", partyIds)
 
-  // if (error) {
-  //   throw new Error(`Error bulk updating party status: ${error.message}`)
-  // }
-  
-  console.warn("bulkUpdatePartyStatus is disabled - status field not available in database schema")
+    if (error) {
+      throw new Error(`Error bulk updating party status: ${error.message}`)
+    }
+  } catch (error) {
+    console.error("Error bulk updating party status:", error)
+    throw error
+  }
 }
 
 /**
@@ -297,5 +299,141 @@ export async function validateUniqueCRN(crn: string, excludeId?: string): Promis
   } catch (error) {
     console.warn("Error validating CRN:", error)
     return true
+  }
+}
+
+/**
+ * Get party status analytics
+ */
+export async function getPartyStatusAnalytics() {
+  try {
+    const { data, error } = await supabase
+      .from("parties")
+      .select("status, type, created_at")
+
+    if (error) {
+      throw new Error(`Error fetching party status analytics: ${error.message}`)
+    }
+
+    const analytics = (data || []).reduce((acc, party) => {
+      const status = party.status || 'Unknown'
+      const type = party.type || 'Unknown'
+      
+      // Status counts
+      acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1
+      
+      // Type breakdown by status
+      if (!acc.typeBreakdown[type]) {
+        acc.typeBreakdown[type] = {}
+      }
+      acc.typeBreakdown[type][status] = (acc.typeBreakdown[type][status] || 0) + 1
+      
+      // Monthly trends (last 6 months)
+      if (party.created_at) {
+        const month = new Date(party.created_at).toISOString().slice(0, 7) // YYYY-MM
+        if (!acc.monthlyTrends[month]) {
+          acc.monthlyTrends[month] = {}
+        }
+        acc.monthlyTrends[month][status] = (acc.monthlyTrends[month][status] || 0) + 1
+      }
+      
+      return acc
+    }, {
+      statusCounts: {} as Record<string, number>,
+      typeBreakdown: {} as Record<string, Record<string, number>>,
+      monthlyTrends: {} as Record<string, Record<string, number>>
+    })
+
+    return {
+      total: data?.length || 0,
+      ...analytics
+    }
+  } catch (error) {
+    console.error("Error getting party status analytics:", error)
+    return {
+      total: 0,
+      statusCounts: {},
+      typeBreakdown: {},
+      monthlyTrends: {}
+    }
+  }
+}
+
+/**
+ * Get parties requiring attention (inactive with active contracts, etc.)
+ */
+export async function getPartiesRequiringAttention(): Promise<{
+  inactiveWithContracts: Party[]
+  suspendedWithContracts: Party[]
+  activeWithoutContracts: Party[]
+}> {
+  try {
+    // Get all parties with their contract counts
+    const parties = await fetchPartiesWithContractCount()
+    
+    const inactiveWithContracts = parties.filter(
+      party => party.status === 'Inactive' && (party.contract_count || 0) > 0
+    )
+    
+    const suspendedWithContracts = parties.filter(
+      party => party.status === 'Suspended' && (party.contract_count || 0) > 0
+    )
+    
+    const activeWithoutContracts = parties.filter(
+      party => party.status === 'Active' && (party.contract_count || 0) === 0
+    )
+
+    return {
+      inactiveWithContracts,
+      suspendedWithContracts,
+      activeWithoutContracts
+    }
+  } catch (error) {
+    console.error("Error getting parties requiring attention:", error)
+    return {
+      inactiveWithContracts: [],
+      suspendedWithContracts: [],
+      activeWithoutContracts: []
+    }
+  }
+}
+
+/**
+ * Export party status report
+ */
+export async function exportPartyStatusReport(): Promise<string> {
+  try {
+    const parties = await fetchPartiesWithContractCount()
+    const analytics = await getPartyStatusAnalytics()
+    
+    // Create CSV content
+    const headers = [
+      'ID', 'Name (EN)', 'Name (AR)', 'CRN', 'Type', 'Status', 
+      'Contact Person', 'Email', 'Phone', 'Active Contracts', 'Created At'
+    ]
+    
+    const rows = parties.map(party => [
+      party.id,
+      party.name_en || '',
+      party.name_ar || '',
+      party.crn || '',
+      party.type || '',
+      party.status || '',
+      party.contact_person || '',
+      party.contact_email || '',
+      party.contact_phone || '',
+      party.contract_count || 0,
+      party.created_at || ''
+    ])
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+    
+    return csvContent
+  } catch (error) {
+    console.error("Error exporting party status report:", error)
+    throw error
   }
 }
