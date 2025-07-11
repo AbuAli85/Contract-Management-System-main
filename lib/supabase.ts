@@ -11,15 +11,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+// Create a single instance to avoid multiple auth listeners
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storage: typeof window !== 'undefined' ? {
+      getItem: (key: string) => {
+        try {
+          return window.localStorage.getItem(key)
+        } catch (error) {
+          console.warn('Error reading from localStorage:', error)
+          return null
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          window.localStorage.setItem(key, value)
+        } catch (error) {
+          console.warn('Error writing to localStorage:', error)
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          window.localStorage.removeItem(key)
+        } catch (error) {
+          console.warn('Error removing from localStorage:', error)
+        }
+      }
+    } : undefined,
     storageKey: 'sb-auth-token',
-    debug: process.env.NODE_ENV === 'development'
+    debug: false // Disable debug to reduce console noise
   },
   realtime: {
     params: {
@@ -86,6 +110,21 @@ export const refreshSession = async () => {
   } catch (error) {
     console.error("Error refreshing session:", error)
     return null
+  }
+}
+
+// Utility function to sign out
+export const signOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Error signing out:", error)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("Error signing out:", error)
+    return false
   }
 }
 
