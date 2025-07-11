@@ -10,9 +10,7 @@ import { supabase } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { 
   Form, 
   FormControl, 
@@ -21,44 +19,7 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form"
-import { Loader2, Eye, EyeOff, Mail, Lock, Github } from "lucide-react"
-
-// Enhanced Google icon component
-const GoogleIcon = React.memo((props: React.SVGProps<SVGSVGElement>) => (
-  <svg 
-    {...props} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-    role="img"
-    aria-label="Google logo"
-  >
-    <g clipPath="url(#google-clip)">
-      <path 
-        d="M23.766 12.276c0-.818-.074-1.604-.213-2.356H12.24v4.451h6.484a5.54 5.54 0 0 1-2.4 3.637v3.017h3.877c2.27-2.09 3.565-5.17 3.565-8.749z" 
-        fill="#4285F4"
-      />
-      <path 
-        d="M12.24 24c3.24 0 5.963-1.07 7.95-2.91l-3.877-3.017c-1.08.726-2.462 1.16-4.073 1.16-3.13 0-5.78-2.11-6.73-4.946H1.53v3.09A11.997 11.997 0 0 0 12.24 24z" 
-        fill="#34A853"
-      />
-      <path 
-        d="M5.51 14.287a7.19 7.19 0 0 1 0-4.574V6.623H1.53a12.004 12.004 0 0 0 0 10.754l3.98-3.09z" 
-        fill="#FBBC05"
-      />
-      <path 
-        d="M12.24 4.77c1.77 0 3.35.61 4.6 1.81l3.43-3.43C18.2 1.07 15.48 0 12.24 0A11.997 11.997 0 0 0 1.53 6.623l3.98 3.09c.95-2.836 3.6-4.946 6.73-4.946z" 
-        fill="#EA4335"
-      />
-    </g>
-    <defs>
-      <clipPath id="google-clip">
-        <rect width="24" height="24" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
-))
-GoogleIcon.displayName = "GoogleIcon"
+import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react"
 
 // Enhanced validation schema with better error messages
 const authFormSchema = z.object({
@@ -86,32 +47,6 @@ interface AuthFormProps {
 
 type AuthFormValues = z.infer<typeof authFormSchema>
 type AuthMode = "signin" | "signup"
-type SocialProvider = "google" | "github"
-
-// Social login button component
-const SocialLoginButton = React.memo(({ 
-  provider, 
-  onClick, 
-  disabled, 
-  children 
-}: {
-  provider: SocialProvider
-  onClick: () => void
-  disabled: boolean
-  children: React.ReactNode
-}) => (
-  <Button
-    type="button"
-    variant="outline"
-    onClick={onClick}
-    disabled={disabled}
-    className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-    aria-label={`Sign in with ${provider}`}
-  >
-    {children}
-  </Button>
-))
-SocialLoginButton.displayName = "SocialLoginButton"
 
 // Password input component
 const PasswordInput = React.memo(({ 
@@ -267,32 +202,6 @@ export default function AuthForm({
     })
   }, [isSignUp, redirectTo, toast, navigateToApp])
 
-  const handleSocialLogin = useCallback(async (provider: SocialProvider) => {
-    startTransition(async () => {
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider,
-          options: {
-            redirectTo: `${window.location.origin}${redirectTo}`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            }
-          }
-        })
-
-        if (error) throw error
-      } catch (error: any) {
-        console.error("Social login error:", error)
-        toast({
-          title: "Social Login Failed",
-          description: error.message || "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        })
-      }
-    })
-  }, [redirectTo, toast])
-
   return (
     <Card className={`w-full max-w-md mx-auto shadow-xl border-0 bg-card/50 backdrop-blur-sm ${className || ""}`}>
       <CardHeader className="space-y-2 text-center pb-6">
@@ -308,37 +217,6 @@ export default function AuthForm({
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Social Login Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <SocialLoginButton
-            provider="google"
-            onClick={() => handleSocialLogin("google")}
-            disabled={isPending}
-          >
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            Google
-          </SocialLoginButton>
-          <SocialLoginButton
-            provider="github"
-            onClick={() => handleSocialLogin("github")}
-            disabled={isPending}
-          >
-            <Github className="mr-2 h-4 w-4" />
-            GitHub
-          </SocialLoginButton>
-        </div>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-3 text-muted-foreground font-medium">
-              Or continue with email
-            </span>
-          </div>
-        </div>
-
         {/* Email/Password Form */}
         <Form {...form}>
           <form 
