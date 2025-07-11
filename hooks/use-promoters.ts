@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useCallback, useMemo } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
 import type { Promoter } from "@/types/custom"
@@ -10,8 +10,8 @@ import type { Promoter } from "@/types/custom"
 export type PromoterWithStats = Promoter & {
   active_contracts_count?: number
   total_contracts_count?: number
-  document_status?: 'valid' | 'expiring' | 'expired'
-  overall_status?: 'active' | 'warning' | 'critical' | 'inactive'
+  document_status?: "valid" | "expiring" | "expired"
+  overall_status?: "active" | "warning" | "critical" | "inactive"
 }
 
 interface PromotersOptions {
@@ -27,7 +27,7 @@ export const usePromoters = (options: PromotersOptions = {}) => {
   const {
     enableRealtime = true,
     staleTime = 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus = false
+    refetchOnWindowFocus = false,
   } = options
 
   const queryClient = useQueryClient()
@@ -40,6 +40,8 @@ export const usePromoters = (options: PromotersOptions = {}) => {
     if (!isAuthenticated) {
       throw new Error("Authentication required")
     }
+
+    const supabase = createClient()
 
     try {
       // Fetch promoters
@@ -57,49 +59,57 @@ export const usePromoters = (options: PromotersOptions = {}) => {
       }
 
       // Fetch contract counts for each promoter
-      const promoterIds = promotersData.map(p => p.id).filter(Boolean)
-      
+      const promoterIds = promotersData.map((p) => p.id).filter(Boolean)
+
       const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")
         .select("promoter_id, contract_end_date, status")
         .in("promoter_id", promoterIds)
 
       if (contractsError) {
-        console.warn('Error fetching contract data:', contractsError)
+        console.warn("Error fetching contract data:", contractsError)
       }
 
       // Enhance promoters with stats
-      const enhancedPromoters = promotersData.map(promoter => {
-        const promoterContracts = contractsData?.filter(c => c.promoter_id === promoter.id) || []
-        const activeContracts = promoterContracts.filter(c => 
-          c.contract_end_date && 
-          new Date(c.contract_end_date) > new Date() &&
-          c.status === 'active'
+      const enhancedPromoters = promotersData.map((promoter) => {
+        const promoterContracts = contractsData?.filter((c) => c.promoter_id === promoter.id) || []
+        const activeContracts = promoterContracts.filter(
+          (c) =>
+            c.contract_end_date &&
+            new Date(c.contract_end_date) > new Date() &&
+            c.status === "active"
         )
 
         // Determine document status
         const now = new Date()
-        const idCardExpiry = promoter.id_card_expiry_date ? new Date(promoter.id_card_expiry_date) : null
-        const passportExpiry = promoter.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null
-        
-        let documentStatus: 'valid' | 'expiring' | 'expired' = 'valid'
+        const idCardExpiry = promoter.id_card_expiry_date
+          ? new Date(promoter.id_card_expiry_date)
+          : null
+        const passportExpiry = promoter.passport_expiry_date
+          ? new Date(promoter.passport_expiry_date)
+          : null
+
+        let documentStatus: "valid" | "expiring" | "expired" = "valid"
         if ((idCardExpiry && idCardExpiry < now) || (passportExpiry && passportExpiry < now)) {
-          documentStatus = 'expired'
+          documentStatus = "expired"
         } else {
           const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-          if ((idCardExpiry && idCardExpiry < thirtyDaysFromNow) || (passportExpiry && passportExpiry < thirtyDaysFromNow)) {
-            documentStatus = 'expiring'
+          if (
+            (idCardExpiry && idCardExpiry < thirtyDaysFromNow) ||
+            (passportExpiry && passportExpiry < thirtyDaysFromNow)
+          ) {
+            documentStatus = "expiring"
           }
         }
 
         // Determine overall status
-        let overallStatus: 'active' | 'warning' | 'critical' | 'inactive' = 'inactive'
-        if (documentStatus === 'expired') {
-          overallStatus = 'critical'
-        } else if (documentStatus === 'expiring') {
-          overallStatus = 'warning'
+        let overallStatus: "active" | "warning" | "critical" | "inactive" = "inactive"
+        if (documentStatus === "expired") {
+          overallStatus = "critical"
+        } else if (documentStatus === "expiring") {
+          overallStatus = "warning"
         } else if (activeContracts.length > 0) {
-          overallStatus = 'active'
+          overallStatus = "active"
         }
 
         return {
@@ -107,13 +117,13 @@ export const usePromoters = (options: PromotersOptions = {}) => {
           active_contracts_count: activeContracts.length,
           total_contracts_count: promoterContracts.length,
           document_status: documentStatus,
-          overall_status: overallStatus
+          overall_status: overallStatus,
         }
       })
 
       return enhancedPromoters
     } catch (error) {
-      console.error('Error fetching promoters:', error)
+      console.error("Error fetching promoters:", error)
       throw error
     }
   }, [isAuthenticated])
@@ -130,9 +140,9 @@ export const usePromoters = (options: PromotersOptions = {}) => {
       toast({
         title: "Error Loading Promoters",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
   // Enhanced realtime subscription
@@ -141,6 +151,7 @@ export const usePromoters = (options: PromotersOptions = {}) => {
       return
     }
 
+    const supabase = createClient()
     let retryCount = 0
     const maxRetries = 3
     let channel: any = null
@@ -149,12 +160,13 @@ export const usePromoters = (options: PromotersOptions = {}) => {
       try {
         channel = supabase
           .channel("promoters_realtime")
-          .on("postgres_changes", 
-            { event: "*", schema: "public", table: "promoters" }, 
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "promoters" },
             (payload) => {
               queryClient.invalidateQueries({ queryKey })
-              
-              if (payload.eventType === 'INSERT') {
+
+              if (payload.eventType === "INSERT") {
                 toast({
                   title: "New Promoter",
                   description: "A new promoter has been added",
@@ -180,7 +192,7 @@ export const usePromoters = (options: PromotersOptions = {}) => {
 
         return channel
       } catch (error) {
-        console.error('Error setting up promoters subscription:', error)
+        console.error("Error setting up promoters subscription:", error)
         return null
       }
     }
@@ -206,8 +218,9 @@ export const useCreatePromoterMutation = () => {
 
   return useMutation({
     mutationFn: async (promoterData: Partial<Promoter>) => {
+      const supabase = createClient()
       const { data, error } = await supabase
-        .from('promoters')
+        .from("promoters")
         .insert(promoterData)
         .select()
         .single()
@@ -229,9 +242,9 @@ export const useCreatePromoterMutation = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 }
 
@@ -243,11 +256,12 @@ export const useUpdatePromoterMutation = () => {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: Partial<Promoter> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Promoter> }) => {
+      const supabase = createClient()
       const { data, error } = await supabase
-        .from('promoters')
+        .from("promoters")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single()
 
@@ -268,9 +282,9 @@ export const useUpdatePromoterMutation = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 }
 
@@ -283,10 +297,8 @@ export const useDeletePromoterMutation = () => {
 
   return useMutation({
     mutationFn: async (promoterId: string) => {
-      const { error } = await supabase
-        .from('promoters')
-        .delete()
-        .eq('id', promoterId)
+      const supabase = createClient()
+      const { error } = await supabase.from("promoters").delete().eq("id", promoterId)
 
       if (error) {
         throw new Error(`Failed to delete promoter: ${error.message}`)
@@ -303,9 +315,9 @@ export const useDeletePromoterMutation = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 }
 
@@ -317,11 +329,9 @@ export const useBulkPromoterOperations = () => {
   const { toast } = useToast()
 
   const bulkUpdateStatus = useMutation({
-    mutationFn: async ({ ids, status }: { ids: string[], status: string }) => {
-      const { error } = await supabase
-        .from('promoters')
-        .update({ status })
-        .in('id', ids)
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
+      const supabase = createClient()
+      const { error } = await supabase.from("promoters").update({ status }).in("id", ids)
 
       if (error) {
         throw new Error(`Failed to update promoters: ${error.message}`)
@@ -338,17 +348,15 @@ export const useBulkPromoterOperations = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
   const bulkDelete = useMutation({
     mutationFn: async (ids: string[]) => {
-      const { error } = await supabase
-        .from('promoters')
-        .delete()
-        .in('id', ids)
+      const supabase = createClient()
+      const { error } = await supabase.from("promoters").delete().in("id", ids)
 
       if (error) {
         throw new Error(`Failed to delete promoters: ${error.message}`)
@@ -365,13 +373,13 @@ export const useBulkPromoterOperations = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
-    }
+    },
   })
 
   return {
     bulkUpdateStatus,
-    bulkDelete
+    bulkDelete,
   }
 }

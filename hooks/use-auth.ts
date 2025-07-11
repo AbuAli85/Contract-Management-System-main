@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
 
 interface AuthState {
@@ -16,7 +16,7 @@ let globalAuthState: AuthState = {
   session: null,
   isAuthenticated: false,
   loading: true,
-  initialized: false
+  initialized: false,
 }
 
 let globalListeners: Set<(state: AuthState) => void> = new Set()
@@ -28,10 +28,15 @@ const initializeAuth = async () => {
   if (isInitialized) return
   isInitialized = true
 
+  const supabase = createClient()
+
   try {
     // Get initial session
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
+
     if (error) {
       console.error("Error getting initial session:", error)
       updateGlobalState(null)
@@ -40,8 +45,11 @@ const initializeAuth = async () => {
 
     if (session) {
       // Verify session is valid
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
       if (userError || !user) {
         console.error("Initial session invalid:", userError)
         updateGlobalState(null)
@@ -54,47 +62,50 @@ const initializeAuth = async () => {
 
     // Set up auth state listener (only once)
     if (!authSubscription) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("Auth state change:", event, !!session)
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("Auth state change:", event, !!session)
 
-          switch (event) {
-            case 'SIGNED_IN':
-            case 'TOKEN_REFRESHED':
-              if (session) {
-                try {
-                  const { data: { user }, error } = await supabase.auth.getUser()
-                  if (error || !user) {
-                    console.error("Session verification failed:", error)
-                    updateGlobalState(null)
-                  } else {
-                    updateGlobalState({ ...session, user })
-                  }
-                } catch (error) {
-                  console.error("Error verifying session:", error)
+        switch (event) {
+          case "SIGNED_IN":
+          case "TOKEN_REFRESHED":
+            if (session) {
+              try {
+                const {
+                  data: { user },
+                  error,
+                } = await supabase.auth.getUser()
+                if (error || !user) {
+                  console.error("Session verification failed:", error)
                   updateGlobalState(null)
+                } else {
+                  updateGlobalState({ ...session, user })
                 }
-              } else {
+              } catch (error) {
+                console.error("Error verifying session:", error)
                 updateGlobalState(null)
               }
-              break
-              
-            case 'SIGNED_OUT':
+            } else {
               updateGlobalState(null)
-              break
-              
-            case 'USER_UPDATED':
-              if (session) {
-                updateGlobalState(session)
-              }
-              break
-              
-            default:
-              // For other events, just update with the session
+            }
+            break
+
+          case "SIGNED_OUT":
+            updateGlobalState(null)
+            break
+
+          case "USER_UPDATED":
+            if (session) {
               updateGlobalState(session)
-          }
+            }
+            break
+
+          default:
+            // For other events, just update with the session
+            updateGlobalState(session)
         }
-      )
+      })
       authSubscription = subscription
     }
   } catch (error) {
@@ -109,11 +120,11 @@ const updateGlobalState = (session: Session | null) => {
     session: session,
     isAuthenticated: !!session?.user,
     loading: false,
-    initialized: true
+    initialized: true,
   }
-  
+
   // Notify all listeners
-  globalListeners.forEach(listener => listener(globalAuthState))
+  globalListeners.forEach((listener) => listener(globalAuthState))
 }
 
 export function useAuth() {
@@ -125,9 +136,9 @@ export function useAuth() {
     const listener = (newState: AuthState) => {
       setAuthState(newState)
     }
-    
+
     globalListeners.add(listener)
-    
+
     // Initialize auth if not already done
     if (!isInitialized) {
       initializeAuth()
@@ -135,7 +146,7 @@ export function useAuth() {
       // If already initialized, use current global state
       setAuthState(globalAuthState)
     }
-    
+
     return () => {
       globalListeners.delete(listener)
     }
@@ -143,11 +154,16 @@ export function useAuth() {
 
   // Always call useCallback - never conditionally
   const refresh = useCallback(async () => {
+    const supabase = createClient()
+
     try {
-      setAuthState(prev => ({ ...prev, loading: true }))
-      
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
+      setAuthState((prev) => ({ ...prev, loading: true }))
+
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
+
       if (error) {
         console.error("Error refreshing session:", error)
         updateGlobalState(null)
@@ -155,8 +171,11 @@ export function useAuth() {
       }
 
       if (session) {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+
         if (userError || !user) {
           console.error("Session invalid during refresh:", userError)
           updateGlobalState(null)
@@ -178,7 +197,7 @@ export function useAuth() {
     isAuthenticated: authState.isAuthenticated,
     loading: authState.loading,
     initialized: authState.initialized,
-    refresh
+    refresh,
   }
 }
 
