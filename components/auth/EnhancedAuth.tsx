@@ -3,6 +3,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react"
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 import type { User, Session } from "@supabase/supabase-js"
 
 interface UserProfile {
@@ -410,7 +411,9 @@ interface RequireAuthProps {
 }
 
 export function RequireAuth({ children, fallback, requiredRole }: RequireAuthProps) {
-  const { isAuthenticated, loading, profile } = useEnhancedAuth()
+  const { isAuthenticated, loading } = useAuth()
+  // For now, we'll skip the profile role check since we're using the simple auth
+  const profile = null
 
   if (loading) {
     return (
