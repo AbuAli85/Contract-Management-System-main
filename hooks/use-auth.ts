@@ -201,6 +201,28 @@ export function useAuth() {
   }
 }
 
+// Improved error handling for fetching user profile
+const fetchUserProfile = async (userId: string) => {
+  const supabase = createClient()
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role,is_premium")
+      .eq("id", userId)
+      .single()
+
+    if (error) {
+      console.error("Profile fetch error:", error)
+      return { role: "user", is_premium: false } // Default values
+    }
+    return data
+  } catch (err) {
+    console.error("Unexpected error fetching profile:", err)
+    return { role: "user", is_premium: false } // Default values
+  }
+}
+
 // Cleanup function for when the app unmounts
 export const cleanupAuth = () => {
   if (authSubscription) {
