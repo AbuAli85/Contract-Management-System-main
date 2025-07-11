@@ -9,6 +9,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/assets') ||
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password') ||
@@ -18,14 +19,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Create a response object to pass to Supabase
+  // Create a response object
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
-  // Create Supabase client for middleware
+  // Create Supabase client with cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -35,11 +36,13 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options) {
+          // Update the request cookies
           request.cookies.set({
             name,
             value,
             ...options,
           })
+          // Update the response cookies
           response = NextResponse.next({
             request: {
               headers: request.headers,
@@ -52,11 +55,13 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options) {
+          // Remove from request cookies
           request.cookies.set({
             name,
             value: '',
             ...options,
           })
+          // Remove from response cookies
           response = NextResponse.next({
             request: {
               headers: request.headers,

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import { supabase } from "@/lib/supabase"
+import { useSupabase } from '@/components/supabase-provider'
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -105,6 +105,7 @@ export default function AuthForm({
   // Hooks
   const router = useRouter()
   const { toast } = useToast()
+  const { supabase } = useSupabase()
 
   // Form setup with react-hook-form and zod
   const form = useForm<AuthFormValues>({
@@ -200,7 +201,7 @@ export default function AuthForm({
         })
       }
     })
-  }, [isSignUp, redirectTo, toast, navigateToApp])
+  }, [isSignUp, redirectTo, toast, navigateToApp, supabase])
 
   return (
     <Card className={`w-full max-w-md mx-auto shadow-xl border-0 bg-card/50 backdrop-blur-sm ${className || ""}`}>
