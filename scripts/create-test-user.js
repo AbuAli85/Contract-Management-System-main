@@ -1,57 +1,103 @@
-// Test user creation script
-const { createClient } = require('@supabase/supabase-js')
-
-const supabaseUrl = 'https://ekdjxzhujettocosgzql.supabase.co'
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZGp4emh1amV0dG9jb3NnenFsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTMxOTEwNiwiZXhwIjoyMDY0ODk1MTA2fQ.dAf5W8m9Q8FGlLY19Lo2x8JYSfq3RuFMAsHaPcH3F7A'
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+const { createClient } = require("@supabase/supabase-js")
+require("dotenv").config({ path: ".env.local" })
 
 async function createTestUser() {
-  try {
-    console.log('Creating test user...')
-    
-    // Create test user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: 'test@example.com',
-      password: 'Test123!',
-      email_confirm: true
-    })
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("❌ Missing required environment variables!")
+    console.log("\nPlease ensure your .env.local file contains:")
+    console.log("NEXT_PUBLIC_SUPABASE_URL=your_supabase_url")
+    console.log("SUPABASE_SERVICE_ROLE_KEY=your_service_role_key")
+    return
+  }
 
-    if (authError) {
-      console.error('Error creating user:', authError)
-      return
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
     }
+  )
 
-    console.log('✅ Test user created successfully!')
-    console.log('📧 Email: test@example.com')
-    console.log('🔑 Password: Test123!')
-    
-    // Create profile
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: authData.user.id,
-          email: 'test@example.com',
-          full_name: 'Test User',
-          role: 'admin'
-        }])
+  const testUsers = [
+    {
+      email: "admin@example.com",
+      password: "Admin123!",
+      role: "admin",
+      full_name: "Admin User",
+    },
+    {
+      email: "user@example.com",
+      password: "User123!",
+      role: "user",
+      full_name: "Test User",
+    },
+  ]
+
+  console.log("🚀 Creating test users...\n")
+
+  for (const testUser of testUsers) {
+    try {
+      // Check if user already exists
+      const { data: existingUsers } = await supabase.auth.admin.listUsers()
+      const userExists = existingUsers?.users?.some((u) => u.email === testUser.email)
+
+      if (userExists) {
+        console.log(`⚠️  User ${testUser.email} already exists`)
+        continue
+      }
+
+      // Create user with admin API (bypasses email confirmation)
+      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
+        email: testUser.email,
+        password: testUser.password,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: testUser.full_name,
+        },
+      })
+
+      if (createError) {
+        console.error(`❌ Failed to create ${testUser.email}:`, createError.message)
+        continue
+      }
+
+      console.log(`✅ Created user: ${testUser.email}`)
+
+      // Create or update profile
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: userData.user.id,
+        email: testUser.email,
+        full_name: testUser.full_name,
+        role: testUser.role,
+        email_verified_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
 
       if (profileError) {
-        console.error('Error creating profile:', profileError)
+        console.error(`⚠️  Failed to create profile for ${testUser.email}:`, profileError.message)
       } else {
-        console.log('✅ User profile created successfully!')
+        console.log(`✅ Created profile with role: ${testUser.role}`)
       }
+    } catch (error) {
+      console.error(`❌ Error creating ${testUser.email}:`, error.message)
     }
-
-  } catch (error) {
-    console.error('Unexpected error:', error)
   }
+
+  console.log("\n📝 Test User Credentials:")
+  console.log("========================")
+  testUsers.forEach((user) => {
+    console.log(`\n${user.role.toUpperCase()}:`)
+    console.log(`Email: ${user.email}`)
+    console.log(`Password: ${user.password}`)
+  })
+
+  console.log("\n✨ You can now sign in with these credentials!")
+  console.log('Note: If sign-in fails, run "npm run debug-auth" to troubleshoot')
 }
 
-createTestUser()
+// Run the script
+createTestUser().catch(console.error)

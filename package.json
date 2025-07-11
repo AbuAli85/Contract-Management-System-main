@@ -26,7 +26,9 @@
     "pre-commit": "lint-staged",
     "security:check": "npm audit --audit-level=moderate",
     "db:migrate": "node scripts/run-migrations.js",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "debug-auth": "node scripts/debug-auth.js",
+    "create-test-user": "node scripts/create-test-user.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",
