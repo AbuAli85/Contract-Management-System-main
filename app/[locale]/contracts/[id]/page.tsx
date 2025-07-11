@@ -299,15 +299,6 @@ export default function ContractDetailPage() {
                       </div>
                     )}
 
-                    {contract?.id_card_number && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">ID Card Number</label>
-                        <p className="mt-1 font-mono text-sm text-gray-700">
-                          {contract.id_card_number}
-                        </p>
-                      </div>
-                    )}
-
                     {(contract?.email || contract?.second_party?.email) && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Email</label>
@@ -455,38 +446,6 @@ export default function ContractDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contract?.google_doc_url && (
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
-                      <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-blue-100 p-2">
-                          <FileTextIcon className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Google Document</h4>
-                          <p className="text-sm text-gray-500">Editable contract document</p>
-                          <p className="mt-1 break-all text-xs text-gray-400">
-                            {contract.google_doc_url}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={contract.google_doc_url} target="_blank">
-                            <EyeIcon className="mr-2 h-4 w-4" />
-                            View
-                          </Link>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(contract.google_doc_url || "")}
-                        >
-                          <CopyIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
                   {contract?.pdf_url && (
                     <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
                       <div className="flex items-start gap-3">
@@ -517,7 +476,7 @@ export default function ContractDetailPage() {
                     </div>
                   )}
 
-                  {!contract?.google_doc_url && !contract?.pdf_url && (
+                  {!contract?.pdf_url && (
                     <div className="py-12 text-center text-gray-500">
                       <FileTextIcon className="mx-auto mb-4 h-16 w-16 text-gray-300" />
                       <h3 className="mb-2 text-lg font-medium text-gray-900">
@@ -538,7 +497,7 @@ export default function ContractDetailPage() {
                   )}
                 </div>
 
-                {(contract?.google_doc_url || contract?.pdf_url) && (
+                {contract?.pdf_url && (
                   <div className="mt-6 border-t border-gray-200 pt-6">
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                       <div className="flex items-start gap-3">

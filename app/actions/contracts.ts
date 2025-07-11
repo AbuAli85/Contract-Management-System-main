@@ -81,7 +81,7 @@ export async function createContract(data: ContractInsert) {
       promoter_id: data.promoter_id || null, // Convert empty string to null
       contract_number: contractNumber,
       status: "draft",
-      created_by: user.id,
+      user_id: user.id, // Use user_id instead of created_by
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -224,8 +224,7 @@ export async function deleteContract(id: string) {
     .from("contracts")
     .update({
       status: "deleted",
-      deleted_at: new Date().toISOString(),
-      deleted_by: user.id,
+      updated_at: new Date().toISOString(),
     })
     .eq("id", id)
 
@@ -285,7 +284,7 @@ export async function generateContractDocument(contractId: string, templateId: s
     .from("contracts")
     .update({
       status: "processing",
-      document_generation_started_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", contractId)
 

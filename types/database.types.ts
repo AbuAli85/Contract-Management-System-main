@@ -34,7 +34,6 @@ export interface Database {
           end_date?: string | null
           duration?: string | null
           metadata?: Json | null
-          created_by?: string | null
         }
         Insert: {
           id?: string
@@ -66,7 +65,6 @@ export interface Database {
           end_date?: string | null
           duration?: string | null
           metadata?: Json | null
-          created_by?: string | null
         }
         Update: {
           id?: string
@@ -98,7 +96,6 @@ export interface Database {
           end_date?: string | null
           duration?: string | null
           metadata?: Json | null
-          created_by?: string | null
         }
         Relationships: [
           {
