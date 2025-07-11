@@ -17,7 +17,6 @@ export function useContractTemplates() {
         const { data, error: fetchError } = await supabase
           .from("contract_templates")
           .select("*")
-          .eq("is_active", true)
           .order("name")
 
         if (fetchError) throw fetchError
@@ -55,7 +54,6 @@ export function useContractTemplates() {
         const { data, error: fetchError } = await supabase
           .from("contract_templates")
           .select("*")
-          .eq("is_active", true)
           .order("name")
 
         if (fetchError) throw fetchError

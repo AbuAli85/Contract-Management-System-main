@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, FileText, Info, Sparkles } from "lucide-react"
 import Link from "next/link"
-import ContractGeneratorFormWithTemplate from "@/components/contract-generator-form-with-template"
+import ContractGeneratorFormSimple from "@/components/contract-generator-form-simple"
 
 export default function GenerateContractV2Page() {
   const router = useRouter()
@@ -65,7 +65,7 @@ export default function GenerateContractV2Page() {
       )}
 
       {/* Main Form */}
-      <ContractGeneratorFormWithTemplate onSuccess={handleSuccess} />
+      <ContractGeneratorFormSimple onSuccess={handleSuccess} />
 
       {/* Help Section */}
       <Card>

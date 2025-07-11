@@ -15,7 +15,6 @@ import {
   MapPin,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   Save,
   Plus,
   FileText,
@@ -32,7 +31,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Form,
   FormControl,
@@ -54,12 +52,65 @@ import {
 } from "./contract-template-selector-simple"
 import { cn } from "@/lib/utils"
 
-// Dynamic form schema based on template
-const createContractFormSchema = (template?: ContractTemplate) => {
-  const baseSchema = {
+// Template configurations
+const templateConfigs: Record<
+  string,
+  {
+    fields: string[]
+    category: string
+  }
+> = {
+  "Standard Employment Contract": {
+    category: "employment",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "contract_value",
+      "job_title",
+      "work_location",
+    ],
+  },
+  "Service Agreement": {
+    category: "service",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "contract_value",
+      "deliverables",
+      "payment_terms",
+    ],
+  },
+  "Partnership Agreement": {
+    category: "partnership",
+    fields: ["first_party_id", "second_party_id", "contract_start_date", "contract_end_date"],
+  },
+  "Freelance Contract": {
+    category: "freelance",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "hourly_rate",
+      "project_scope",
+    ],
+  },
+}
+
+// Base schema
+const baseSchema = z
+  .object({
     template_id: z.string().min(1, "Please select a template"),
     first_party_id: z.string().min(1, "Please select the first party"),
     second_party_id: z.string().min(1, "Please select the second party"),
+    promoter_id: z.string().optional().nullable(),
     contract_start_date: z.date({
       required_error: "Contract start date is required",
       invalid_type_error: "Please enter a valid start date",
@@ -68,99 +119,50 @@ const createContractFormSchema = (template?: ContractTemplate) => {
       required_error: "Contract end date is required",
       invalid_type_error: "Please enter a valid end date",
     }),
-  }
-
-  // Add fields based on template
-  const templateFields: Record<string, any> = {}
-
-  if (template?.fields.includes("promoter_id")) {
-    templateFields.promoter_id = z.string().min(1, "Please select a promoter")
-  } else {
-    templateFields.promoter_id = z.string().optional().nullable()
-  }
-
-  if (template?.fields.includes("contract_value")) {
-    templateFields.contract_value = z.coerce
-      .number({ invalid_type_error: "Contract value must be a number" })
-      .min(0, "Contract value must be positive")
-      .max(999999999, "Contract value is too large")
-  } else {
-    templateFields.contract_value = z.coerce.number().optional().nullable()
-  }
-
-  if (template?.fields.includes("job_title")) {
-    templateFields.job_title = z.string().min(1, "Job title is required").max(100)
-  } else {
-    templateFields.job_title = z.string().max(100).optional().nullable()
-  }
-
-  if (template?.fields.includes("work_location")) {
-    templateFields.work_location = z.string().min(1, "Work location is required").max(200)
-  } else {
-    templateFields.work_location = z.string().max(200).optional().nullable()
-  }
-
-  // Template-specific fields
-  if (template?.fields.includes("deliverables")) {
-    templateFields.deliverables = z.string().min(1, "Deliverables are required")
-  }
-
-  if (template?.fields.includes("payment_terms")) {
-    templateFields.payment_terms = z.string().min(1, "Payment terms are required")
-  }
-
-  if (template?.fields.includes("hourly_rate")) {
-    templateFields.hourly_rate = z.coerce.number().min(0, "Hourly rate must be positive")
-  }
-
-  if (template?.fields.includes("project_scope")) {
-    templateFields.project_scope = z.string().min(1, "Project scope is required")
-  }
-
-  const schema = z
-    .object({
-      ...baseSchema,
-      ...templateFields,
-      metadata: z.record(z.any()).optional(),
-    })
-    .refine(
-      (data) => {
-        if (data.contract_start_date && data.contract_end_date) {
-          return data.contract_end_date > data.contract_start_date
-        }
-        return true
-      },
-      {
-        message: "End date must be after start date",
-        path: ["contract_end_date"],
+    contract_value: z.coerce.number().optional().nullable(),
+    job_title: z.string().optional().nullable(),
+    work_location: z.string().optional().nullable(),
+    deliverables: z.string().optional().nullable(),
+    payment_terms: z.string().optional().nullable(),
+    hourly_rate: z.coerce.number().optional().nullable(),
+    project_scope: z.string().optional().nullable(),
+    metadata: z.record(z.any()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.contract_start_date && data.contract_end_date) {
+        return data.contract_end_date > data.contract_start_date
       }
-    )
-    .refine(
-      (data) => {
-        return data.first_party_id !== data.second_party_id
-      },
-      {
-        message: "First party and second party must be different",
-        path: ["second_party_id"],
-      }
-    )
+      return true
+    },
+    {
+      message: "End date must be after start date",
+      path: ["contract_end_date"],
+    }
+  )
+  .refine(
+    (data) => {
+      return data.first_party_id !== data.second_party_id
+    },
+    {
+      message: "First party and second party must be different",
+      path: ["second_party_id"],
+    }
+  )
 
-  return schema
-}
+type ContractFormValues = z.infer<typeof baseSchema>
 
-type ContractFormValues = z.infer<ReturnType<typeof createContractFormSchema>>
-
-interface ContractGeneratorFormWithTemplateProps {
+interface ContractGeneratorFormSimpleProps {
   contract?: ContractDetail
   onSuccess?: () => void
   className?: string
 }
 
-export function ContractGeneratorFormWithTemplate({
+export function ContractGeneratorFormSimple({
   contract,
   onSuccess,
   className,
-}: ContractGeneratorFormWithTemplateProps) {
+}: ContractGeneratorFormSimpleProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -168,8 +170,8 @@ export function ContractGeneratorFormWithTemplate({
   const [currentStep, setCurrentStep] = useState(1)
 
   // Data fetching
-  const { data: parties, isLoading: partiesLoading, error: partiesError } = useParties()
-  const { data: promoters, isLoading: promotersLoading, error: promotersError } = usePromoters()
+  const { data: parties, isLoading: partiesLoading } = useParties()
+  const { data: promoters, isLoading: promotersLoading } = usePromoters()
 
   const isEditing = useMemo(() => Boolean(contract), [contract])
   const isLoading = useMemo(
@@ -177,15 +179,20 @@ export function ContractGeneratorFormWithTemplate({
     [partiesLoading, promotersLoading]
   )
 
-  // Dynamic form schema based on selected template
-  const formSchema = useMemo(
-    () => createContractFormSchema(selectedTemplate || undefined),
-    [selectedTemplate]
-  )
+  // Get template config
+  const templateConfig = useMemo(() => {
+    if (!selectedTemplate) return null
+    return (
+      templateConfigs[selectedTemplate.name] || {
+        fields: ["first_party_id", "second_party_id", "contract_start_date", "contract_end_date"],
+        category: "general",
+      }
+    )
+  }, [selectedTemplate])
 
-  // Form setup with dynamic schema
+  // Form setup
   const form = useForm<ContractFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(baseSchema),
     defaultValues: {
       template_id: contract?.template_id || "",
       first_party_id: contract?.first_party_id || "",
@@ -209,20 +216,6 @@ export function ContractGeneratorFormWithTemplate({
   useEffect(() => {
     if (selectedTemplate) {
       form.setValue("template_id", selectedTemplate.id)
-
-      // Reset optional fields based on template
-      if (!selectedTemplate.fields.includes("promoter_id")) {
-        form.setValue("promoter_id", "")
-      }
-      if (!selectedTemplate.fields.includes("contract_value")) {
-        form.setValue("contract_value", undefined)
-      }
-      if (!selectedTemplate.fields.includes("job_title")) {
-        form.setValue("job_title", "")
-      }
-      if (!selectedTemplate.fields.includes("work_location")) {
-        form.setValue("work_location", "")
-      }
     }
   }, [selectedTemplate, form])
 
@@ -258,20 +251,16 @@ export function ContractGeneratorFormWithTemplate({
             metadata: {
               ...data.metadata,
               template_name: selectedTemplate?.name,
-              template_category: selectedTemplate?.category,
+              doc_template_id: selectedTemplate?.doc_template_id,
             },
           }
 
           if (isEditing && contract) {
             await updateContract(contract.id, payload)
-            toast.success("Contract updated successfully!", {
-              description: "All changes have been saved.",
-            })
+            toast.success("Contract updated successfully!")
           } else {
             await createContract(payload as ContractInsert)
-            toast.success("Contract created successfully!", {
-              description: "Your contract is being generated.",
-            })
+            toast.success("Contract created successfully!")
           }
 
           if (onSuccess) {
@@ -283,9 +272,7 @@ export function ContractGeneratorFormWithTemplate({
         } catch (e) {
           const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred"
           setError(errorMessage)
-          toast.error(isEditing ? "Failed to update contract" : "Failed to create contract", {
-            description: errorMessage,
-          })
+          toast.error("Failed to save contract", { description: errorMessage })
         }
       })
     },
@@ -365,7 +352,7 @@ export function ContractGeneratorFormWithTemplate({
       <CardContent className="space-y-8">
         {currentStep === 1 ? (
           <div className="space-y-6">
-            <ContractTemplateSelector
+            <ContractTemplateSelectorSimple
               onSelectTemplate={setSelectedTemplate}
               selectedTemplateId={selectedTemplate?.id}
             />
@@ -387,12 +374,12 @@ export function ContractGeneratorFormWithTemplate({
                   <strong>Template:</strong> {selectedTemplate?.name}
                   <br />
                   <span className="text-xs text-muted-foreground">
-                    {selectedTemplate?.description}
+                    Document Template ID: {selectedTemplate?.doc_template_id}
                   </span>
                 </AlertDescription>
               </Alert>
 
-              {/* Parties Section */}
+              {/* Always show parties and dates */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
@@ -405,14 +392,7 @@ export function ContractGeneratorFormWithTemplate({
                     name="first_party_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          First Party <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>
-                          {selectedTemplate?.category === "employment"
-                            ? "The employer organization"
-                            : "The client or service recipient"}
-                        </FormDescription>
+                        <FormLabel>First Party *</FormLabel>
                         <FormControl>
                           <ComboboxField
                             field={field}
@@ -433,14 +413,7 @@ export function ContractGeneratorFormWithTemplate({
                     name="second_party_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Second Party <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>
-                          {selectedTemplate?.category === "employment"
-                            ? "The contracting company"
-                            : "The service provider"}
-                        </FormDescription>
+                        <FormLabel>Second Party *</FormLabel>
                         <FormControl>
                           <ComboboxField
                             field={field}
@@ -460,8 +433,8 @@ export function ContractGeneratorFormWithTemplate({
 
               <Separator />
 
-              {/* Promoter Section - Only show if template requires it */}
-              {selectedTemplate?.fields.includes("promoter_id") && (
+              {/* Promoter - Show for employment/service/freelance */}
+              {templateConfig?.fields.includes("promoter_id") && (
                 <>
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
@@ -474,12 +447,7 @@ export function ContractGeneratorFormWithTemplate({
                       name="promoter_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">
-                            Assigned Promoter <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormDescription>
-                            Select the promoter who will be working under this contract
-                          </FormDescription>
+                          <FormLabel>Assigned Promoter</FormLabel>
                           <FormControl>
                             <ComboboxField
                               field={field}
@@ -499,7 +467,7 @@ export function ContractGeneratorFormWithTemplate({
                 </>
               )}
 
-              {/* Contract Dates Section */}
+              {/* Contract Dates */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-5 w-5 text-primary" />
@@ -512,10 +480,7 @@ export function ContractGeneratorFormWithTemplate({
                     name="contract_start_date"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Start Date <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>When the contract becomes effective</FormDescription>
+                        <FormLabel>Start Date *</FormLabel>
                         <FormControl>
                           <DatePickerWithManualInput
                             date={field.value}
@@ -533,10 +498,7 @@ export function ContractGeneratorFormWithTemplate({
                     name="contract_end_date"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          End Date <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>When the contract expires</FormDescription>
+                        <FormLabel>End Date *</FormLabel>
                         <FormControl>
                           <DatePickerWithManualInput
                             date={field.value}
@@ -553,7 +515,7 @@ export function ContractGeneratorFormWithTemplate({
 
               <Separator />
 
-              {/* Template-specific fields */}
+              {/* Additional Fields Based on Template */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-primary" />
@@ -561,26 +523,20 @@ export function ContractGeneratorFormWithTemplate({
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  {/* Contract Value - Show based on template */}
-                  {selectedTemplate?.fields.includes("contract_value") && (
+                  {/* Contract Value */}
+                  {templateConfig?.fields.includes("contract_value") && (
                     <FormField
                       control={form.control}
                       name="contract_value"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">
-                            Contract Value <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormDescription>Total monetary value</FormDescription>
+                          <FormLabel>Contract Value</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                               <Input
                                 type="number"
                                 placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                disabled={isPending}
                                 className="pl-10"
                                 {...field}
                                 onChange={(e) => {
@@ -597,28 +553,20 @@ export function ContractGeneratorFormWithTemplate({
                     />
                   )}
 
-                  {/* Job Title - Show based on template */}
-                  {selectedTemplate?.fields.includes("job_title") && (
+                  {/* Job Title */}
+                  {templateConfig?.fields.includes("job_title") && (
                     <FormField
                       control={form.control}
                       name="job_title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">
-                            Job Title <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormDescription>Position or role description</FormDescription>
+                          <FormLabel>Job Title</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                placeholder="e.g., Software Developer"
-                                disabled={isPending}
-                                className="pl-10"
-                                {...field}
-                                value={field.value ?? ""}
-                              />
-                            </div>
+                            <Input
+                              placeholder="e.g., Software Developer"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -626,26 +574,20 @@ export function ContractGeneratorFormWithTemplate({
                     />
                   )}
 
-                  {/* Hourly Rate - For freelance contracts */}
-                  {selectedTemplate?.fields.includes("hourly_rate") && (
+                  {/* Hourly Rate */}
+                  {templateConfig?.fields.includes("hourly_rate") && (
                     <FormField
                       control={form.control}
                       name="hourly_rate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium">
-                            Hourly Rate <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormDescription>Rate per hour</FormDescription>
+                          <FormLabel>Hourly Rate</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                               <Input
                                 type="number"
                                 placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                disabled={isPending}
                                 className="pl-10"
                                 {...field}
                                 onChange={(e) => {
@@ -663,28 +605,20 @@ export function ContractGeneratorFormWithTemplate({
                   )}
                 </div>
 
-                {/* Work Location - Show based on template */}
-                {selectedTemplate?.fields.includes("work_location") && (
+                {/* Work Location */}
+                {templateConfig?.fields.includes("work_location") && (
                   <FormField
                     control={form.control}
                     name="work_location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Work Location <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>Primary work location or address</FormDescription>
+                        <FormLabel>Work Location</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="e.g., Riyadh, Saudi Arabia"
-                              disabled={isPending}
-                              className="pl-10"
-                              {...field}
-                              value={field.value ?? ""}
-                            />
-                          </div>
+                          <Input
+                            placeholder="e.g., Riyadh, Saudi Arabia"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -692,21 +626,17 @@ export function ContractGeneratorFormWithTemplate({
                   />
                 )}
 
-                {/* Project Scope - For freelance contracts */}
-                {selectedTemplate?.fields.includes("project_scope") && (
+                {/* Project Scope */}
+                {templateConfig?.fields.includes("project_scope") && (
                   <FormField
                     control={form.control}
                     name="project_scope"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Project Scope <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>Detailed description of the project scope</FormDescription>
+                        <FormLabel>Project Scope</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe the project scope and objectives..."
-                            disabled={isPending}
+                            placeholder="Describe the project scope..."
                             rows={4}
                             {...field}
                             value={field.value ?? ""}
@@ -718,21 +648,17 @@ export function ContractGeneratorFormWithTemplate({
                   />
                 )}
 
-                {/* Deliverables - For service agreements */}
-                {selectedTemplate?.fields.includes("deliverables") && (
+                {/* Deliverables */}
+                {templateConfig?.fields.includes("deliverables") && (
                   <FormField
                     control={form.control}
                     name="deliverables"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Deliverables <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>List of deliverables and milestones</FormDescription>
+                        <FormLabel>Deliverables</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="List the key deliverables..."
-                            disabled={isPending}
                             rows={4}
                             {...field}
                             value={field.value ?? ""}
@@ -744,21 +670,17 @@ export function ContractGeneratorFormWithTemplate({
                   />
                 )}
 
-                {/* Payment Terms - For service agreements */}
-                {selectedTemplate?.fields.includes("payment_terms") && (
+                {/* Payment Terms */}
+                {templateConfig?.fields.includes("payment_terms") && (
                   <FormField
                     control={form.control}
                     name="payment_terms"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          Payment Terms <span className="text-destructive">*</span>
-                        </FormLabel>
-                        <FormDescription>Payment schedule and terms</FormDescription>
+                        <FormLabel>Payment Terms</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe payment terms and schedule..."
-                            disabled={isPending}
+                            placeholder="Describe payment terms..."
                             rows={3}
                             {...field}
                             value={field.value ?? ""}
@@ -790,8 +712,8 @@ export function ContractGeneratorFormWithTemplate({
                   {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isPending
                     ? isEditing
-                      ? "Updating Contract..."
-                      : "Creating Contract..."
+                      ? "Updating..."
+                      : "Creating..."
                     : isEditing
                       ? "Update Contract"
                       : "Create Contract"}
@@ -805,4 +727,4 @@ export function ContractGeneratorFormWithTemplate({
   )
 }
 
-export default ContractGeneratorFormWithTemplate
+export default ContractGeneratorFormSimple

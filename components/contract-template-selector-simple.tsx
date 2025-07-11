@@ -5,90 +5,96 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  FileText,
-  Briefcase,
-  Users,
-  Zap,
-  CheckCircle2,
-  Info,
-  ArrowRight,
-  Settings,
-  FileCheck,
-} from "lucide-react"
+import { FileText, CheckCircle2, Info } from "lucide-react"
 import { useSupabase } from "@/components/supabase-provider"
 import { cn } from "@/lib/utils"
 
-export interface ContractTemplate {
+// Simplified template interface that matches current database structure
+export interface SimpleContractTemplate {
   id: string
   name: string
-  description: string
-  category: string
-  fields: string[]
-  make_scenario_id?: string
-  document_url?: string
-  metadata?: Record<string, any>
-  is_active: boolean
-  icon?: React.ElementType
-  features?: string[]
+  doc_template_id: string
+  created_at?: string
+  is_active?: boolean
 }
 
-interface ContractTemplateSelectorProps {
-  onSelectTemplate: (template: ContractTemplate) => void
+interface ContractTemplateSelectorSimpleProps {
+  onSelectTemplate: (template: SimpleContractTemplate) => void
   selectedTemplateId?: string
   className?: string
 }
 
-// Template icons mapping
-const templateIcons: Record<string, React.ElementType> = {
-  "standard-employment": Briefcase,
-  "service-agreement": FileCheck,
-  "partnership-agreement": Users,
-  "freelance-contract": Zap,
+// Default template configurations (since they're not in the database yet)
+const templateConfigs: Record<
+  string,
+  {
+    description: string
+    category: string
+    fields: string[]
+    icon: string
+  }
+> = {
+  "Standard Employment Contract": {
+    description: "Full-time employment agreement with standard terms",
+    category: "employment",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "contract_value",
+      "job_title",
+      "work_location",
+    ],
+    icon: "💼",
+  },
+  "Service Agreement": {
+    description: "Professional services contract for consultants",
+    category: "service",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "contract_value",
+      "deliverables",
+      "payment_terms",
+    ],
+    icon: "📋",
+  },
+  "Partnership Agreement": {
+    description: "Business partnership with profit sharing",
+    category: "partnership",
+    fields: ["first_party_id", "second_party_id", "contract_start_date", "contract_end_date"],
+    icon: "���",
+  },
+  "Freelance Contract": {
+    description: "Project-based work agreement",
+    category: "freelance",
+    fields: [
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "hourly_rate",
+      "project_scope",
+    ],
+    icon: "⚡",
+  },
 }
 
-// Template features mapping
-const templateFeatures: Record<string, string[]> = {
-  "standard-employment": [
-    "Full-time employment terms",
-    "Salary and benefits",
-    "Probation period",
-    "Notice period",
-    "Work location",
-  ],
-  "service-agreement": [
-    "Service scope definition",
-    "Deliverables tracking",
-    "Payment milestones",
-    "Performance metrics",
-    "Termination clauses",
-  ],
-  "partnership-agreement": [
-    "Profit sharing terms",
-    "Capital contributions",
-    "Decision making process",
-    "Exit strategies",
-    "Dispute resolution",
-  ],
-  "freelance-contract": [
-    "Project-based work",
-    "Hourly/fixed rates",
-    "Revision limits",
-    "IP ownership",
-    "Flexible duration",
-  ],
-}
-
-export function ContractTemplateSelector({
+export function ContractTemplateSelectorSimple({
   onSelectTemplate,
   selectedTemplateId,
   className,
-}: ContractTemplateSelectorProps) {
+}: ContractTemplateSelectorSimpleProps) {
   const { supabase } = useSupabase()
-  const [templates, setTemplates] = useState<ContractTemplate[]>([])
+  const [templates, setTemplates] = useState<SimpleContractTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState(selectedTemplateId || "")
@@ -109,14 +115,7 @@ export function ContractTemplateSelector({
 
       if (fetchError) throw fetchError
 
-      // Enhance templates with icons and features
-      const enhancedTemplates = (data || []).map((template) => ({
-        ...template,
-        icon: templateIcons[template.id] || FileText,
-        features: templateFeatures[template.id] || [],
-      }))
-
-      setTemplates(enhancedTemplates)
+      setTemplates(data || [])
     } catch (err: any) {
       setError(err.message || "Failed to load templates")
     } finally {
@@ -132,13 +131,24 @@ export function ContractTemplateSelector({
     }
   }
 
+  const getTemplateConfig = (templateName: string) => {
+    return (
+      templateConfigs[templateName] || {
+        description: "Contract template",
+        category: "general",
+        fields: ["first_party_id", "second_party_id", "contract_start_date", "contract_end_date"],
+        icon: "📄",
+      }
+    )
+  }
+
   if (loading) {
     return (
       <div className={cn("space-y-4", className)}>
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-4 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-48" />
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
       </div>
@@ -158,7 +168,7 @@ export function ContractTemplateSelector({
       <Alert className={className}>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          No contract templates available. Please contact your administrator.
+          No contract templates available. Please add templates to the database first.
         </AlertDescription>
       </Alert>
     )
@@ -179,7 +189,7 @@ export function ContractTemplateSelector({
         className="grid gap-4 md:grid-cols-2"
       >
         {templates.map((template) => {
-          const Icon = template.icon || FileText
+          const config = getTemplateConfig(template.name)
           const isSelected = selectedId === template.id
 
           return (
@@ -198,23 +208,11 @@ export function ContractTemplateSelector({
                   <CardHeader className="p-0 pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "rounded-lg p-2",
-                            isSelected ? "bg-primary/10" : "bg-muted"
-                          )}
-                        >
-                          <Icon
-                            className={cn(
-                              "h-5 w-5",
-                              isSelected ? "text-primary" : "text-muted-foreground"
-                            )}
-                          />
-                        </div>
+                        <div className="text-2xl">{config.icon}</div>
                         <div>
                           <CardTitle className="text-base">{template.name}</CardTitle>
                           <Badge variant="secondary" className="mt-1 text-xs">
-                            {template.category}
+                            {config.category}
                           </Badge>
                         </div>
                       </div>
@@ -222,28 +220,10 @@ export function ContractTemplateSelector({
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <CardDescription className="mb-3 text-sm">
-                      {template.description}
-                    </CardDescription>
-
-                    {template.features && template.features.length > 0 && (
-                      <div className="space-y-1">
-                        {template.features.slice(0, 3).map((feature, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-2 text-xs text-muted-foreground"
-                          >
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {template.make_scenario_id && (
-                      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                        <Settings className="h-3 w-3" />
-                        <span>Automated document generation</span>
+                    <CardDescription className="text-sm">{config.description}</CardDescription>
+                    {template.doc_template_id && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Template ID: {template.doc_template_id}
                       </div>
                     )}
                   </CardContent>
@@ -260,8 +240,9 @@ export function ContractTemplateSelector({
           <AlertDescription>
             <strong>Selected:</strong> {templates.find((t) => t.id === selectedId)?.name}
             <br />
-            This template will determine which fields are required and how the contract document is
-            generated.
+            <span className="text-xs text-muted-foreground">
+              This template will be used to generate your contract document.
+            </span>
           </AlertDescription>
         </Alert>
       )}
