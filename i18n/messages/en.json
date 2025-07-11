@@ -467,5 +467,12 @@
     "success": {
       "updated": "Profile updated successfully."
     }
+  },
+  "ErrorPage": {
+    "title": "Something went wrong!",
+    "description": "An error occurred while loading this page.",
+    "errorMessage": "Error details",
+    "tryAgain": "Try again",
+    "goHome": "Go to Home"
   }
 }

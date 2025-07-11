@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { partyFormSchema, type PartyFormData } from "@/lib/party-schema"
 import type { Party } from "@/lib/types"
-import { supabase } from "@/lib/supabase"
+import { useSupabase } from "@/components/supabase-provider"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO } from "date-fns"
 
@@ -39,6 +39,7 @@ interface PartyFormProps {
 
 export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps) {
   const { toast } = useToast()
+  const { supabase } = useSupabase()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<PartyFormData>({
