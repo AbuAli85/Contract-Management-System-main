@@ -137,10 +137,16 @@ export default function GenerateContractPage() {
         .order("created_at", { ascending: false })
         .limit(5)
 
-      if (error) throw error
-      setRecentContracts(data || [])
-    } catch (error) {
-      console.error("Error fetching recent contracts:", error)
+      if (error) {
+        console.warn("Error fetching recent contracts:", error.message)
+        // Don't throw, just set empty array
+        setRecentContracts([])
+      } else {
+        setRecentContracts(data || [])
+      }
+    } catch (error: any) {
+      console.warn("Error fetching recent contracts:", error?.message || error)
+      setRecentContracts([])
     } finally {
       setLoadingRecent(false)
     }
@@ -152,9 +158,16 @@ export default function GenerateContractPage() {
         .from("contracts")
         .select("created_at, status, updated_at")
 
-      if (error) throw error
-
-      if (contracts) {
+      if (error) {
+        console.warn("Error fetching contract stats:", error.message)
+        // Set default stats if error
+        setContractStats({
+          total: 0,
+          thisMonth: 0,
+          avgProcessingTime: 0,
+          successRate: 0,
+        })
+      } else if (contracts) {
         const now = new Date()
         const thisMonth = contracts.filter((c) => {
           const created = new Date(c.created_at)
@@ -172,8 +185,14 @@ export default function GenerateContractPage() {
           successRate: contracts.length > 0 ? (completed.length / contracts.length) * 100 : 0,
         })
       }
-    } catch (error) {
-      console.error("Error fetching contract stats:", error)
+    } catch (error: any) {
+      console.warn("Error fetching contract stats:", error?.message || error)
+      setContractStats({
+        total: 0,
+        thisMonth: 0,
+        avgProcessingTime: 0,
+        successRate: 0,
+      })
     }
   }
 
