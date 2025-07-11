@@ -71,12 +71,12 @@ export default function ContractGeneratorForm({
     data: clientParties, // Party A
     isLoading: isLoadingClientParties,
     error: clientPartiesError,
-  } = useParties("Client")
+  } = useParties()
   const {
     data: employerParties, // Party B  
     isLoading: isLoadingEmployerParties,
     error: employerPartiesError,
-  } = useParties("Employer")
+  } = useParties()
   const {
     data: promoters,
     isLoading: isLoadingPromoters,

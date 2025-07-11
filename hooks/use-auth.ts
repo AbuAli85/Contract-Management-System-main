@@ -117,9 +117,10 @@ const updateGlobalState = (session: Session | null) => {
 }
 
 export function useAuth() {
+  // Always call useState - never conditionally
   const [authState, setAuthState] = useState<AuthState>(globalAuthState)
 
-  // Register listener for global state changes
+  // Always call useEffect - never conditionally
   useEffect(() => {
     const listener = (newState: AuthState) => {
       setAuthState(newState)
@@ -140,6 +141,7 @@ export function useAuth() {
     }
   }, [])
 
+  // Always call useCallback - never conditionally
   const refresh = useCallback(async () => {
     try {
       setAuthState(prev => ({ ...prev, loading: true }))
