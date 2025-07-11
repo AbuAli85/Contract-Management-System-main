@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAuthClient, getCurrentUser, logAuthEvent } from '@/lib/auth/utils'
 import { mfaVerifySchema } from '@/lib/auth/types'
 import { requireAuth } from '@/lib/auth/middleware'
-import * as speakeasy from 'speakeasy'
+import { verifyTOTP } from '@/lib/auth/totp'
 
 async function handler(req: NextRequest, user: any) {
   try {
@@ -35,12 +35,7 @@ async function handler(req: NextRequest, user: any) {
     }
     
     // Verify TOTP code
-    const verified = speakeasy.totp.verify({
-      secret: mfaSettings.totp_secret,
-      encoding: 'base32',
-      token: code,
-      window: 2 // Allow 2 time steps for clock skew
-    })
+    const verified = verifyTOTP(code, mfaSettings.totp_secret)
     
     if (!verified) {
       await logAuthEvent('mfa_verify', user.id, {}, false, 'Invalid code', req)

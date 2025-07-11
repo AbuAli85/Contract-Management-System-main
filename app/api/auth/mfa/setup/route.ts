@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuthClient, getCurrentUser, logAuthEvent, generateBackupCodes, hashBackupCode } from '@/lib/auth/utils'
 import { requireAuth } from '@/lib/auth/middleware'
-import * as speakeasy from 'speakeasy'
-import * as qrcode from 'qrcode'
+import { generateSecret, generateOTPAuthURL } from '@/lib/auth/totp'
+import { generateQRCode } from '@/lib/auth/qrcode'
 
 async function handler(req: NextRequest, user: any) {
   try {
@@ -23,14 +23,12 @@ async function handler(req: NextRequest, user: any) {
     }
     
     // Generate TOTP secret
-    const secret = speakeasy.generateSecret({
-      name: `${process.env.NEXT_PUBLIC_APP_NAME} (${user.email})`,
-      issuer: process.env.NEXT_PUBLIC_APP_NAME,
-      length: 32
-    })
+    const secret = generateSecret()
+    const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Contract Management'
+    const otpAuthUrl = generateOTPAuthURL(secret, user.email, appName)
     
     // Generate QR code
-    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!)
+    const qrCodeUrl = await generateQRCode(otpAuthUrl)
     
     // Generate backup codes
     const backupCodes = generateBackupCodes(10)
@@ -41,7 +39,7 @@ async function handler(req: NextRequest, user: any) {
       .from('mfa_settings')
       .upsert({
         user_id: user.id,
-        totp_secret: secret.base32,
+        totp_secret: secret,
         totp_enabled: false,
         backup_codes: hashedBackupCodes
       })
@@ -49,7 +47,7 @@ async function handler(req: NextRequest, user: any) {
     await logAuthEvent('mfa_setup_initiated', user.id, {}, true, undefined, req)
     
     return NextResponse.json({
-      secret: secret.base32,
+      secret: secret,
       qrCode: qrCodeUrl,
       backupCodes
     })
