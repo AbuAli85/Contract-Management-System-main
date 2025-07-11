@@ -81,22 +81,22 @@ export class MakeWebhookIntegration {
       const payload: MakeWebhookPayload = {
         contract_id: contract.id,
         contract_number: contract.contract_number,
-        first_party_name_en: contract.first_party.name_en,
-        first_party_name_ar: contract.first_party.name_ar || "",
-        first_party_crn: contract.first_party.crn || "",
-        second_party_name_en: contract.second_party.name_en,
-        second_party_name_ar: contract.second_party.name_ar || "",
-        second_party_crn: contract.second_party.crn || "",
-        promoter_name_en: contract.promoter.name_en,
-        promoter_name_ar: contract.promoter.name_ar || "",
+        first_party_name_en: contract.first_party?.name_en || "",
+        first_party_name_ar: contract.first_party?.name_ar || "",
+        first_party_crn: contract.first_party?.crn || "",
+        second_party_name_en: contract.second_party?.name_en || "",
+        second_party_name_ar: contract.second_party?.name_ar || "",
+        second_party_crn: contract.second_party?.crn || "",
+        promoter_name_en: contract.promoter?.name_en || "",
+        promoter_name_ar: contract.promoter?.name_ar || "",
         job_title: contract.job_title || "",
         work_location: contract.work_location || "",
-        email: contract.promoter.email || "",
+        email: contract.promoter?.email || "",
         start_date: contract.contract_start_date,
         end_date: contract.contract_end_date,
-        id_card_number: contract.promoter.id_card_number || "",
-        promoter_id_card_url: contract.promoter.id_card_url || "",
-        promoter_passport_url: contract.promoter.passport_url || "",
+        id_card_number: contract.promoter?.id_card_number || "",
+        promoter_id_card_url: contract.promoter?.id_card_url || "",
+        promoter_passport_url: contract.promoter?.passport_url || "",
       }
 
       // Send to Make.com webhook
@@ -169,9 +169,20 @@ export class MakeWebhookIntegration {
     if (!contract.contract_number) missingFields.push("contract_number")
     if (!contract.first_party?.name_en) missingFields.push("first_party_name")
     if (!contract.second_party?.name_en) missingFields.push("second_party_name")
-    if (!contract.promoter?.name_en) missingFields.push("promoter_name")
     if (!contract.contract_start_date) missingFields.push("start_date")
     if (!contract.contract_end_date) missingFields.push("end_date")
+
+    // Check if promoter is required based on template
+    const templateName = contract.metadata?.template_name
+    const promoterRequiredTemplates = [
+      "Standard Employment Contract",
+      "Service Agreement",
+      "Freelance Contract",
+    ]
+
+    if (promoterRequiredTemplates.includes(templateName) && !contract.promoter?.name_en) {
+      missingFields.push("promoter_name")
+    }
 
     return {
       valid: missingFields.length === 0,

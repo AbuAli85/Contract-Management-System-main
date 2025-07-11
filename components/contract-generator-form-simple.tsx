@@ -104,13 +104,12 @@ const templateConfigs: Record<
   },
 }
 
-// Base schema
-const baseSchema = z
-  .object({
+// Create dynamic schema based on template
+const createContractSchema = (templateName: string | null) => {
+  const baseFields = {
     template_id: z.string().min(1, "Please select a template"),
     first_party_id: z.string().min(1, "Please select the first party"),
     second_party_id: z.string().min(1, "Please select the second party"),
-    promoter_id: z.string().optional().nullable(),
     contract_start_date: z.date({
       required_error: "Contract start date is required",
       invalid_type_error: "Please enter a valid start date",
@@ -127,30 +126,74 @@ const baseSchema = z
     hourly_rate: z.coerce.number().optional().nullable(),
     project_scope: z.string().optional().nullable(),
     metadata: z.record(z.any()).optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.contract_start_date && data.contract_end_date) {
-        return data.contract_end_date > data.contract_start_date
-      }
-      return true
-    },
-    {
-      message: "End date must be after start date",
-      path: ["contract_end_date"],
-    }
-  )
-  .refine(
-    (data) => {
-      return data.first_party_id !== data.second_party_id
-    },
-    {
-      message: "First party and second party must be different",
-      path: ["second_party_id"],
-    }
-  )
+  }
 
-type ContractFormValues = z.infer<typeof baseSchema>
+  // Add promoter as required for certain templates
+  const promoterRequiredTemplates = [
+    "Standard Employment Contract",
+    "Service Agreement",
+    "Freelance Contract",
+  ]
+
+  if (templateName && promoterRequiredTemplates.includes(templateName)) {
+    return z
+      .object({
+        ...baseFields,
+        promoter_id: z.string().min(1, "Please select a promoter"),
+      })
+      .refine(
+        (data) => {
+          if (data.contract_start_date && data.contract_end_date) {
+            return data.contract_end_date > data.contract_start_date
+          }
+          return true
+        },
+        {
+          message: "End date must be after start date",
+          path: ["contract_end_date"],
+        }
+      )
+      .refine(
+        (data) => {
+          return data.first_party_id !== data.second_party_id
+        },
+        {
+          message: "First party and second party must be different",
+          path: ["second_party_id"],
+        }
+      )
+  }
+
+  return z
+    .object({
+      ...baseFields,
+      promoter_id: z.string().optional().nullable(),
+    })
+    .refine(
+      (data) => {
+        if (data.contract_start_date && data.contract_end_date) {
+          return data.contract_end_date > data.contract_start_date
+        }
+        return true
+      },
+      {
+        message: "End date must be after start date",
+        path: ["contract_end_date"],
+      }
+    )
+    .refine(
+      (data) => {
+        return data.first_party_id !== data.second_party_id
+      },
+      {
+        message: "First party and second party must be different",
+        path: ["second_party_id"],
+      }
+    )
+}
+
+// Base type for form values
+type ContractFormValues = z.infer<ReturnType<typeof createContractSchema>>
 
 interface ContractGeneratorFormSimpleProps {
   contract?: ContractDetail
@@ -190,9 +233,14 @@ export function ContractGeneratorFormSimple({
     )
   }, [selectedTemplate])
 
+  // Create schema based on selected template
+  const schema = useMemo(() => {
+    return createContractSchema(selectedTemplate?.name || null)
+  }, [selectedTemplate])
+
   // Form setup
   const form = useForm<ContractFormValues>({
-    resolver: zodResolver(baseSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       template_id: contract?.template_id || "",
       first_party_id: contract?.first_party_id || "",
@@ -447,7 +495,14 @@ export function ContractGeneratorFormSimple({
                       name="promoter_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Assigned Promoter</FormLabel>
+                          <FormLabel>
+                            Assigned Promoter
+                            {[
+                              "Standard Employment Contract",
+                              "Service Agreement",
+                              "Freelance Contract",
+                            ].includes(selectedTemplate?.name || "") && " *"}
+                          </FormLabel>
                           <FormControl>
                             <ComboboxField
                               field={field}
