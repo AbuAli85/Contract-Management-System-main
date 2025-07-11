@@ -7,5 +7,5 @@ export default async function LocaleDashboardPage({
 }) {
   const { locale } = await params
 
-  return <DashboardContent locale={locale} />
+  return <DashboardContent />
 }

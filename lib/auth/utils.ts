@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 import { AuthUser, AuthEventType } from "./types"
-import type { Database } from "@/types/supabase"
+import type { Database } from "@/types/database.types"
 import crypto from "crypto"
 
 // Cookie configuration
