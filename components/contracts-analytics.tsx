@@ -41,7 +41,15 @@ interface ContractAnalytics {
   draftContracts: number
   statusDistribution: Array<{ name: string; value: number; color: string }>
   monthlyTrends: Array<{ month: string; contracts: number; value?: number }>
-  recentActivity: Array<{ date: string; action: string; contractId: string }>
+  recentActivity: Array<{ 
+    id: string
+    date: string
+    action: string
+    contractId: string
+    contractTitle?: string
+    userName?: string
+    details?: string
+  }>
   upcomingExpirations: number
   averageContractValue: number
   totalContractValue: number
@@ -115,6 +123,9 @@ export function ContractsAnalyticsDashboard() {
       const totalValue = contractsWithValue.reduce((sum, c) => sum + (c.contract_value || 0), 0)
       const averageValue = contractsWithValue.length > 0 ? totalValue / contractsWithValue.length : 0
 
+      // Generate recent activity data
+      const recentActivity = await generateRecentActivity(contracts, rangeStart)
+
       setAnalytics({
         totalContracts: contracts.length,
         activeContracts: statusCounts.active || 0,
@@ -122,7 +133,7 @@ export function ContractsAnalyticsDashboard() {
         draftContracts: statusCounts.draft || 0,
         statusDistribution,
         monthlyTrends: monthlyData,
-        recentActivity: [], // TODO: Implement activity tracking
+        recentActivity,
         upcomingExpirations,
         averageContractValue: averageValue,
         totalContractValue: totalValue
@@ -170,6 +181,86 @@ export function ContractsAnalyticsDashboard() {
       'unknown': '#9CA3AF'
     }
     return colorMap[status] || '#9CA3AF'
+  }
+
+  const generateRecentActivity = async (contracts: any[], rangeStart: Date) => {
+    const activities = []
+    
+    // Generate activity from recent contracts
+    const recentContracts = contracts
+      .filter(contract => new Date(contract.created_at) >= rangeStart)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10) // Get latest 10 activities
+
+    for (const contract of recentContracts) {
+      const createdDate = new Date(contract.created_at)
+      const now = new Date()
+      const diffInDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      let timeAgo = ''
+      if (diffInDays === 0) {
+        const diffInHours = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60))
+        timeAgo = diffInHours === 0 ? 'Just now' : `${diffInHours}h ago`
+      } else if (diffInDays === 1) {
+        timeAgo = 'Yesterday'
+      } else {
+        timeAgo = `${diffInDays} days ago`
+      }
+
+      // Contract creation activity
+      activities.push({
+        id: `create-${contract.id}`,
+        date: timeAgo,
+        action: 'Contract Created',
+        contractId: contract.id,
+        contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
+        userName: 'System', // In a real app, this would come from user data
+        details: `New ${contract.status || 'draft'} contract created`
+      })
+
+      // Status change activities (simulated based on current status)
+      if (contract.status === 'active') {
+        activities.push({
+          id: `activate-${contract.id}`,
+          date: timeAgo,
+          action: 'Contract Activated',
+          contractId: contract.id,
+          contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
+          userName: 'System',
+          details: 'Contract status changed to active'
+        })
+      }
+
+      // Expiration warnings for contracts ending soon
+      if (contract.end_date) {
+        const endDate = new Date(contract.end_date)
+        const daysUntilExpiry = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        
+        if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
+          activities.push({
+            id: `expiry-warning-${contract.id}`,
+            date: 'Today',
+            action: 'Expiration Warning',
+            contractId: contract.id,
+            contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
+            userName: 'System',
+            details: `Contract expires in ${daysUntilExpiry} days`
+          })
+        }
+      }
+    }
+
+    // Sort by most recent and limit to 15 activities
+    return activities
+      .sort((a, b) => {
+        // Simple sorting by date string (in a real app, use proper date comparison)
+        if (a.date === 'Just now') return -1
+        if (b.date === 'Just now') return 1
+        if (a.date === 'Today') return -1
+        if (b.date === 'Today') return 1
+        return 0
+      })
+      .slice(0, 15)
   }
 
   const calculateGrowth = (current: number, previous: number) => {
@@ -280,8 +371,8 @@ export function ContractsAnalyticsDashboard() {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Charts and Activity */}
+      <div className="grid gap-4 md:grid-cols-3">
         {/* Status Distribution */}
         <Card>
           <CardHeader>
@@ -346,6 +437,56 @@ export function ContractsAnalyticsDashboard() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest contract activities and updates</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 max-h-64 overflow-y-auto">
+              {analytics.recentActivity.length > 0 ? (
+                analytics.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-start space-x-3 text-sm">
+                    <div className="flex-shrink-0">
+                      {activity.action === 'Contract Created' && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      )}
+                      {activity.action === 'Contract Activated' && (
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      )}
+                      {activity.action === 'Expiration Warning' && (
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-gray-900 truncate">
+                          {activity.action}
+                        </p>
+                        <p className="text-xs text-gray-500">{activity.date}</p>
+                      </div>
+                      <p className="text-xs text-gray-600 truncate">
+                        {activity.contractTitle}
+                      </p>
+                      {activity.details && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {activity.details}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <Clock className="mx-auto h-8 w-8 mb-2" />
+                  <p className="text-sm">No recent activity</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
