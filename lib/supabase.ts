@@ -1,64 +1,7 @@
-import { createClient } from "@supabase/supabase-js"
-import type { Database } from "@/types/supabase"
+import { getSupabaseBrowserClient } from "./supabase/singleton"
 
-// Support both client and server environments
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (for client) or SUPABASE_URL and SUPABASE_ANON_KEY (for server) are set."
-  )
-}
-
-// Create a single instance to avoid multiple auth listeners
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
-    storage:
-      typeof window !== "undefined"
-        ? {
-            getItem: (key: string) => {
-              try {
-                return window.localStorage.getItem(key)
-              } catch (error) {
-                console.warn("Error reading from localStorage:", error)
-                return null
-              }
-            },
-            setItem: (key: string, value: string) => {
-              try {
-                window.localStorage.setItem(key, value)
-              } catch (error) {
-                console.warn("Error writing to localStorage:", error)
-              }
-            },
-            removeItem: (key: string) => {
-              try {
-                window.localStorage.removeItem(key)
-              } catch (error) {
-                console.warn("Error removing from localStorage:", error)
-              }
-            },
-          }
-        : undefined,
-    storageKey: "sb-auth-token",
-    debug: false, // Disable debug to reduce console noise
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-  global: {
-    headers: {
-      "X-Client-Info": "supabase-js/2.x",
-    },
-  },
-})
+// Export the singleton instance
+export const supabase = getSupabaseBrowserClient()
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {

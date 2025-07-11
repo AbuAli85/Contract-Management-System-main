@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
-import GenerateContractForm from "@/components/generate-contract-form"
+import { ContractGeneratorForm } from "@/components/contract-generator-form"
 
 // Enhanced utilities for contract insights
 import {
@@ -456,11 +456,11 @@ export default function GenerateContractPage() {
                 the standard form below for contract generation.
               </AlertDescription>
             </Alert>
-            <GenerateContractForm />
+            <ContractGeneratorForm />
           </div>
         ) : (
           <div className="p-6 md:p-8">
-            <GenerateContractForm />
+            <ContractGeneratorForm />
           </div>
         )}
       </motion.div>

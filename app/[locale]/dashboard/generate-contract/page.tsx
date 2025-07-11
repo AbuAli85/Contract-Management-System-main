@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
-import GenerateContractForm from "@/components/generate-contract-form"
+import { ContractGeneratorForm } from "@/components/contract-generator-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -144,7 +144,7 @@ export default function DashboardGenerateContractPage() {
                 </div>
               </CardHeader>
               <CardContent className="bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 p-8">
-                <GenerateContractForm />
+                <ContractGeneratorForm />
               </CardContent>
             </Card>
           </motion.div>
