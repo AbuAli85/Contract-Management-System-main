@@ -88,7 +88,6 @@ import {
   ArrowLeftIcon,
   FileCheck,
   XCircle,
-  Passport,
   IdCard,
   CalendarDays,
   UserCheck,
@@ -941,7 +940,7 @@ export default function ManagePromotersPage() {
                                 )}
                                 {promoter.passport_expiry_date && (
                                   <div className="flex items-center text-xs text-muted-foreground">
-                                    <Passport className="mr-1 h-3 w-3" />
+                                    <CreditCard className="mr-1 h-3 w-3" />
                                     {format(parseISO(promoter.passport_expiry_date), "MMM yyyy")}
                                   </div>
                                 )}
@@ -1244,7 +1243,7 @@ export default function ManagePromotersPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
-                        <Passport className="h-4 w-4" />
+                        <CreditCard className="h-4 w-4" />
                         Passport
                       </CardTitle>
                     </CardHeader>
