@@ -28,7 +28,8 @@
     "db:migrate": "node scripts/run-migrations.js",
     "test:coverage": "jest --coverage",
     "debug-auth": "node scripts/debug-auth.js",
-    "create-test-user": "node scripts/create-test-user.js"
+    "create-test-user": "node scripts/create-test-user.js",
+    "reset-test-user": "node scripts/reset-test-user.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",
