@@ -12,16 +12,6 @@ import { useTranslations } from "next-intl"
 import { useAuth } from "@/hooks/use-auth"
 import AuthStatus from "@/components/auth-status"
 
-// --- Types ---
-interface Profile {
-  role: string | null
-  is_premium: boolean | null
-}
-
-interface HomePageContentProps {
-  locale: string
-}
-
 interface Stats {
   contracts: number
   parties: number
@@ -29,7 +19,10 @@ interface Stats {
   activeContracts: number
 }
 
-// --- Static Data (outside component for performance) ---
+interface HomePageContentProps {
+  locale: string
+}
+
 const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => [
   {
     title: t("generateContract"),
@@ -128,7 +121,44 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     }
   }, [user, profile, authLoading])
 
-  const quickActions = getQuickActions(t, locale)
+  // Use fallback actions if translations are missing
+  const quickActions = React.useMemo(() => {
+    try {
+      return getQuickActions(t, locale)
+    } catch (error) {
+      // Fallback actions if translations are missing
+      return [
+        {
+          title: "Generate Contract",
+          description: "Create a new contract with our easy-to-use form",
+          icon: <Plus className="h-6 w-6" />,
+          href: `/${locale}/generate-contract`,
+          color: "bg-blue-500",
+        },
+        {
+          title: "Manage Parties",
+          description: "Add, edit, and organize contract parties",
+          icon: <Users className="h-6 w-6" />,
+          href: `/${locale}/manage-parties`,
+          color: "bg-green-500",
+        },
+        {
+          title: "View Reports",
+          description: "Analyze contract data and generate insights",
+          icon: <BarChart3 className="h-6 w-6" />,
+          href: `/${locale}/reports`,
+          color: "bg-purple-500",
+        },
+        {
+          title: "Search Contracts",
+          description: "Find and manage your existing contracts",
+          icon: <Search className="h-6 w-6" />,
+          href: `/${locale}/contracts`,
+          color: "bg-orange-500",
+        },
+      ]
+    }
+  }, [t, locale])
 
   if (authLoading) {
     return (

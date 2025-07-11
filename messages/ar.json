@@ -1,0 +1,25 @@
+{
+  "Home": {
+    "welcome": "مرحباً بكم في نظام إدارة العقود",
+    "subtitle": "إدارة العقود بكفاءة وأمان",
+    "generateContract": "إنشاء عقد",
+    "generateContractDesc": "إنشاء عقد جديد باستخدام النموذج السهل",
+    "manageParties": "إدارة الأطراف",
+    "managePartiesDesc": "إضافة وتحرير وتنظيم أطراف العقد",
+    "viewReports": "عرض التقارير",
+    "viewReportsDesc": "تحليل بيانات العقود وإنشاء الرؤى",
+    "searchContracts": "البحث في العقود",
+    "searchContractsDesc": "البحث عن العقود الموجودة وإدارتها",
+    "totalContracts": "إجمالي العقود",
+    "totalParties": "إجمالي الأطراف",
+    "promoters": "المروجين",
+    "activeContracts": "العقود النشطة",
+    "quickActions": "إجراءات سريعة",
+    "statistics": "الإحصائيات",
+    "recentActivity": "النشاط الأخير",
+    "contractManagement": "إدارة العقود",
+    "partyManagement": "إدارة الأطراف",
+    "systemReports": "تقارير النظام",
+    "contractSearch": "البحث في العقود"
+  }
+}
