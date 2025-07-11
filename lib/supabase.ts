@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (for client) or SUPABASE_URL and SUPABASE_ANON_KEY (for server) are set.",
+    "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (for client) or SUPABASE_URL and SUPABASE_ANON_KEY (for server) are set."
   )
 }
 
@@ -17,33 +17,36 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? {
-      getItem: (key: string) => {
-        try {
-          return window.localStorage.getItem(key)
-        } catch (error) {
-          console.warn('Error reading from localStorage:', error)
-          return null
-        }
-      },
-      setItem: (key: string, value: string) => {
-        try {
-          window.localStorage.setItem(key, value)
-        } catch (error) {
-          console.warn('Error writing to localStorage:', error)
-        }
-      },
-      removeItem: (key: string) => {
-        try {
-          window.localStorage.removeItem(key)
-        } catch (error) {
-          console.warn('Error removing from localStorage:', error)
-        }
-      }
-    } : undefined,
-    storageKey: 'sb-auth-token',
-    debug: false // Disable debug to reduce console noise
+    flowType: "pkce",
+    storage:
+      typeof window !== "undefined"
+        ? {
+            getItem: (key: string) => {
+              try {
+                return window.localStorage.getItem(key)
+              } catch (error) {
+                console.warn("Error reading from localStorage:", error)
+                return null
+              }
+            },
+            setItem: (key: string, value: string) => {
+              try {
+                window.localStorage.setItem(key, value)
+              } catch (error) {
+                console.warn("Error writing to localStorage:", error)
+              }
+            },
+            removeItem: (key: string) => {
+              try {
+                window.localStorage.removeItem(key)
+              } catch (error) {
+                console.warn("Error removing from localStorage:", error)
+              }
+            },
+          }
+        : undefined,
+    storageKey: "sb-auth-token",
+    debug: false, // Disable debug to reduce console noise
   },
   realtime: {
     params: {
@@ -52,7 +55,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js/2.x',
+      "X-Client-Info": "supabase-js/2.x",
     },
   },
 })
@@ -60,7 +63,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Utility function to check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     return !!session?.user
   } catch (error) {
     console.error("Error checking authentication status:", error)
@@ -71,7 +76,10 @@ export const isAuthenticated = async (): Promise<boolean> => {
 // Utility function to get current user
 export const getCurrentUser = async () => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
     if (error) {
       console.error("Error getting current user:", error)
       return null
@@ -86,7 +94,10 @@ export const getCurrentUser = async () => {
 // Utility function to get current session
 export const getCurrentSession = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
     if (error) {
       console.error("Error getting current session:", error)
       return null
@@ -131,23 +142,23 @@ export const signOut = async () => {
 // Utility function to handle realtime connection errors
 export const handleRealtimeError = (error: any, tableName: string) => {
   const message = error?.message ?? "Unknown channel error"
-  
+
   // Check for specific error types
   if (message.includes("JWT") || message.includes("auth") || message.includes("permission")) {
     console.warn(`Authentication error for ${tableName}:`, message)
     return "AUTH_ERROR"
   }
-  
+
   if (message.includes("timeout") || message.includes("TIMED_OUT")) {
     console.warn(`Timeout error for ${tableName}:`, message)
     return "TIMEOUT_ERROR"
   }
-  
+
   if (message.includes("network") || message.includes("connection")) {
     console.warn(`Network error for ${tableName}:`, message)
     return "NETWORK_ERROR"
   }
-  
+
   console.warn(`Unknown error for ${tableName}:`, message)
   return "UNKNOWN_ERROR"
 }
@@ -165,9 +176,12 @@ export const createRealtimeChannel = (tableName: string, callback: (payload: any
 }
 
 // Utility function to safely subscribe to a channel
-export const subscribeToChannel = (channel: any, onStatusChange?: (status: string, error?: any) => void) => {
+export const subscribeToChannel = (
+  channel: any,
+  onStatusChange?: (status: string, error?: any) => void
+) => {
   if (!channel) return null
-  
+
   try {
     return channel.subscribe((status: string, error?: any) => {
       if (onStatusChange) {
@@ -182,13 +196,19 @@ export const subscribeToChannel = (channel: any, onStatusChange?: (status: strin
 
 // Debug function to log current auth state
 export const debugAuthState = async () => {
-  if (process.env.NODE_ENV !== 'development') return
-  
+  if (process.env.NODE_ENV !== "development") return
+
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    console.log('🔍 Auth Debug:', {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    console.log("🔍 Auth Debug:", {
       session: !!session,
       sessionError: sessionError?.message,
       user: !!user,
@@ -196,10 +216,10 @@ export const debugAuthState = async () => {
       userId: user?.id,
       userEmail: user?.email,
       sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000) : null,
-      accessToken: session?.access_token ? 'Present' : 'Missing',
-      refreshToken: session?.refresh_token ? 'Present' : 'Missing'
+      accessToken: session?.access_token ? "Present" : "Missing",
+      refreshToken: session?.refresh_token ? "Present" : "Missing",
     })
   } catch (error) {
-    console.error('🔍 Auth Debug Error:', error)
+    console.error("🔍 Auth Debug Error:", error)
   }
 }

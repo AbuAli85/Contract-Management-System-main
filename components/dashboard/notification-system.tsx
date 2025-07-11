@@ -36,13 +36,25 @@ export default function NotificationSystem() {
       const { data, error } = await supabase
         .from("notifications")
         .select(
-          "id, type, message, created_at, user_email, related_contract_id, related_entity_id, related_entity_type, is_read",
+          "id, type, message, created_at, user_email, related_contract_id, related_entity_id, related_entity_type, is_read"
         )
         .order("created_at", { ascending: false })
         .limit(20)
 
       if (error) throw error
-      if (Array.isArray(data) && data.every(n => n && typeof n === 'object' && 'id' in n && 'type' in n && 'message' in n && 'created_at' in n && 'is_read' in n)) {
+      if (
+        Array.isArray(data) &&
+        data.every(
+          (n) =>
+            n &&
+            typeof n === "object" &&
+            "id" in n &&
+            "type" in n &&
+            "message" in n &&
+            "created_at" in n &&
+            "is_read" in n
+        )
+      ) {
         setNotifications(
           data.map((n: NotificationRow) => ({
             id: n.id,
@@ -115,9 +127,9 @@ export default function NotificationSystem() {
                       : undefined,
               },
               ...prev,
-            ].slice(0, 20),
+            ].slice(0, 20)
           )
-        },
+        }
       )
       .subscribe()
     return () => {
@@ -160,9 +172,8 @@ export default function NotificationSystem() {
                     <div>
                       <p className="text-sm">{notif.message}</p>
                       <p className="text-xs text-muted-foreground">
-                        {notif.timestamp && (
-                          formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })
-                        )}
+                        {notif.timestamp &&
+                          formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })}
                         {notif.context && ` (${notif.context})`}
                       </p>
                     </div>

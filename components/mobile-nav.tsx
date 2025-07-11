@@ -31,9 +31,7 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-full max-w-xs pe-0 ps-6 pt-8">
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        {" "}
-        {/* RTL: pe-6 ps-0 */}
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle> {/* RTL: pe-6 ps-0 */}
         <div className="mb-8 flex items-center justify-between">
           <Link
             href={locale ? `/${locale}` : "/"}

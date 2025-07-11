@@ -51,12 +51,14 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
         // Enhanced query with relations
         const { data, error } = await supabase
           .from("contracts")
-          .select(`
+          .select(
+            `
             *,
             employer:parties!contracts_employer_id_fkey (name_en, name_ar, crn),
             client:parties!contracts_client_id_fkey (name_en, name_ar, crn),
             promoters(id, name_en, name_ar, id_card_number)
-          `)
+          `
+          )
           .eq("id", params.id)
           .single()
 
@@ -85,7 +87,7 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
         <div className="mx-auto max-w-4xl">
           <Card>
             <CardContent className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
               <p>Loading contract details...</p>
             </CardContent>
           </Card>
@@ -103,7 +105,7 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
               <CardTitle className="text-red-600">Error Loading Contract</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-red-500 mb-4">{error}</p>
+              <p className="mb-4 text-red-500">{error}</p>
               <Button asChild variant="outline">
                 <Link href="/contracts">
                   <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -132,7 +134,7 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
           <p className="text-gray-600">Contract ID: {params.id}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -149,15 +151,25 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Created At</label>
-                <p>{contract?.created_at ? new Date(contract.created_at).toLocaleString() : "N/A"}</p>
+                <p>
+                  {contract?.created_at ? new Date(contract.created_at).toLocaleString() : "N/A"}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Start Date</label>
-                <p>{contract?.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : "N/A"}</p>
+                <p>
+                  {contract?.contract_start_date
+                    ? new Date(contract.contract_start_date).toLocaleDateString()
+                    : "N/A"}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">End Date</label>
-                <p>{contract?.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : "N/A"}</p>
+                <p>
+                  {contract?.contract_end_date
+                    ? new Date(contract.contract_end_date).toLocaleDateString()
+                    : "N/A"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -172,14 +184,18 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
                 <label className="text-sm font-medium text-gray-500">Employer</label>
                 <p>{contract?.employer?.name_en || "N/A"}</p>
                 {contract?.employer?.name_ar && (
-                  <p className="text-sm text-gray-600" dir="rtl">{contract.employer.name_ar}</p>
+                  <p className="text-sm text-gray-600" dir="rtl">
+                    {contract.employer.name_ar}
+                  </p>
                 )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Client</label>
                 <p>{contract?.client?.name_en || "N/A"}</p>
                 {contract?.client?.name_ar && (
-                  <p className="text-sm text-gray-600" dir="rtl">{contract.client.name_ar}</p>
+                  <p className="text-sm text-gray-600" dir="rtl">
+                    {contract.client.name_ar}
+                  </p>
                 )}
               </div>
               <div>
@@ -188,7 +204,9 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
                   <div>
                     <p>{contract.promoters[0].name_en || "N/A"}</p>
                     {contract.promoters[0].name_ar && (
-                      <p className="text-sm text-gray-600" dir="rtl">{contract.promoters[0].name_ar}</p>
+                      <p className="text-sm text-gray-600" dir="rtl">
+                        {contract.promoters[0].name_ar}
+                      </p>
                     )}
                   </div>
                 ) : (
@@ -222,13 +240,13 @@ export default function ContractDetailPage({ params }: { params: { id: string } 
             <CardContent>
               <details>
                 <summary className="cursor-pointer font-medium">Raw Data</summary>
-                <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                <pre className="mt-2 overflow-auto rounded bg-gray-100 p-2 text-xs">
                   {JSON.stringify(rawData, null, 2)}
                 </pre>
               </details>
               <details>
-                <summary className="cursor-pointer font-medium mt-2">Enhanced Data</summary>
-                <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                <summary className="mt-2 cursor-pointer font-medium">Enhanced Data</summary>
+                <pre className="mt-2 overflow-auto rounded bg-gray-100 p-2 text-xs">
                   {JSON.stringify(contract, null, 2)}
                 </pre>
               </details>

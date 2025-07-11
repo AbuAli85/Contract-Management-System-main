@@ -1,10 +1,10 @@
-import './globals.css'
+import "./globals.css"
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Lexend } from "next/font/google"
 import { MainNav } from "@/components/main-nav"
-import { NextIntlClientProvider } from 'next-intl'
-import { notFound } from 'next/navigation'
+import { NextIntlClientProvider } from "next-intl"
+import { notFound } from "next/navigation"
 import { ClientProviders } from "@/components/client-providers"
 import { cn } from "@/lib/utils"
 
@@ -25,19 +25,15 @@ export const metadata: Metadata = {
   generator: "v0.dev",
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let messages
-  let locale = 'en'
+  let locale = "en"
   try {
     messages = (await import(`../i18n/messages/${locale}.json`)).default
   } catch (error) {
     notFound()
   }
-  
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body

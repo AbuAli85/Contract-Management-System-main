@@ -7,7 +7,10 @@ import type { Promoter } from "@/lib/types"
 export async function getPromoters(): Promise<Promoter[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("promoters").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase
+    .from("promoters")
+    .select("*")
+    .order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching promoters:", error)
@@ -47,7 +50,12 @@ export async function createPromoter(promoterData: Omit<Promoter, "id" | "create
 export async function updatePromoter(id: string, promoterData: Partial<Promoter>) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("promoters").update(promoterData).eq("id", id).select().single()
+  const { data, error } = await supabase
+    .from("promoters")
+    .update(promoterData)
+    .eq("id", id)
+    .select()
+    .single()
 
   if (error) {
     console.error("Error updating promoter:", error)

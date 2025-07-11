@@ -1,14 +1,14 @@
 import { supabase } from "./supabase"
 
 export interface NotificationData {
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: "success" | "error" | "warning" | "info"
   message: string
   user_email?: string
   user_id?: string
   related_contract_id?: string
   related_entity_id?: string
   related_entity_type?: string
-  priority?: 'low' | 'medium' | 'high' | 'urgent'
+  priority?: "low" | "medium" | "high" | "urgent"
   category?: string
   metadata?: Record<string, any>
   is_read?: boolean
@@ -54,19 +54,19 @@ export async function createNotification(data: NotificationData): Promise<string
       related_contract_id: data.related_contract_id,
       related_entity_id: data.related_entity_id,
       related_entity_type: data.related_entity_type,
-      priority: data.priority || 'medium',
-      category: data.category || 'general',
+      priority: data.priority || "medium",
+      category: data.category || "general",
       metadata: data.metadata,
       is_read: data.is_read || false,
       is_starred: data.is_starred || false,
       is_archived: data.is_archived || false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     }
 
     const { data: result, error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .insert(notification)
-      .select('id')
+      .select("id")
       .single()
 
     if (error) {
@@ -75,7 +75,7 @@ export async function createNotification(data: NotificationData): Promise<string
 
     return result.id
   } catch (error) {
-    console.error('Error creating notification:', error)
+    console.error("Error creating notification:", error)
     throw error
   }
 }
@@ -87,58 +87,56 @@ export async function getNotifications(
   filter: NotificationFilter = {},
   page: number = 1,
   limit: number = 20
-): Promise<{ notifications: any[], total: number }> {
+): Promise<{ notifications: any[]; total: number }> {
   try {
-    let query = supabase
-      .from('notifications')
-      .select('*', { count: 'exact' })
+    let query = supabase.from("notifications").select("*", { count: "exact" })
 
     // Apply filters
-    if (filter.type && filter.type !== 'all') {
-      query = query.eq('type', filter.type)
+    if (filter.type && filter.type !== "all") {
+      query = query.eq("type", filter.type)
     }
 
-    if (filter.priority && filter.priority !== 'all') {
-      query = query.eq('priority', filter.priority)
+    if (filter.priority && filter.priority !== "all") {
+      query = query.eq("priority", filter.priority)
     }
 
-    if (filter.category && filter.category !== 'all') {
-      query = query.eq('category', filter.category)
+    if (filter.category && filter.category !== "all") {
+      query = query.eq("category", filter.category)
     }
 
     if (filter.user_email) {
-      query = query.eq('user_email', filter.user_email)
+      query = query.eq("user_email", filter.user_email)
     }
 
     if (filter.is_read !== undefined) {
-      query = query.eq('is_read', filter.is_read)
+      query = query.eq("is_read", filter.is_read)
     }
 
     if (filter.is_starred !== undefined) {
-      query = query.eq('is_starred', filter.is_starred)
+      query = query.eq("is_starred", filter.is_starred)
     }
 
     if (filter.is_archived !== undefined) {
-      query = query.eq('is_archived', filter.is_archived)
+      query = query.eq("is_archived", filter.is_archived)
     }
 
     if (filter.date_from) {
-      query = query.gte('created_at', filter.date_from)
+      query = query.gte("created_at", filter.date_from)
     }
 
     if (filter.date_to) {
-      query = query.lte('created_at', filter.date_to)
+      query = query.lte("created_at", filter.date_to)
     }
 
     if (filter.search) {
-      query = query.or(`message.ilike.%${filter.search}%,user_email.ilike.%${filter.search}%,category.ilike.%${filter.search}%`)
+      query = query.or(
+        `message.ilike.%${filter.search}%,user_email.ilike.%${filter.search}%,category.ilike.%${filter.search}%`
+      )
     }
 
     // Apply pagination
     const offset = (page - 1) * limit
-    query = query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
 
@@ -148,10 +146,10 @@ export async function getNotifications(
 
     return {
       notifications: data || [],
-      total: count || 0
+      total: count || 0,
     }
   } catch (error) {
-    console.error('Error fetching notifications:', error)
+    console.error("Error fetching notifications:", error)
     throw error
   }
 }
@@ -162,8 +160,8 @@ export async function getNotifications(
 export async function getNotificationStats(): Promise<NotificationStats> {
   try {
     const { data, error } = await supabase
-      .from('notifications')
-      .select('type, priority, category, is_read, is_starred, is_archived, created_at')
+      .from("notifications")
+      .select("type, priority, category, is_read, is_starred, is_archived, created_at")
 
     if (error) {
       throw new Error(`Failed to fetch notification stats: ${error.message}`)
@@ -175,34 +173,32 @@ export async function getNotificationStats(): Promise<NotificationStats> {
 
     const stats: NotificationStats = {
       total: notifications.length,
-      unread: notifications.filter(n => !n.is_read).length,
-      starred: notifications.filter(n => n.is_starred).length,
-      archived: notifications.filter(n => n.is_archived).length,
+      unread: notifications.filter((n) => !n.is_read).length,
+      starred: notifications.filter((n) => n.is_starred).length,
+      archived: notifications.filter((n) => n.is_archived).length,
       byType: {},
       byPriority: {},
       byCategory: {},
-      recentActivity: notifications.filter(n => 
-        new Date(n.created_at) > yesterday
-      ).length
+      recentActivity: notifications.filter((n) => new Date(n.created_at) > yesterday).length,
     }
 
     // Calculate distributions
-    notifications.forEach(n => {
+    notifications.forEach((n) => {
       // Type distribution
       stats.byType[n.type] = (stats.byType[n.type] || 0) + 1
-      
+
       // Priority distribution
-      const priority = n.priority || 'medium'
+      const priority = n.priority || "medium"
       stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1
-      
+
       // Category distribution
-      const category = n.category || 'general'
+      const category = n.category || "general"
       stats.byCategory[category] = (stats.byCategory[category] || 0) + 1
     })
 
     return stats
   } catch (error) {
-    console.error('Error fetching notification stats:', error)
+    console.error("Error fetching notification stats:", error)
     throw error
   }
 }
@@ -211,20 +207,20 @@ export async function getNotificationStats(): Promise<NotificationStats> {
  * Mark notification as read/unread
  */
 export async function updateNotificationReadStatus(
-  notificationId: string, 
+  notificationId: string,
   isRead: boolean
 ): Promise<void> {
   try {
     const { error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_read: isRead })
-      .eq('id', notificationId)
+      .eq("id", notificationId)
 
     if (error) {
       throw new Error(`Failed to update notification read status: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error updating notification read status:', error)
+    console.error("Error updating notification read status:", error)
     throw error
   }
 }
@@ -233,20 +229,20 @@ export async function updateNotificationReadStatus(
  * Star/unstar notification
  */
 export async function updateNotificationStarStatus(
-  notificationId: string, 
+  notificationId: string,
   isStarred: boolean
 ): Promise<void> {
   try {
     const { error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_starred: isStarred })
-      .eq('id', notificationId)
+      .eq("id", notificationId)
 
     if (error) {
       throw new Error(`Failed to update notification star status: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error updating notification star status:', error)
+    console.error("Error updating notification star status:", error)
     throw error
   }
 }
@@ -255,20 +251,20 @@ export async function updateNotificationStarStatus(
  * Archive/unarchive notification
  */
 export async function updateNotificationArchiveStatus(
-  notificationId: string, 
+  notificationId: string,
   isArchived: boolean
 ): Promise<void> {
   try {
     const { error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_archived: isArchived })
-      .eq('id', notificationId)
+      .eq("id", notificationId)
 
     if (error) {
       throw new Error(`Failed to update notification archive status: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error updating notification archive status:', error)
+    console.error("Error updating notification archive status:", error)
     throw error
   }
 }
@@ -281,16 +277,13 @@ export async function bulkUpdateNotifications(
   updates: Partial<NotificationData>
 ): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('notifications')
-      .update(updates)
-      .in('id', notificationIds)
+    const { error } = await supabase.from("notifications").update(updates).in("id", notificationIds)
 
     if (error) {
       throw new Error(`Failed to bulk update notifications: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error bulk updating notifications:', error)
+    console.error("Error bulk updating notifications:", error)
     throw error
   }
 }
@@ -300,16 +293,13 @@ export async function bulkUpdateNotifications(
  */
 export async function deleteNotifications(notificationIds: string[]): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .in('id', notificationIds)
+    const { error } = await supabase.from("notifications").delete().in("id", notificationIds)
 
     if (error) {
       throw new Error(`Failed to delete notifications: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error deleting notifications:', error)
+    console.error("Error deleting notifications:", error)
     throw error
   }
 }
@@ -320,16 +310,16 @@ export async function deleteNotifications(notificationIds: string[]): Promise<vo
 export async function markAllAsReadForUser(userEmail: string): Promise<void> {
   try {
     const { error } = await supabase
-      .from('notifications')
+      .from("notifications")
       .update({ is_read: true })
-      .eq('user_email', userEmail)
-      .eq('is_read', false)
+      .eq("user_email", userEmail)
+      .eq("is_read", false)
 
     if (error) {
       throw new Error(`Failed to mark all notifications as read: ${error.message}`)
     }
   } catch (error) {
-    console.error('Error marking all notifications as read:', error)
+    console.error("Error marking all notifications as read:", error)
     throw error
   }
 }
@@ -340,11 +330,11 @@ export async function markAllAsReadForUser(userEmail: string): Promise<void> {
 export async function getUnreadCount(userEmail: string): Promise<number> {
   try {
     const { count, error } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_email', userEmail)
-      .eq('is_read', false)
-      .eq('is_archived', false)
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_email", userEmail)
+      .eq("is_read", false)
+      .eq("is_archived", false)
 
     if (error) {
       throw new Error(`Failed to get unread count: ${error.message}`)
@@ -352,7 +342,7 @@ export async function getUnreadCount(userEmail: string): Promise<number> {
 
     return count || 0
   } catch (error) {
-    console.error('Error getting unread count:', error)
+    console.error("Error getting unread count:", error)
     return 0
   }
 }
@@ -362,19 +352,19 @@ export async function getUnreadCount(userEmail: string): Promise<number> {
  */
 export async function createContractNotification(
   contractId: string,
-  type: NotificationData['type'],
+  type: NotificationData["type"],
   message: string,
   userEmail?: string,
-  priority: NotificationData['priority'] = 'medium'
+  priority: NotificationData["priority"] = "medium"
 ): Promise<string> {
   return createNotification({
     type,
     message,
     user_email: userEmail,
     related_contract_id: contractId,
-    related_entity_type: 'contract',
+    related_entity_type: "contract",
     priority,
-    category: 'contract'
+    category: "contract",
   })
 }
 
@@ -383,19 +373,19 @@ export async function createContractNotification(
  */
 export async function createPartyNotification(
   partyId: string,
-  type: NotificationData['type'],
+  type: NotificationData["type"],
   message: string,
   userEmail?: string,
-  priority: NotificationData['priority'] = 'medium'
+  priority: NotificationData["priority"] = "medium"
 ): Promise<string> {
   return createNotification({
     type,
     message,
     user_email: userEmail,
     related_entity_id: partyId,
-    related_entity_type: 'party',
+    related_entity_type: "party",
     priority,
-    category: 'party'
+    category: "party",
   })
 }
 
@@ -404,19 +394,19 @@ export async function createPartyNotification(
  */
 export async function createPromoterNotification(
   promoterId: string,
-  type: NotificationData['type'],
+  type: NotificationData["type"],
   message: string,
   userEmail?: string,
-  priority: NotificationData['priority'] = 'medium'
+  priority: NotificationData["priority"] = "medium"
 ): Promise<string> {
   return createNotification({
     type,
     message,
     user_email: userEmail,
     related_entity_id: promoterId,
-    related_entity_type: 'promoter',
+    related_entity_type: "promoter",
     priority,
-    category: 'promoter'
+    category: "promoter",
   })
 }
 
@@ -424,17 +414,17 @@ export async function createPromoterNotification(
  * Create system notification
  */
 export async function createSystemNotification(
-  type: NotificationData['type'],
+  type: NotificationData["type"],
   message: string,
-  priority: NotificationData['priority'] = 'medium',
+  priority: NotificationData["priority"] = "medium",
   metadata?: Record<string, any>
 ): Promise<string> {
   return createNotification({
     type,
     message,
     priority,
-    category: 'system',
-    metadata
+    category: "system",
+    metadata,
   })
 }
 
@@ -446,14 +436,14 @@ export function subscribeToNotifications(
   userEmail?: string
 ) {
   let channel = supabase
-    .channel('notifications_realtime')
+    .channel("notifications_realtime")
     .on(
-      'postgres_changes',
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'notifications',
-        filter: userEmail ? `user_email=eq.${userEmail}` : undefined
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "notifications",
+        filter: userEmail ? `user_email=eq.${userEmail}` : undefined,
       },
       callback
     )
@@ -470,37 +460,44 @@ export function subscribeToNotifications(
 export async function exportNotificationsToCSV(filter: NotificationFilter = {}): Promise<string> {
   try {
     const { notifications } = await getNotifications(filter, 1, 10000) // Get all matching notifications
-    
+
     const headers = [
-      'ID', 'Type', 'Message', 'User Email', 'Priority', 'Category',
-      'Created At', 'Is Read', 'Is Starred', 'Is Archived', 'Related Contract ID',
-      'Related Entity ID', 'Related Entity Type'
+      "ID",
+      "Type",
+      "Message",
+      "User Email",
+      "Priority",
+      "Category",
+      "Created At",
+      "Is Read",
+      "Is Starred",
+      "Is Archived",
+      "Related Contract ID",
+      "Related Entity ID",
+      "Related Entity Type",
     ]
-    
-    const csvData = notifications.map(n => [
+
+    const csvData = notifications.map((n) => [
       n.id,
       n.type,
       `"${n.message.replace(/"/g, '""')}"`,
-      n.user_email || '',
-      n.priority || '',
-      n.category || '',
+      n.user_email || "",
+      n.priority || "",
+      n.category || "",
       n.created_at,
-      n.is_read ? 'Yes' : 'No',
-      n.is_starred ? 'Yes' : 'No',
-      n.is_archived ? 'Yes' : 'No',
-      n.related_contract_id || '',
-      n.related_entity_id || '',
-      n.related_entity_type || ''
+      n.is_read ? "Yes" : "No",
+      n.is_starred ? "Yes" : "No",
+      n.is_archived ? "Yes" : "No",
+      n.related_contract_id || "",
+      n.related_entity_id || "",
+      n.related_entity_type || "",
     ])
 
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n')
+    const csvContent = [headers.join(","), ...csvData.map((row) => row.join(","))].join("\n")
 
     return csvContent
   } catch (error) {
-    console.error('Error exporting notifications to CSV:', error)
+    console.error("Error exporting notifications to CSV:", error)
     throw error
   }
 }

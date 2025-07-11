@@ -1,48 +1,33 @@
 "use client"
 
-import React from 'react'
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React from "react"
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // Loading Spinner Component
-export const LoadingSpinner = ({ 
-  size = 'default', 
-  className 
-}: { 
-  size?: 'sm' | 'default' | 'lg'
-  className?: string 
+export const LoadingSpinner = ({
+  size = "default",
+  className,
+}: {
+  size?: "sm" | "default" | "lg"
+  className?: string
 }) => {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    default: 'h-6 w-6',
-    lg: 'h-8 w-8'
+    sm: "h-4 w-4",
+    default: "h-6 w-6",
+    lg: "h-8 w-8",
   }
 
-  return (
-    <Loader2 
-      className={cn('animate-spin', sizeClasses[size], className)} 
-    />
-  )
+  return <Loader2 className={cn("animate-spin", sizeClasses[size], className)} />
 }
 
 // Skeleton Components
-export const Skeleton = ({ 
-  className, 
-  ...props 
-}: React.HTMLAttributes<HTMLDivElement>) => {
-  return (
-    <div
-      className={cn(
-        'animate-pulse rounded-md bg-muted',
-        className
-      )}
-      {...props}
-    />
-  )
+export const Skeleton = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
+  return <div className={cn("animate-pulse rounded-md bg-muted", className)} {...props} />
 }
 
 export const ContractCardSkeleton = () => (
-  <div className="p-6 border rounded-lg space-y-4">
+  <div className="space-y-4 rounded-lg border p-6">
     <div className="flex items-center justify-between">
       <Skeleton className="h-6 w-32" />
       <Skeleton className="h-5 w-20" />
@@ -75,7 +60,7 @@ export const useLoadingState = () => {
   const [loadingStates, setLoadingStates] = React.useState<Record<string, boolean>>({})
 
   const setLoading = (key: string, loading: boolean) => {
-    setLoadingStates(prev => ({ ...prev, [key]: loading }))
+    setLoadingStates((prev) => ({ ...prev, [key]: loading }))
   }
 
   const isLoading = (key: string) => loadingStates[key] || false
@@ -84,14 +69,14 @@ export const useLoadingState = () => {
 }
 
 // Progress Indicator
-export const ProgressIndicator = ({ 
-  progress, 
-  label, 
-  showPercentage = true 
-}: { 
+export const ProgressIndicator = ({
+  progress,
+  label,
+  showPercentage = true,
+}: {
   progress: number
   label?: string
-  showPercentage?: boolean 
+  showPercentage?: boolean
 }) => (
   <div className="space-y-2">
     {label && (
@@ -100,9 +85,9 @@ export const ProgressIndicator = ({
         {showPercentage && <span>{Math.round(progress)}%</span>}
       </div>
     )}
-    <div className="w-full bg-muted rounded-full h-2">
-      <div 
-        className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+    <div className="h-2 w-full rounded-full bg-muted">
+      <div
+        className="h-2 rounded-full bg-primary transition-all duration-300 ease-out"
         style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
       />
     </div>
@@ -110,27 +95,27 @@ export const ProgressIndicator = ({
 )
 
 // Status Indicator
-export const StatusIndicator = ({ 
-  status, 
-  message 
-}: { 
-  status: 'loading' | 'success' | 'error'
-  message?: string 
+export const StatusIndicator = ({
+  status,
+  message,
+}: {
+  status: "loading" | "success" | "error"
+  message?: string
 }) => {
   const icons = {
     loading: <LoadingSpinner size="sm" />,
     success: <CheckCircle className="h-4 w-4 text-green-600" />,
-    error: <AlertCircle className="h-4 w-4 text-red-600" />
+    error: <AlertCircle className="h-4 w-4 text-red-600" />,
   }
 
   const colors = {
-    loading: 'text-muted-foreground',
-    success: 'text-green-600',
-    error: 'text-red-600'
+    loading: "text-muted-foreground",
+    success: "text-green-600",
+    error: "text-red-600",
   }
 
   return (
-    <div className={cn('flex items-center gap-2 text-sm', colors[status])}>
+    <div className={cn("flex items-center gap-2 text-sm", colors[status])}>
       {icons[status]}
       {message && <span>{message}</span>}
     </div>
@@ -138,10 +123,10 @@ export const StatusIndicator = ({
 }
 
 // Loading Overlay
-export const LoadingOverlay = ({ 
-  isLoading, 
-  message = 'Loading...', 
-  children 
+export const LoadingOverlay = ({
+  isLoading,
+  message = "Loading...",
+  children,
 }: {
   isLoading: boolean
   message?: string
@@ -150,7 +135,7 @@ export const LoadingOverlay = ({
   <div className="relative">
     {children}
     {isLoading && (
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-2">
           <LoadingSpinner size="lg" />
           <p className="text-sm text-muted-foreground">{message}</p>

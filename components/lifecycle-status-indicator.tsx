@@ -25,7 +25,10 @@ export default function LifecycleStatusIndicator({
   // Don't render until mounted to prevent hydration mismatch
   if (!mounted || !now) {
     return (
-      <Badge variant="outline" className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 border-gray-300">
+      <Badge
+        variant="outline"
+        className="flex items-center gap-1.5 border-gray-300 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"
+      >
         <AlertCircle className="h-3.5 w-3.5" />
         Loading...
       </Badge>

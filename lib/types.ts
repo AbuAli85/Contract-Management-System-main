@@ -99,19 +99,19 @@ export interface Contract {
   second_party?: Party | null
   employer?: Party | null
   client?: Party | null
-  title?: string | null;
-  start_date?: string | null;
-  total_value?: number | null;
-  promoter_name_ar?: string | null;
-  promoter_name_en?: string | null;
-  first_party_name_en?: string | null;
-  first_party_name_ar?: string | null;
-  second_party_name_en?: string | null;
-  second_party_name_ar?: string | null;
-  id_card_number?: string | null;
-  salary?: number | null;
-  employer_id?: string | null;
-  client_id?: string | null;
+  title?: string | null
+  start_date?: string | null
+  total_value?: number | null
+  promoter_name_ar?: string | null
+  promoter_name_en?: string | null
+  first_party_name_en?: string | null
+  first_party_name_ar?: string | null
+  second_party_name_en?: string | null
+  second_party_name_ar?: string | null
+  id_card_number?: string | null
+  salary?: number | null
+  employer_id?: string | null
+  client_id?: string | null
 }
 
 export interface ContractDetail extends Contract {
@@ -161,45 +161,53 @@ export interface BilingualPdfData {
 }
 
 export interface ActivityLog {
-  id: string;
-  action: string;
-  description: string;
-  created_at: string;
-  user_id?: string;
-  metadata?: any;
+  id: string
+  action: string
+  description: string
+  created_at: string
+  user_id?: string
+  metadata?: any
 }
 
 export interface PartyNote {
-  id: string;
-  party_id: string;
-  user_id: string;
-  note: string;
-  created_at: string;
+  id: string
+  party_id: string
+  user_id: string
+  note: string
+  created_at: string
 }
 
 export interface PartyTag {
-  id: string;
-  party_id: string;
-  tag: string;
-  created_at: string;
+  id: string
+  party_id: string
+  tag: string
+  created_at: string
 }
 
 export interface PartyActivity {
-  id: string;
-  party_id: string;
-  user_id?: string;
-  activity_type: string;
-  details: string;
-  created_at: string;
+  id: string
+  party_id: string
+  user_id?: string
+  activity_type: string
+  details: string
+  created_at: string
 }
 
 export interface PartyFile {
-  id: string;
-  party_id: string;
-  user_id: string;
-  file_name: string;
-  file_url: string;
-  created_at: string;
+  id: string
+  party_id: string
+  user_id: string
+  file_name: string
+  file_url: string
+  created_at: string
 }
 
-export type ContractStatus = "draft" | "pending" | "active" | "completed" | "cancelled" | "expired" | "failed" | "generating";
+export type ContractStatus =
+  | "draft"
+  | "pending"
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "expired"
+  | "failed"
+  | "generating"

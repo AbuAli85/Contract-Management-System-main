@@ -1,12 +1,12 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') ?? '/'
+  const code = requestUrl.searchParams.get("code")
+  const next = requestUrl.searchParams.get("next") ?? "/"
 
   if (code) {
     const cookieStore = cookies()
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
             cookieStore.set({ name, value, ...options })
           },
           remove(name: string, options) {
-            cookieStore.set({ name, value: '', ...options })
+            cookieStore.set({ name, value: "", ...options })
           },
         },
       }
@@ -35,5 +35,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(new URL('/auth/auth-code-error', request.url))
+  return NextResponse.redirect(new URL("/auth/auth-code-error", request.url))
 }

@@ -11,7 +11,7 @@ import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env"
 // Placeholder for your PDF generation logic (e.g., calling Google Docs API via Make.com)
 async function generateBilingualPdf(
   contractData: BilingualPdfData,
-  contractId: string,
+  contractId: string
 ): Promise<string | null> {
   const supabaseAdmin = getSupabaseAdmin() // Get client instance
   const makeWebhookUrl = process.env.MAKE_WEBHOOK_URL
@@ -51,34 +51,39 @@ async function generateBilingualPdf(
   // Retry loop for webhook calls
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Triggering Make.com webhook (attempt ${attempt}/${maxRetries}) with payload:`, payloadForMake)
-      
+      console.log(
+        `Triggering Make.com webhook (attempt ${attempt}/${maxRetries}) with payload:`,
+        payloadForMake
+      )
+
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-      
+
       const response = await fetch(makeWebhookUrl, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-Webhook-Secret": process.env.MAKE_WEBHOOK_SECRET || "",
           "User-Agent": "Contract-Generator-App/1.0",
           "X-Trigger-Source": "contract-generator",
           "X-Contract-ID": contractId,
-          "X-Timestamp": new Date().toISOString()
+          "X-Timestamp": new Date().toISOString(),
         },
         body: JSON.stringify(payloadForMake),
         signal: controller.signal,
       })
-      
+
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        console.error(`Make.com webhook failed (attempt ${attempt}): ${response.status} ${response.statusText}`)
+        console.error(
+          `Make.com webhook failed (attempt ${attempt}): ${response.status} ${response.statusText}`
+        )
         if (attempt === maxRetries) {
           return null
         }
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+        await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt))
         continue
       }
 
@@ -96,19 +101,26 @@ async function generateBilingualPdf(
           return "accepted" // Special case for simple acceptance
         }
         // Only log as error if it's not a recognized success message
-        console.error("Failed to parse Make.com response as JSON and not a recognized success message:", parseError)
+        console.error(
+          "Failed to parse Make.com response as JSON and not a recognized success message:",
+          parseError
+        )
         console.error("Response text was:", responseText)
         if (attempt === maxRetries) {
           return null
         }
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+        await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt))
         continue
       }
 
       // Extract PDF URL from JSON response
-      const pdfUrl = responseData.pdf_url || responseData.url || responseData.download_url || responseData.file_url
-      
+      const pdfUrl =
+        responseData.pdf_url ||
+        responseData.url ||
+        responseData.download_url ||
+        responseData.file_url
+
       if (pdfUrl) {
         console.log("✓ PDF URL extracted from Make.com response:", pdfUrl)
         return pdfUrl
@@ -121,12 +133,12 @@ async function generateBilingualPdf(
           return null
         }
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+        await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt))
         continue
       }
     } catch (error) {
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           console.error(`Make.com webhook timeout (attempt ${attempt}): Request took too long`)
         } else {
           console.error(`Error calling Make.com webhook (attempt ${attempt}):`, error.message)
@@ -134,15 +146,15 @@ async function generateBilingualPdf(
       } else {
         console.error(`Unknown error calling Make.com webhook (attempt ${attempt}):`, error)
       }
-      
+
       if (attempt === maxRetries) {
         return null
       }
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+      await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt))
     }
   }
-  
+
   return null
 }
 
@@ -156,22 +168,29 @@ export async function POST(request: NextRequest) {
     } catch (adminError) {
       console.error("✗ Supabase admin client error:", adminError)
       return NextResponse.json(
-        { message: "Server configuration error", error: "Failed to initialize Supabase admin client", details: adminError instanceof Error ? adminError.message : String(adminError) },
-        { status: 500 },
+        {
+          message: "Server configuration error",
+          error: "Failed to initialize Supabase admin client",
+          details: adminError instanceof Error ? adminError.message : String(adminError),
+        },
+        { status: 500 }
       )
     }
     const body = await request.json()
     console.log("Received contract data:", JSON.stringify(body, null, 2))
 
     // Validate required fields
-    const requiredIds = ['first_party_id', 'second_party_id', 'promoter_id']
-    const missingIds = requiredIds.filter(id => !body[id])
-    
+    const requiredIds = ["first_party_id", "second_party_id", "promoter_id"]
+    const missingIds = requiredIds.filter((id) => !body[id])
+
     if (missingIds.length > 0) {
       console.error("Missing required IDs:", missingIds)
       return NextResponse.json(
-        { message: "Missing required fields", error: `Missing required IDs: ${missingIds.join(', ')}` },
-        { status: 400 },
+        {
+          message: "Missing required fields",
+          error: `Missing required IDs: ${missingIds.join(", ")}`,
+        },
+        { status: 400 }
       )
     }
 
@@ -190,7 +209,7 @@ export async function POST(request: NextRequest) {
       work_location: body.work_location,
       email: body.email,
       contract_value: body.contract_value ? parseFloat(body.contract_value.toString()) : null,
-      status: body.status || 'draft',
+      status: body.status || "draft",
       // contract_number will be auto-generated by the trigger
     }
     console.log("Contract to insert:", JSON.stringify(contractToInsert, null, 2))
@@ -205,13 +224,13 @@ export async function POST(request: NextRequest) {
       console.error("Supabase insert error:", insertError)
       return NextResponse.json(
         { message: "Failed to create contract", error: insertError.message },
-        { status: 500 },
+        { status: 500 }
       )
     }
     if (!newContract) {
       return NextResponse.json(
         { message: "Failed to create contract, no data returned after insert." },
-        { status: 500 },
+        { status: 500 }
       )
     }
     console.log("✓ Contract created:", newContract.id)
@@ -224,27 +243,27 @@ export async function POST(request: NextRequest) {
 
     // Only fetch data if IDs are present
     const [clientParty, employerParty, promoterDetails] = await Promise.all([
-      newContract.first_party_id ? 
-        supabase
-          .from("parties")
-          .select("name_en, name_ar, crn")
-          .eq("id", newContract.first_party_id)
-          .single() :
-        Promise.resolve({ data: null, error: null }),
-      newContract.second_party_id ?
-        supabase
-          .from("parties")
-          .select("name_en, name_ar, crn")
-          .eq("id", newContract.second_party_id)
-          .single() :
-        Promise.resolve({ data: null, error: null }),
-      newContract.promoter_id ?
-        supabase
-          .from("promoters")
-          .select("name_en, name_ar, id_card_number, id_card_url, passport_url")
-          .eq("id", newContract.promoter_id)
-          .single() :
-        Promise.resolve({ data: null, error: null }),
+      newContract.first_party_id
+        ? supabase
+            .from("parties")
+            .select("name_en, name_ar, crn")
+            .eq("id", newContract.first_party_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      newContract.second_party_id
+        ? supabase
+            .from("parties")
+            .select("name_en, name_ar, crn")
+            .eq("id", newContract.second_party_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      newContract.promoter_id
+        ? supabase
+            .from("promoters")
+            .select("name_en, name_ar, id_card_number, id_card_url, passport_url")
+            .eq("id", newContract.promoter_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
     ])
 
     // Log the results of each query
@@ -303,12 +322,21 @@ export async function POST(request: NextRequest) {
 
     // Validate that we have the required data for Make.com
     const requiredFields = [
-      'first_party_name_en', 'first_party_name_ar', 'first_party_crn', // Client
-      'second_party_name_en', 'second_party_name_ar', 'second_party_crn', // Employer
-      'promoter_name_en', 'promoter_name_ar', 'email', 'contract_number'
+      "first_party_name_en",
+      "first_party_name_ar",
+      "first_party_crn", // Client
+      "second_party_name_en",
+      "second_party_name_ar",
+      "second_party_crn", // Employer
+      "promoter_name_en",
+      "promoter_name_ar",
+      "email",
+      "contract_number",
     ]
-    
-    const missingFields = requiredFields.filter(field => !pdfData[field as keyof BilingualPdfData])
+
+    const missingFields = requiredFields.filter(
+      (field) => !pdfData[field as keyof BilingualPdfData]
+    )
     if (missingFields.length > 0) {
       console.warn("⚠️ Missing required fields for Make.com webhook:", missingFields)
       console.warn("This may cause issues with PDF generation")
@@ -330,8 +358,10 @@ export async function POST(request: NextRequest) {
 
         if (updateError) {
           console.error("Supabase update error (pdf_url):", updateError)
-          if (updateError.code === 'PGRST116') {
-            console.warn("⚠️ Contract not found during PDF URL update - it may have been deleted or modified")
+          if (updateError.code === "PGRST116") {
+            console.warn(
+              "⚠️ Contract not found during PDF URL update - it may have been deleted or modified"
+            )
           }
           // Don't fail the entire request if PDF URL update fails
           // The contract was created successfully, just without PDF URL
@@ -350,14 +380,18 @@ export async function POST(request: NextRequest) {
     console.log("=== CONTRACT API ROUTE SUCCESS ===")
     return NextResponse.json(
       { message: "Contract created successfully!", contract: finalContractData },
-      { status: 201 },
+      { status: 201 }
     )
   } catch (error: any) {
     console.error("=== CONTRACT API ROUTE ERROR ===")
     console.error("API Route Error:", error)
     return NextResponse.json(
-      { message: "Internal server error", error: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined },
-      { status: 500 },
+      {
+        message: "Internal server error",
+        error: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+      { status: 500 }
     )
   }
 }

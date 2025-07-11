@@ -18,7 +18,7 @@ export interface CreateContractRequest {
 
 export interface UpdateContractRequest {
   id: string
-  first_party_id?: string  // Updated: was client_id
+  first_party_id?: string // Updated: was client_id
   second_party_id?: string // Updated: was employer_id
   promoter_id?: string
   job_title?: string
@@ -70,4 +70,4 @@ export interface ValidationError {
 export interface ValidationResult {
   isValid: boolean
   errors: ValidationError[]
-} 
+}

@@ -12,9 +12,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Progress } from "@/components/ui/progress"
@@ -28,18 +49,79 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 // Icons
 import {
-  Upload, Download, Search, Filter, MoreHorizontal, Eye, Edit3, Trash2, 
-  UserPlus, FileSpreadsheet, FileText, AlertTriangle, CheckCircle, 
-  XCircle, Calendar as CalendarIcon, Clock, Users, TrendingUp, 
-  BarChart3, PieChart, Activity, Loader2, RefreshCw, ArrowUpDown,
-  SortAsc, SortDesc, Settings, Globe, Flag, Phone, Mail, MapPin,
-  CreditCard, FileImage, Shield, ShieldAlert, Archive, 
-  Plus, Minus, ChevronDown, ExternalLink, Copy, Share2, Star,
-  MessageSquare, History, Download as DownloadIcon, Upload as UploadIcon,
-  Zap, Target, Bell, BookOpen, Briefcase, Camera,
-  QrCode, Send, UserCheck, UserX, Layers, Grid3x3, List,
-  Filter as FilterIcon, SortAsc as SortIcon, MonitorPlay, Smartphone,
-  Tablet, Layout, Save, Printer, Bookmark, Tag, Workflow, Gauge
+  Upload,
+  Download,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Eye,
+  Edit3,
+  Trash2,
+  UserPlus,
+  FileSpreadsheet,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Calendar as CalendarIcon,
+  Clock,
+  Users,
+  TrendingUp,
+  BarChart3,
+  PieChart,
+  Activity,
+  Loader2,
+  RefreshCw,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc,
+  Settings,
+  Globe,
+  Flag,
+  Phone,
+  Mail,
+  MapPin,
+  CreditCard,
+  FileImage,
+  Shield,
+  ShieldAlert,
+  Archive,
+  Plus,
+  Minus,
+  ChevronDown,
+  ExternalLink,
+  Copy,
+  Share2,
+  Star,
+  MessageSquare,
+  History,
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+  Zap,
+  Target,
+  Bell,
+  BookOpen,
+  Briefcase,
+  Camera,
+  QrCode,
+  Send,
+  UserCheck,
+  UserX,
+  Layers,
+  Grid3x3,
+  List,
+  Filter as FilterIcon,
+  SortAsc as SortIcon,
+  MonitorPlay,
+  Smartphone,
+  Tablet,
+  Layout,
+  Save,
+  Printer,
+  Bookmark,
+  Tag,
+  Workflow,
+  Gauge,
 } from "lucide-react"
 
 // Types and Utils
@@ -110,7 +192,7 @@ export default function AdvancedPromotersManagement() {
   const [isLoading, setIsLoading] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
-  
+
   // Filter and sort state
   const [filters, setFilters] = useState<FilterOptions>({
     status: [],
@@ -119,10 +201,10 @@ export default function AdvancedPromotersManagement() {
     active_contracts: [0, 50],
     created_date_range: [null, null],
     search: "",
-    tags: []
+    tags: [],
   })
   const [sortOption, setSortOption] = useState<SortOption>({ field: "name_en", direction: "asc" })
-  
+
   // Modal and dialog states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
@@ -131,8 +213,10 @@ export default function AdvancedPromotersManagement() {
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false)
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false)
   const [bulkOperation, setBulkOperation] = useState<BulkOperation>({ type: "status_update" })
-  const [selectedPromoterForEdit, setSelectedPromoterForEdit] = useState<EnhancedPromoter | null>(null)
-  
+  const [selectedPromoterForEdit, setSelectedPromoterForEdit] = useState<EnhancedPromoter | null>(
+    null
+  )
+
   // View state
   const [currentView, setCurrentView] = useState<"table" | "grid" | "analytics">("table")
   const [pageSize, setPageSize] = useState(25)
@@ -143,9 +227,9 @@ export default function AdvancedPromotersManagement() {
   const [notificationSettings, setNotificationSettings] = useState({
     expiry_alerts: true,
     activity_updates: true,
-    system_notifications: true
+    system_notifications: true,
   })
-  
+
   // Hooks
   const router = useRouter()
   const { toast } = useToast()
@@ -154,38 +238,44 @@ export default function AdvancedPromotersManagement() {
   const fetchPromoters = useCallback(async () => {
     try {
       setIsLoading(true)
-      
+
       const { data: promotersData, error } = await supabase
         .from("promoters")
-        .select(`
+        .select(
+          `
           *,
           contracts:contracts(count)
-        `)
+        `
+        )
         .order("created_at", { ascending: false })
 
       if (error) throw error
 
       // Enhance promoter data with calculated fields
-      const enhancedPromoters: EnhancedPromoter[] = promotersData?.map(promoter => {
-        const idExpiryDays = promoter.id_card_expiry_date 
-          ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
-          : null
+      const enhancedPromoters: EnhancedPromoter[] =
+        promotersData?.map((promoter) => {
+          const idExpiryDays = promoter.id_card_expiry_date
+            ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+            : null
 
-        const passportExpiryDays = promoter.passport_expiry_date
-          ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
-          : null
+          const passportExpiryDays = promoter.passport_expiry_date
+            ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+            : null
 
-        return {
-          ...promoter,
-          id_card_status: getDocumentStatus(idExpiryDays, promoter.id_card_expiry_date || null),
-          passport_status: getDocumentStatus(passportExpiryDays, promoter.passport_expiry_date || null),
-          overall_status: getOverallStatus(promoter),
-          days_until_id_expiry: idExpiryDays || undefined,
-          days_until_passport_expiry: passportExpiryDays || undefined,
-          contracts_trend: getContractsTrend(promoter),
-          tags: generateTags(promoter)
-        }
-      }) || []
+          return {
+            ...promoter,
+            id_card_status: getDocumentStatus(idExpiryDays, promoter.id_card_expiry_date || null),
+            passport_status: getDocumentStatus(
+              passportExpiryDays,
+              promoter.passport_expiry_date || null
+            ),
+            overall_status: getOverallStatus(promoter),
+            days_until_id_expiry: idExpiryDays || undefined,
+            days_until_passport_expiry: passportExpiryDays || undefined,
+            contracts_trend: getContractsTrend(promoter),
+            tags: generateTags(promoter),
+          }
+        }) || []
 
       setPromoters(enhancedPromoters)
       setFilteredPromoters(enhancedPromoters)
@@ -194,7 +284,7 @@ export default function AdvancedPromotersManagement() {
       toast({
         title: "Error",
         description: "Failed to fetch promoters data",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -202,7 +292,10 @@ export default function AdvancedPromotersManagement() {
   }, [toast])
 
   // Helper functions for data processing
-  const getDocumentStatus = (daysUntilExpiry: number | null, dateString: string | null): "valid" | "expiring" | "expired" | "missing" => {
+  const getDocumentStatus = (
+    daysUntilExpiry: number | null,
+    dateString: string | null
+  ): "valid" | "expiring" | "expired" | "missing" => {
     if (!dateString) return "missing"
     if (daysUntilExpiry === null) return "missing"
     if (daysUntilExpiry < 0) return "expired"
@@ -212,18 +305,25 @@ export default function AdvancedPromotersManagement() {
 
   const getOverallStatus = (promoter: Promoter): "active" | "warning" | "critical" | "inactive" => {
     if (!promoter.status || promoter.status === "inactive") return "inactive"
-    
-    const idExpiry = promoter.id_card_expiry_date ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date()) : null
-    const passportExpiry = promoter.passport_expiry_date ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date()) : null
-    
+
+    const idExpiry = promoter.id_card_expiry_date
+      ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+      : null
+    const passportExpiry = promoter.passport_expiry_date
+      ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+      : null
+
     if ((idExpiry !== null && idExpiry < 0) || (passportExpiry !== null && passportExpiry < 0)) {
       return "critical"
     }
-    
-    if ((idExpiry !== null && idExpiry <= 30) || (passportExpiry !== null && passportExpiry <= 30)) {
+
+    if (
+      (idExpiry !== null && idExpiry <= 30) ||
+      (passportExpiry !== null && passportExpiry <= 30)
+    ) {
       return "warning"
     }
-    
+
     return "active"
   }
 
@@ -235,20 +335,22 @@ export default function AdvancedPromotersManagement() {
 
   const generateTags = (promoter: Promoter): string[] => {
     const tags: string[] = []
-    
+
     if (promoter.active_contracts_count && promoter.active_contracts_count > 5) {
       tags.push("high-activity")
     }
-    
+
     if (promoter.status === "premium") {
       tags.push("premium")
     }
-    
-    const idExpiry = promoter.id_card_expiry_date ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date()) : null
+
+    const idExpiry = promoter.id_card_expiry_date
+      ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+      : null
     if (idExpiry !== null && idExpiry <= 30) {
       tags.push("urgent")
     }
-    
+
     return tags
   }
 
@@ -259,53 +361,56 @@ export default function AdvancedPromotersManagement() {
     // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
-      filtered = filtered.filter(promoter => 
-        promoter.name_en.toLowerCase().includes(searchTerm) ||
-        promoter.name_ar.toLowerCase().includes(searchTerm) ||
-        promoter.id_card_number.toLowerCase().includes(searchTerm)
+      filtered = filtered.filter(
+        (promoter) =>
+          promoter.name_en.toLowerCase().includes(searchTerm) ||
+          promoter.name_ar.toLowerCase().includes(searchTerm) ||
+          promoter.id_card_number.toLowerCase().includes(searchTerm)
       )
     }
 
     // Apply status filters
     if (filters.status.length > 0) {
-      filtered = filtered.filter(promoter => 
+      filtered = filtered.filter((promoter) =>
         filters.status.includes(promoter.status || "inactive")
       )
     }
 
     // Apply document status filters
     if (filters.id_card_status.length > 0) {
-      filtered = filtered.filter(promoter => 
+      filtered = filtered.filter((promoter) =>
         filters.id_card_status.includes(promoter.id_card_status)
       )
     }
 
     if (filters.passport_status.length > 0) {
-      filtered = filtered.filter(promoter => 
+      filtered = filtered.filter((promoter) =>
         filters.passport_status.includes(promoter.passport_status)
       )
     }
 
     // Apply contracts range filter
-    filtered = filtered.filter(promoter => {
+    filtered = filtered.filter((promoter) => {
       const contracts = promoter.active_contracts_count || 0
       return contracts >= filters.active_contracts[0] && contracts <= filters.active_contracts[1]
     })
 
     // Apply date range filter
     if (filters.created_date_range[0] && filters.created_date_range[1]) {
-      filtered = filtered.filter(promoter => {
+      filtered = filtered.filter((promoter) => {
         if (!promoter.created_at) return false
         const createdDate = parseISO(promoter.created_at)
-        return createdDate >= filters.created_date_range[0]! && 
-               createdDate <= filters.created_date_range[1]!
+        return (
+          createdDate >= filters.created_date_range[0]! &&
+          createdDate <= filters.created_date_range[1]!
+        )
       })
     }
 
     // Apply tag filters
     if (filters.tags.length > 0) {
-      filtered = filtered.filter(promoter => 
-        filters.tags.some(tag => promoter.tags?.includes(tag))
+      filtered = filtered.filter((promoter) =>
+        filters.tags.some((tag) => promoter.tags?.includes(tag))
       )
     }
 
@@ -313,10 +418,10 @@ export default function AdvancedPromotersManagement() {
     filtered.sort((a, b) => {
       const aValue = a[sortOption.field]
       const bValue = b[sortOption.field]
-      
+
       if (aValue === null || aValue === undefined) return 1
       if (bValue === null || bValue === undefined) return -1
-      
+
       const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0
       return sortOption.direction === "asc" ? comparison : -comparison
     })
@@ -328,11 +433,11 @@ export default function AdvancedPromotersManagement() {
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
     const total = promoters.length
-    const active = promoters.filter(p => p.overall_status === "active").length
-    const expiring = promoters.filter(p => p.overall_status === "warning").length
-    const expired = promoters.filter(p => p.overall_status === "critical").length
+    const active = promoters.filter((p) => p.overall_status === "active").length
+    const expiring = promoters.filter((p) => p.overall_status === "warning").length
+    const expired = promoters.filter((p) => p.overall_status === "critical").length
     const totalContracts = promoters.reduce((sum, p) => sum + (p.active_contracts_count || 0), 0)
-    
+
     return {
       total,
       active,
@@ -340,7 +445,7 @@ export default function AdvancedPromotersManagement() {
       expired_documents: expired,
       total_contracts: totalContracts,
       growth_rate: 12.5, // This would be calculated from historical data
-      engagement_score: 87.3 // This would be calculated based on activity metrics
+      engagement_score: 87.3, // This would be calculated based on activity metrics
     }
   }, [promoters])
 
@@ -350,14 +455,14 @@ export default function AdvancedPromotersManagement() {
       toast({
         title: "No Selection",
         description: "Please select promoters to perform bulk operations",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
 
     try {
       setIsLoading(true)
-      
+
       switch (operation.type) {
         case "status_update":
           await supabase
@@ -365,24 +470,21 @@ export default function AdvancedPromotersManagement() {
             .update({ status: operation.data.status })
             .in("id", selectedPromoters)
           break
-          
+
         case "delete":
-          await supabase
-            .from("promoters")
-            .delete()
-            .in("id", selectedPromoters)
+          await supabase.from("promoters").delete().in("id", selectedPromoters)
           break
-          
+
         case "export":
           handleExport(selectedPromoters)
           break
-          
+
         case "notification_settings":
           await supabase
             .from("promoters")
             .update({
               notify_days_before_id_expiry: operation.data.id_expiry_days,
-              notify_days_before_passport_expiry: operation.data.passport_expiry_days
+              notify_days_before_passport_expiry: operation.data.passport_expiry_days,
             })
             .in("id", selectedPromoters)
           break
@@ -390,9 +492,9 @@ export default function AdvancedPromotersManagement() {
 
       toast({
         title: "Success",
-        description: `Bulk operation completed for ${selectedPromoters.length} promoters`
+        description: `Bulk operation completed for ${selectedPromoters.length} promoters`,
       })
-      
+
       setSelectedPromoters([])
       await fetchPromoters()
     } catch (error) {
@@ -400,7 +502,7 @@ export default function AdvancedPromotersManagement() {
       toast({
         title: "Error",
         description: "Failed to perform bulk operation",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -415,13 +517,13 @@ export default function AdvancedPromotersManagement() {
 
     try {
       let data: any[] = []
-      
-      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+
+      if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
         const arrayBuffer = await file.arrayBuffer()
         const workbook = XLSX.read(arrayBuffer)
         const worksheet = workbook.Sheets[workbook.SheetNames[0]]
         data = XLSX.utils.sheet_to_json(worksheet)
-      } else if (file.name.endsWith('.csv')) {
+      } else if (file.name.endsWith(".csv")) {
         const text = await file.text()
         const result = Papa.parse(text, { header: true, skipEmptyLines: true })
         data = result.data
@@ -429,7 +531,7 @@ export default function AdvancedPromotersManagement() {
         throw new Error("Unsupported file format. Please use Excel (.xlsx) or CSV files.")
       }
 
-      setImportProgress(prev => ({ ...prev!, total: data.length }))
+      setImportProgress((prev) => ({ ...prev!, total: data.length }))
 
       const batchSize = 50
       let processed = 0
@@ -438,39 +540,39 @@ export default function AdvancedPromotersManagement() {
 
       for (let i = 0; i < data.length; i += batchSize) {
         const batch = data.slice(i, i + batchSize)
-        
+
         try {
           const formattedBatch = batch.map((row, index) => ({
-            name_en: row.name_en || row['Name (English)'] || '',
-            name_ar: row.name_ar || row['Name (Arabic)'] || '',
-            id_card_number: row.id_card_number || row['ID Card Number'] || '',
-            status: row.status || 'active',
-            id_card_expiry_date: row.id_card_expiry_date || row['ID Expiry Date'] || null,
-            passport_expiry_date: row.passport_expiry_date || row['Passport Expiry Date'] || null,
-            notify_days_before_id_expiry: parseInt(row.notify_days_before_id_expiry || '30'),
-            notify_days_before_passport_expiry: parseInt(row.notify_days_before_passport_expiry || '30'),
-            notes: row.notes || row['Notes'] || null,
-            created_at: new Date().toISOString()
+            name_en: row.name_en || row["Name (English)"] || "",
+            name_ar: row.name_ar || row["Name (Arabic)"] || "",
+            id_card_number: row.id_card_number || row["ID Card Number"] || "",
+            status: row.status || "active",
+            id_card_expiry_date: row.id_card_expiry_date || row["ID Expiry Date"] || null,
+            passport_expiry_date: row.passport_expiry_date || row["Passport Expiry Date"] || null,
+            notify_days_before_id_expiry: parseInt(row.notify_days_before_id_expiry || "30"),
+            notify_days_before_passport_expiry: parseInt(
+              row.notify_days_before_passport_expiry || "30"
+            ),
+            notes: row.notes || row["Notes"] || null,
+            created_at: new Date().toISOString(),
           }))
 
-          const { error } = await supabase
-            .from("promoters")
-            .insert(formattedBatch)
+          const { error } = await supabase.from("promoters").insert(formattedBatch)
 
           if (error) throw error
-          
+
           success += batch.length
         } catch (error) {
           errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error}`)
         }
-        
+
         processed += batch.length
-        setImportProgress(prev => ({ ...prev!, processed, success, errors }))
+        setImportProgress((prev) => ({ ...prev!, processed, success, errors }))
       }
 
       toast({
         title: "Import Completed",
-        description: `Successfully imported ${success} out of ${data.length} records`
+        description: `Successfully imported ${success} out of ${data.length} records`,
       })
 
       await fetchPromoters()
@@ -478,7 +580,7 @@ export default function AdvancedPromotersManagement() {
       toast({
         title: "Import Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsImporting(false)
@@ -488,37 +590,37 @@ export default function AdvancedPromotersManagement() {
   }
 
   const handleExport = (promoterIds?: string[]) => {
-    const dataToExport = promoterIds 
-      ? promoters.filter(p => promoterIds.includes(p.id))
+    const dataToExport = promoterIds
+      ? promoters.filter((p) => promoterIds.includes(p.id))
       : filteredPromoters
 
-    const exportData = dataToExport.map(promoter => ({
-      'Name (English)': promoter.name_en,
-      'Name (Arabic)': promoter.name_ar,
-      'ID Card Number': promoter.id_card_number,
-      'Status': promoter.status,
-      'ID Card Status': promoter.id_card_status,
-      'Passport Status': promoter.passport_status,
-      'Active Contracts': promoter.active_contracts_count || 0,
-      'ID Expiry Date': promoter.id_card_expiry_date,
-      'Passport Expiry Date': promoter.passport_expiry_date,
-      'Days Until ID Expiry': promoter.days_until_id_expiry,
-      'Days Until Passport Expiry': promoter.days_until_passport_expiry,
-      'Overall Status': promoter.overall_status,
-      'Created Date': promoter.created_at,
-      'Notes': promoter.notes
+    const exportData = dataToExport.map((promoter) => ({
+      "Name (English)": promoter.name_en,
+      "Name (Arabic)": promoter.name_ar,
+      "ID Card Number": promoter.id_card_number,
+      Status: promoter.status,
+      "ID Card Status": promoter.id_card_status,
+      "Passport Status": promoter.passport_status,
+      "Active Contracts": promoter.active_contracts_count || 0,
+      "ID Expiry Date": promoter.id_card_expiry_date,
+      "Passport Expiry Date": promoter.passport_expiry_date,
+      "Days Until ID Expiry": promoter.days_until_id_expiry,
+      "Days Until Passport Expiry": promoter.days_until_passport_expiry,
+      "Overall Status": promoter.overall_status,
+      "Created Date": promoter.created_at,
+      Notes: promoter.notes,
     }))
 
     const worksheet = XLSX.utils.json_to_sheet(exportData)
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Promoters')
-    
-    const filename = `promoters_export_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.xlsx`
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Promoters")
+
+    const filename = `promoters_export_${format(new Date(), "yyyy-MM-dd_HH-mm-ss")}.xlsx`
     XLSX.writeFile(workbook, filename)
 
     toast({
       title: "Export Successful",
-      description: `Exported ${exportData.length} promoters to ${filename}`
+      description: `Exported ${exportData.length} promoters to ${filename}`,
     })
   }
 
@@ -563,7 +665,7 @@ export default function AdvancedPromotersManagement() {
             height={32}
             className="h-8 w-8"
             fallback={
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-sm font-medium text-white">
                 {row.original.name_en.charAt(0).toUpperCase()}
               </div>
             }
@@ -578,9 +680,7 @@ export default function AdvancedPromotersManagement() {
     {
       accessorKey: "id_card_number",
       header: "ID Card Number",
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.original.id_card_number}</div>
-      ),
+      cell: ({ row }) => <div className="font-mono text-sm">{row.original.id_card_number}</div>,
     },
     {
       accessorKey: "overall_status",
@@ -597,11 +697,17 @@ export default function AdvancedPromotersManagement() {
       header: "Documents",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Badge variant={getDocumentStatusVariant(row.original.id_card_status)} className="text-xs">
+          <Badge
+            variant={getDocumentStatusVariant(row.original.id_card_status)}
+            className="text-xs"
+          >
             <CreditCard className="mr-1 h-3 w-3" />
             ID
           </Badge>
-          <Badge variant={getDocumentStatusVariant(row.original.passport_status)} className="text-xs">
+          <Badge
+            variant={getDocumentStatusVariant(row.original.passport_status)}
+            className="text-xs"
+          >
             <Globe className="mr-1 h-3 w-3" />
             PP
           </Badge>
@@ -632,7 +738,9 @@ export default function AdvancedPromotersManagement() {
       header: "Created",
       cell: ({ row }) => (
         <div className="text-sm text-gray-500">
-          {row.original.created_at ? format(parseISO(row.original.created_at), 'MMM dd, yyyy') : 'N/A'}
+          {row.original.created_at
+            ? format(parseISO(row.original.created_at), "MMM dd, yyyy")
+            : "N/A"}
         </div>
       ),
     },
@@ -648,10 +756,12 @@ export default function AdvancedPromotersManagement() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => {
-              setSelectedPromoterForEdit(row.original)
-              setIsQuickEditModalOpen(true)
-            }}>
+            <DropdownMenuItem
+              onClick={() => {
+                setSelectedPromoterForEdit(row.original)
+                setIsQuickEditModalOpen(true)
+              }}
+            >
               <Edit3 className="mr-2 h-4 w-4" />
               Quick Edit
             </DropdownMenuItem>
@@ -659,14 +769,20 @@ export default function AdvancedPromotersManagement() {
               <Eye className="mr-2 h-4 w-4" />
               View Details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              const updatedFavorites = favoritePromoters.includes(row.original.id)
-                ? favoritePromoters.filter(id => id !== row.original.id)
-                : [...favoritePromoters, row.original.id]
-              setFavoritePromoters(updatedFavorites)
-            }}>
-              <Star className={`mr-2 h-4 w-4 ${favoritePromoters.includes(row.original.id) ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-              {favoritePromoters.includes(row.original.id) ? 'Remove from Favorites' : 'Add to Favorites'}
+            <DropdownMenuItem
+              onClick={() => {
+                const updatedFavorites = favoritePromoters.includes(row.original.id)
+                  ? favoritePromoters.filter((id) => id !== row.original.id)
+                  : [...favoritePromoters, row.original.id]
+                setFavoritePromoters(updatedFavorites)
+              }}
+            >
+              <Star
+                className={`mr-2 h-4 w-4 ${favoritePromoters.includes(row.original.id) ? "fill-yellow-400 text-yellow-400" : ""}`}
+              />
+              {favoritePromoters.includes(row.original.id)
+                ? "Remove from Favorites"
+                : "Add to Favorites"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Data & Reports</DropdownMenuLabel>
@@ -714,44 +830,59 @@ export default function AdvancedPromotersManagement() {
   // Helper functions for styling
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "active": return "default"
-      case "warning": return "secondary"
-      case "critical": return "destructive"
-      case "inactive": return "outline"
-      default: return "outline"
+      case "active":
+        return "default"
+      case "warning":
+        return "secondary"
+      case "critical":
+        return "destructive"
+      case "inactive":
+        return "outline"
+      default:
+        return "outline"
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "active": return <CheckCircle className="mr-1 h-3 w-3" />
-      case "warning": return <AlertTriangle className="mr-1 h-3 w-3" />
-      case "critical": return <XCircle className="mr-1 h-3 w-3" />
-      case "inactive": return <Clock className="mr-1 h-3 w-3" />
-      default: return null
+      case "active":
+        return <CheckCircle className="mr-1 h-3 w-3" />
+      case "warning":
+        return <AlertTriangle className="mr-1 h-3 w-3" />
+      case "critical":
+        return <XCircle className="mr-1 h-3 w-3" />
+      case "inactive":
+        return <Clock className="mr-1 h-3 w-3" />
+      default:
+        return null
     }
   }
 
   const getDocumentStatusVariant = (status: string) => {
     switch (status) {
-      case "valid": return "default"
-      case "expiring": return "secondary"
-      case "expired": return "destructive"
-      case "missing": return "outline"
-      default: return "outline"
+      case "valid":
+        return "default"
+      case "expiring":
+        return "secondary"
+      case "expired":
+        return "destructive"
+      case "missing":
+        return "outline"
+      default:
+        return "outline"
     }
   }
 
   // Effects
   useEffect(() => {
     fetchPromoters()
-    
+
     // Load persisted data from localStorage
     try {
-      const savedFavorites = localStorage.getItem('promoter-favorites')
-      const savedRecentlyViewed = localStorage.getItem('promoter-recently-viewed')
-      const savedNotificationSettings = localStorage.getItem('notification-settings')
-      
+      const savedFavorites = localStorage.getItem("promoter-favorites")
+      const savedRecentlyViewed = localStorage.getItem("promoter-recently-viewed")
+      const savedNotificationSettings = localStorage.getItem("notification-settings")
+
       if (savedFavorites) {
         setFavoritePromoters(JSON.parse(savedFavorites))
       }
@@ -762,34 +893,34 @@ export default function AdvancedPromotersManagement() {
         setNotificationSettings(JSON.parse(savedNotificationSettings))
       }
     } catch (error) {
-      console.warn('Failed to load persisted data:', error)
+      console.warn("Failed to load persisted data:", error)
     }
   }, [fetchPromoters])
 
   // Persist favorites to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('promoter-favorites', JSON.stringify(favoritePromoters))
+      localStorage.setItem("promoter-favorites", JSON.stringify(favoritePromoters))
     } catch (error) {
-      console.warn('Failed to save favorites:', error)
+      console.warn("Failed to save favorites:", error)
     }
   }, [favoritePromoters])
 
   // Persist recently viewed to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('promoter-recently-viewed', JSON.stringify(recentlyViewed))
+      localStorage.setItem("promoter-recently-viewed", JSON.stringify(recentlyViewed))
     } catch (error) {
-      console.warn('Failed to save recently viewed:', error)
+      console.warn("Failed to save recently viewed:", error)
     }
   }, [recentlyViewed])
 
   // Persist notification settings to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('notification-settings', JSON.stringify(notificationSettings))
+      localStorage.setItem("notification-settings", JSON.stringify(notificationSettings))
     } catch (error) {
-      console.warn('Failed to save notification settings:', error)
+      console.warn("Failed to save notification settings:", error)
     }
   }, [notificationSettings])
 
@@ -800,8 +931,8 @@ export default function AdvancedPromotersManagement() {
   // Real-time updates
   useEffect(() => {
     const channel = supabase
-      .channel('promoters-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'promoters' }, () => {
+      .channel("promoters-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () => {
         fetchPromoters()
       })
       .subscribe()
@@ -827,7 +958,7 @@ export default function AdvancedPromotersManagement() {
   }, [autoRefresh, fetchPromoters])
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto space-y-6 p-6">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
@@ -838,15 +969,12 @@ export default function AdvancedPromotersManagement() {
         </div>
         <div className="flex items-center gap-3">
           {/* Auto Refresh Toggle */}
-          <div className="flex items-center gap-2 px-3 py-1 border rounded-lg bg-background">
+          <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1">
             <Zap className="h-4 w-4 text-muted-foreground" />
-            <Switch
-              checked={autoRefresh}
-              onCheckedChange={setAutoRefresh}
-            />
+            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
             <span className="text-sm text-muted-foreground">Auto-refresh</span>
           </div>
-          
+
           {/* Notification Center */}
           <Button
             variant="outline"
@@ -856,12 +984,12 @@ export default function AdvancedPromotersManagement() {
           >
             <Bell className="h-4 w-4" />
             {stats.expiring_documents + stats.expired_documents > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                 {stats.expiring_documents + stats.expired_documents}
               </span>
             )}
           </Button>
-          
+
           <Button variant="outline" onClick={() => fetchPromoters()}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
@@ -882,7 +1010,7 @@ export default function AdvancedPromotersManagement() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Promoters</CardTitle>
@@ -890,9 +1018,7 @@ export default function AdvancedPromotersManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              +{stats.growth_rate}% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+{stats.growth_rate}% from last month</p>
           </CardContent>
         </Card>
 
@@ -915,7 +1041,9 @@ export default function AdvancedPromotersManagement() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.expiring_documents + stats.expired_documents}</div>
+            <div className="text-2xl font-bold">
+              {stats.expiring_documents + stats.expired_documents}
+            </div>
             <p className="text-xs text-muted-foreground">
               {stats.expired_documents} expired, {stats.expiring_documents} expiring
             </p>
@@ -949,7 +1077,9 @@ export default function AdvancedPromotersManagement() {
               >
                 <FilterIcon className="mr-2 h-4 w-4" />
                 Advanced Filters
-                <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${isAdvancedFiltersOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`ml-1 h-4 w-4 transition-transform ${isAdvancedFiltersOpen ? "rotate-180" : ""}`}
+                />
               </Button>
               <Button
                 variant="outline"
@@ -962,7 +1092,7 @@ export default function AdvancedPromotersManagement() {
                     active_contracts: [0, 50],
                     created_date_range: [null, null],
                     search: "",
-                    tags: []
+                    tags: [],
                   })
                 }}
               >
@@ -972,7 +1102,7 @@ export default function AdvancedPromotersManagement() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Search</Label>
               <div className="relative">
@@ -980,7 +1110,7 @@ export default function AdvancedPromotersManagement() {
                 <Input
                   placeholder="Search promoters..."
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                   className="pl-10"
                 />
               </div>
@@ -990,10 +1120,12 @@ export default function AdvancedPromotersManagement() {
               <Label>Status Filter</Label>
               <Select
                 value={filters.status.join(",")}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  status: value ? value.split(",") : [] 
-                }))}
+                onValueChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: value ? value.split(",") : [],
+                  }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
@@ -1011,10 +1143,12 @@ export default function AdvancedPromotersManagement() {
               <Label>Document Status</Label>
               <Select
                 value={filters.id_card_status.join(",")}
-                onValueChange={(value) => setFilters(prev => ({ 
-                  ...prev, 
-                  id_card_status: value ? value.split(",") : [] 
-                }))}
+                onValueChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    id_card_status: value ? value.split(",") : [],
+                  }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All documents" />
@@ -1062,30 +1196,32 @@ export default function AdvancedPromotersManagement() {
           {/* Advanced Filters Panel */}
           {isAdvancedFiltersOpen && (
             <div className="border-t pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Quick Filters</Label>
                   <div className="flex flex-wrap gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, id_card_status: ["expiring", "expired"] }))}
+                      onClick={() =>
+                        setFilters((prev) => ({ ...prev, id_card_status: ["expiring", "expired"] }))
+                      }
                     >
                       <AlertTriangle className="mr-1 h-3 w-3" />
                       Document Alerts
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, active_contracts: [5, 50] }))}
+                      onClick={() => setFilters((prev) => ({ ...prev, active_contracts: [5, 50] }))}
                     >
                       <TrendingUp className="mr-1 h-3 w-3" />
                       High Activity
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, active_contracts: [0, 0] }))}
+                      onClick={() => setFilters((prev) => ({ ...prev, active_contracts: [0, 0] }))}
                     >
                       <Clock className="mr-1 h-3 w-3" />
                       Inactive
@@ -1100,10 +1236,15 @@ export default function AdvancedPromotersManagement() {
                       type="number"
                       placeholder="Min"
                       value={filters.active_contracts[0]}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        active_contracts: [parseInt(e.target.value) || 0, prev.active_contracts[1]] 
-                      }))}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          active_contracts: [
+                            parseInt(e.target.value) || 0,
+                            prev.active_contracts[1],
+                          ],
+                        }))
+                      }
                       className="w-20"
                     />
                     <span>-</span>
@@ -1111,10 +1252,15 @@ export default function AdvancedPromotersManagement() {
                       type="number"
                       placeholder="Max"
                       value={filters.active_contracts[1]}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        active_contracts: [prev.active_contracts[0], parseInt(e.target.value) || 50] 
-                      }))}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          active_contracts: [
+                            prev.active_contracts[0],
+                            parseInt(e.target.value) || 50,
+                          ],
+                        }))
+                      }
                       className="w-20"
                     />
                   </div>
@@ -1134,10 +1280,12 @@ export default function AdvancedPromotersManagement() {
                         <Calendar
                           mode="single"
                           selected={filters.created_date_range[0] || undefined}
-                          onSelect={(date) => setFilters(prev => ({ 
-                            ...prev, 
-                            created_date_range: [date || null, prev.created_date_range[1]] 
-                          }))}
+                          onSelect={(date) =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              created_date_range: [date || null, prev.created_date_range[1]],
+                            }))
+                          }
                         />
                       </PopoverContent>
                     </Popover>
@@ -1152,10 +1300,12 @@ export default function AdvancedPromotersManagement() {
                         <Calendar
                           mode="single"
                           selected={filters.created_date_range[1] || undefined}
-                          onSelect={(date) => setFilters(prev => ({ 
-                            ...prev, 
-                            created_date_range: [prev.created_date_range[0], date || null] 
-                          }))}
+                          onSelect={(date) =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              created_date_range: [prev.created_date_range[0], date || null],
+                            }))
+                          }
                         />
                       </PopoverContent>
                     </Popover>
@@ -1181,27 +1331,15 @@ export default function AdvancedPromotersManagement() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExport(selectedPromoters)}
-                >
+                <Button variant="outline" size="sm" onClick={() => handleExport(selectedPromoters)}>
                   <Download className="mr-2 h-4 w-4" />
                   Export Selected
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsBulkActionModalOpen(true)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setIsBulkActionModalOpen(true)}>
                   <Settings className="mr-2 h-4 w-4" />
                   Bulk Actions
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedPromoters([])}
-                >
+                <Button variant="outline" size="sm" onClick={() => setSelectedPromoters([])}>
                   Clear Selection
                 </Button>
               </div>
@@ -1235,7 +1373,7 @@ export default function AdvancedPromotersManagement() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex h-64 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
               <span className="ml-2">Loading promoters...</span>
             </div>
@@ -1247,9 +1385,9 @@ export default function AdvancedPromotersManagement() {
               onRowSelectionChange={setSelectedPromoters}
             />
           ) : currentView === "grid" ? (
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredPromoters.map((promoter) => (
-                <Card key={promoter.id} className="hover:shadow-md transition-shadow group">
+                <Card key={promoter.id} className="group transition-shadow hover:shadow-md">
                   <CardContent className="pt-4">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -1260,7 +1398,7 @@ export default function AdvancedPromotersManagement() {
                           height={40}
                           className="h-10 w-10"
                           fallback={
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-medium">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-medium text-white">
                               {promoter.name_en.charAt(0).toUpperCase()}
                             </div>
                           }
@@ -1269,36 +1407,47 @@ export default function AdvancedPromotersManagement() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
                             onClick={() => {
                               const updatedFavorites = favoritePromoters.includes(promoter.id)
-                                ? favoritePromoters.filter(id => id !== promoter.id)
+                                ? favoritePromoters.filter((id) => id !== promoter.id)
                                 : [...favoritePromoters, promoter.id]
                               setFavoritePromoters(updatedFavorites)
                             }}
                           >
-                            <Star className={`h-3 w-3 ${favoritePromoters.includes(promoter.id) ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                            <Star
+                              className={`h-3 w-3 ${favoritePromoters.includes(promoter.id) ? "fill-yellow-400 text-yellow-400" : ""}`}
+                            />
                           </Button>
-                          <Badge variant={getStatusVariant(promoter.overall_status)} className="text-xs">
+                          <Badge
+                            variant={getStatusVariant(promoter.overall_status)}
+                            className="text-xs"
+                          >
                             {promoter.overall_status}
                           </Badge>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h3 className="font-semibold">{promoter.name_en}</h3>
                         <p className="text-sm text-muted-foreground">{promoter.name_ar}</p>
-                        <p className="text-xs text-muted-foreground font-mono mt-1">
+                        <p className="mt-1 font-mono text-xs text-muted-foreground">
                           {promoter.id_card_number}
                         </p>
                       </div>
 
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <div className="flex gap-1">
-                          <Badge variant={getDocumentStatusVariant(promoter.id_card_status)} className="text-xs">
+                          <Badge
+                            variant={getDocumentStatusVariant(promoter.id_card_status)}
+                            className="text-xs"
+                          >
                             ID
                           </Badge>
-                          <Badge variant={getDocumentStatusVariant(promoter.passport_status)} className="text-xs">
+                          <Badge
+                            variant={getDocumentStatusVariant(promoter.passport_status)}
+                            className="text-xs"
+                          >
                             PP
                           </Badge>
                         </div>
@@ -1308,10 +1457,12 @@ export default function AdvancedPromotersManagement() {
                       </div>
 
                       {/* Document expiry alerts */}
-                      {(promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30) ||
-                       (promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30) ? (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                          <div className="flex items-center gap-1 text-yellow-800 text-xs">
+                      {(promoter.days_until_id_expiry !== undefined &&
+                        promoter.days_until_id_expiry <= 30) ||
+                      (promoter.days_until_passport_expiry !== undefined &&
+                        promoter.days_until_passport_expiry <= 30) ? (
+                        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-2">
+                          <div className="flex items-center gap-1 text-xs text-yellow-800">
                             <AlertTriangle className="h-3 w-3" />
                             Document expiring soon
                           </div>
@@ -1324,16 +1475,18 @@ export default function AdvancedPromotersManagement() {
                           size="sm"
                           className="flex-1"
                           onClick={() => {
-                            setRecentlyViewed(prev => [promoter.id, ...prev.filter(id => id !== promoter.id)].slice(0, 10))
+                            setRecentlyViewed((prev) =>
+                              [promoter.id, ...prev.filter((id) => id !== promoter.id)].slice(0, 10)
+                            )
                             router.push(`/manage-promoters/${promoter.id}`)
                           }}
                         >
                           <Eye className="mr-2 h-3 w-3" />
                           View
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="flex-1"
                           onClick={() => {
                             setSelectedPromoterForEdit(promoter)
@@ -1350,7 +1503,9 @@ export default function AdvancedPromotersManagement() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/contracts?promoter=${promoter.id}`)}>
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/contracts?promoter=${promoter.id}`)}
+                            >
                               <FileText className="mr-2 h-3 w-3" />
                               Contracts
                             </DropdownMenuItem>
@@ -1372,7 +1527,7 @@ export default function AdvancedPromotersManagement() {
             </div>
           ) : (
             // Analytics View
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 p-6">
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -1380,9 +1535,9 @@ export default function AdvancedPromotersManagement() {
                   <TabsTrigger value="contracts">Contracts</TabsTrigger>
                   <TabsTrigger value="trends">Trends</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="overview" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -1392,20 +1547,26 @@ export default function AdvancedPromotersManagement() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {['active', 'warning', 'critical', 'inactive'].map(status => {
-                            const count = promoters.filter(p => p.overall_status === status).length
+                          {["active", "warning", "critical", "inactive"].map((status) => {
+                            const count = promoters.filter(
+                              (p) => p.overall_status === status
+                            ).length
                             const percentage = (count / promoters.length) * 100
                             return (
                               <div key={status} className="flex items-center justify-between">
                                 <span className="capitalize">{status}</span>
                                 <div className="flex items-center gap-2">
                                   <div className="w-24">
-                                    <Progress 
-                                      value={percentage} 
+                                    <Progress
+                                      value={percentage}
                                       className={`h-2 ${
-                                        status === 'active' ? '[&>div]:bg-green-500' :
-                                        status === 'warning' ? '[&>div]:bg-yellow-500' :
-                                        status === 'critical' ? '[&>div]:bg-red-500' : '[&>div]:bg-gray-400'
+                                        status === "active"
+                                          ? "[&>div]:bg-green-500"
+                                          : status === "warning"
+                                            ? "[&>div]:bg-yellow-500"
+                                            : status === "critical"
+                                              ? "[&>div]:bg-red-500"
+                                              : "[&>div]:bg-gray-400"
                                       }`}
                                     />
                                   </div>
@@ -1431,18 +1592,29 @@ export default function AdvancedPromotersManagement() {
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span>High Activity (5+ contracts)</span>
-                            <span>{promoters.filter(p => (p.active_contracts_count || 0) >= 5).length}</span>
+                            <span>
+                              {promoters.filter((p) => (p.active_contracts_count || 0) >= 5).length}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Medium Activity (1-4 contracts)</span>
-                            <span>{promoters.filter(p => {
-                              const count = p.active_contracts_count || 0
-                              return count >= 1 && count < 5
-                            }).length}</span>
+                            <span>
+                              {
+                                promoters.filter((p) => {
+                                  const count = p.active_contracts_count || 0
+                                  return count >= 1 && count < 5
+                                }).length
+                              }
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span>No Activity</span>
-                            <span>{promoters.filter(p => (p.active_contracts_count || 0) === 0).length}</span>
+                            <span>
+                              {
+                                promoters.filter((p) => (p.active_contracts_count || 0) === 0)
+                                  .length
+                              }
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -1451,21 +1623,21 @@ export default function AdvancedPromotersManagement() {
                 </TabsContent>
 
                 <TabsContent value="documents" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Card>
                       <CardHeader>
                         <CardTitle>ID Card Status</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {['valid', 'expiring', 'expired', 'missing'].map(status => {
-                            const count = promoters.filter(p => p.id_card_status === status).length
+                          {["valid", "expiring", "expired", "missing"].map((status) => {
+                            const count = promoters.filter(
+                              (p) => p.id_card_status === status
+                            ).length
                             return (
                               <div key={status} className="flex justify-between">
                                 <span className="capitalize">{status}</span>
-                                <Badge variant={getDocumentStatusVariant(status)}>
-                                  {count}
-                                </Badge>
+                                <Badge variant={getDocumentStatusVariant(status)}>{count}</Badge>
                               </div>
                             )
                           })}
@@ -1479,14 +1651,14 @@ export default function AdvancedPromotersManagement() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {['valid', 'expiring', 'expired', 'missing'].map(status => {
-                            const count = promoters.filter(p => p.passport_status === status).length
+                          {["valid", "expiring", "expired", "missing"].map((status) => {
+                            const count = promoters.filter(
+                              (p) => p.passport_status === status
+                            ).length
                             return (
                               <div key={status} className="flex justify-between">
                                 <span className="capitalize">{status}</span>
-                                <Badge variant={getDocumentStatusVariant(status)}>
-                                  {count}
-                                </Badge>
+                                <Badge variant={getDocumentStatusVariant(status)}>{count}</Badge>
                               </div>
                             )
                           })}
@@ -1533,13 +1705,13 @@ export default function AdvancedPromotersManagement() {
           <DialogHeader>
             <DialogTitle>Import Promoters</DialogTitle>
             <DialogDescription>
-              Upload an Excel (.xlsx) or CSV file to bulk import promoter data.
-              The file should contain columns: name_en, name_ar, id_card_number, status, etc.
+              Upload an Excel (.xlsx) or CSV file to bulk import promoter data. The file should
+              contain columns: name_en, name_ar, id_card_number, status, etc.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">
               <FileSpreadsheet className="mx-auto h-12 w-12 text-gray-400" />
               <div className="mt-2">
                 <Label htmlFor="file-upload" className="cursor-pointer">
@@ -1563,8 +1735,8 @@ export default function AdvancedPromotersManagement() {
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Required Columns:</h4>
+            <div className="rounded-lg bg-blue-50 p-4">
+              <h4 className="mb-2 font-medium text-blue-900">Required Columns:</h4>
               <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
                 <div>• name_en (Name English)</div>
                 <div>• name_ar (Name Arabic)</div>
@@ -1580,26 +1752,28 @@ export default function AdvancedPromotersManagement() {
             <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              // Download template
-              const template = [
-                {
-                  'name_en': 'John Doe',
-                  'name_ar': 'جون دو',
-                  'id_card_number': '123456789',
-                  'status': 'active',
-                  'id_card_expiry_date': '2025-12-31',
-                  'passport_expiry_date': '2025-12-31',
-                  'notify_days_before_id_expiry': '30',
-                  'notify_days_before_passport_expiry': '30',
-                  'notes': 'Sample promoter'
-                }
-              ]
-              const worksheet = XLSX.utils.json_to_sheet(template)
-              const workbook = XLSX.utils.book_new()
-              XLSX.utils.book_append_sheet(workbook, worksheet, 'Template')
-              XLSX.writeFile(workbook, 'promoters_template.xlsx')
-            }}>
+            <Button
+              onClick={() => {
+                // Download template
+                const template = [
+                  {
+                    name_en: "John Doe",
+                    name_ar: "جون دو",
+                    id_card_number: "123456789",
+                    status: "active",
+                    id_card_expiry_date: "2025-12-31",
+                    passport_expiry_date: "2025-12-31",
+                    notify_days_before_id_expiry: "30",
+                    notify_days_before_passport_expiry: "30",
+                    notes: "Sample promoter",
+                  },
+                ]
+                const worksheet = XLSX.utils.json_to_sheet(template)
+                const workbook = XLSX.utils.book_new()
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Template")
+                XLSX.writeFile(workbook, "promoters_template.xlsx")
+              }}
+            >
               <Download className="mr-2 h-4 w-4" />
               Download Template
             </Button>
@@ -1616,18 +1790,22 @@ export default function AdvancedPromotersManagement() {
               Perform actions on {selectedPromoters.length} selected promoters
             </DialogDescription>
           </DialogHeader>
-          
+
           <Tabs defaultValue="status" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="status">Update Status</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="delete">Delete</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="status" className="space-y-4">
               <div className="space-y-2">
                 <Label>New Status</Label>
-                <Select onValueChange={(value) => setBulkOperation({ type: "status_update", data: { status: value } })}>
+                <Select
+                  onValueChange={(value) =>
+                    setBulkOperation({ type: "status_update", data: { status: value } })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -1640,7 +1818,7 @@ export default function AdvancedPromotersManagement() {
                 </Select>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="notifications" className="space-y-4">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -1648,11 +1826,13 @@ export default function AdvancedPromotersManagement() {
                   <Input
                     type="number"
                     placeholder="30"
-                    onChange={(e) => setBulkOperation(prev => ({
-                      ...prev,
-                      type: "notification_settings",
-                      data: { ...prev.data, id_expiry_days: parseInt(e.target.value) }
-                    }))}
+                    onChange={(e) =>
+                      setBulkOperation((prev) => ({
+                        ...prev,
+                        type: "notification_settings",
+                        data: { ...prev.data, id_expiry_days: parseInt(e.target.value) },
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -1660,24 +1840,27 @@ export default function AdvancedPromotersManagement() {
                   <Input
                     type="number"
                     placeholder="30"
-                    onChange={(e) => setBulkOperation(prev => ({
-                      ...prev,
-                      type: "notification_settings",
-                      data: { ...prev.data, passport_expiry_days: parseInt(e.target.value) }
-                    }))}
+                    onChange={(e) =>
+                      setBulkOperation((prev) => ({
+                        ...prev,
+                        type: "notification_settings",
+                        data: { ...prev.data, passport_expiry_days: parseInt(e.target.value) },
+                      }))
+                    }
                   />
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="delete" className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-red-800">
                   <AlertTriangle className="h-5 w-5" />
                   <span className="font-medium">Warning: This action cannot be undone</span>
                 </div>
-                <p className="text-red-700 text-sm mt-2">
-                  This will permanently delete {selectedPromoters.length} promoters and all associated data.
+                <p className="mt-2 text-sm text-red-700">
+                  This will permanently delete {selectedPromoters.length} promoters and all
+                  associated data.
                 </p>
               </div>
               <Button
@@ -1695,9 +1878,7 @@ export default function AdvancedPromotersManagement() {
             <Button variant="outline" onClick={() => setIsBulkActionModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => handleBulkOperation(bulkOperation)}>
-              Apply Changes
-            </Button>
+            <Button onClick={() => handleBulkOperation(bulkOperation)}>Apply Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1711,7 +1892,7 @@ export default function AdvancedPromotersManagement() {
               Make quick changes to {selectedPromoterForEdit?.name_en}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedPromoterForEdit && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -1728,7 +1909,7 @@ export default function AdvancedPromotersManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Quick Actions</Label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1753,7 +1934,7 @@ export default function AdvancedPromotersManagement() {
 
               <div className="space-y-2">
                 <Label>Notes</Label>
-                <Textarea 
+                <Textarea
                   placeholder="Add a quick note..."
                   defaultValue={selectedPromoterForEdit.notes || ""}
                   rows={3}
@@ -1766,14 +1947,16 @@ export default function AdvancedPromotersManagement() {
             <Button variant="outline" onClick={() => setIsQuickEditModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              // Handle quick save
-              setIsQuickEditModalOpen(false)
-              toast({
-                title: "Success",
-                description: "Promoter updated successfully"
-              })
-            }}>
+            <Button
+              onClick={() => {
+                // Handle quick save
+                setIsQuickEditModalOpen(false)
+                toast({
+                  title: "Success",
+                  description: "Promoter updated successfully",
+                })
+              }}
+            >
               Save Changes
             </Button>
           </DialogFooter>
@@ -1782,39 +1965,41 @@ export default function AdvancedPromotersManagement() {
 
       {/* Notification Center */}
       <Dialog open={isNotificationCenterOpen} onOpenChange={setIsNotificationCenterOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
               Notification Center
             </DialogTitle>
-            <DialogDescription>
-              Important alerts and system notifications
-            </DialogDescription>
+            <DialogDescription>Important alerts and system notifications</DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 overflow-y-auto max-h-[60vh]">
+
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto">
             {/* Document Expiry Alerts */}
             <div className="space-y-2">
-              <h4 className="font-medium text-red-600 flex items-center gap-2">
+              <h4 className="flex items-center gap-2 font-medium text-red-600">
                 <AlertTriangle className="h-4 w-4" />
                 Document Expiry Alerts
               </h4>
               {promoters
-                .filter(p => 
-                  (p.days_until_id_expiry !== undefined && p.days_until_id_expiry <= 30) ||
-                  (p.days_until_passport_expiry !== undefined && p.days_until_passport_expiry <= 30)
+                .filter(
+                  (p) =>
+                    (p.days_until_id_expiry !== undefined && p.days_until_id_expiry <= 30) ||
+                    (p.days_until_passport_expiry !== undefined &&
+                      p.days_until_passport_expiry <= 30)
                 )
-                .map(promoter => (
+                .map((promoter) => (
                   <Card key={promoter.id} className="border-red-200 bg-red-50">
-                    <CardContent className="pt-3 pb-3">
+                    <CardContent className="pb-3 pt-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{promoter.name_en}</p>
                           <p className="text-sm text-muted-foreground">
-                            {promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30 && 
+                            {promoter.days_until_id_expiry !== undefined &&
+                              promoter.days_until_id_expiry <= 30 &&
                               `ID expires in ${promoter.days_until_id_expiry} days`}
-                            {promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30 && 
+                            {promoter.days_until_passport_expiry !== undefined &&
+                              promoter.days_until_passport_expiry <= 30 &&
                               `Passport expires in ${promoter.days_until_passport_expiry} days`}
                           </p>
                         </div>
@@ -1823,7 +2008,10 @@ export default function AdvancedPromotersManagement() {
                             <Mail className="mr-1 h-3 w-3" />
                             Notify
                           </Button>
-                          <Button size="sm" onClick={() => router.push(`/manage-promoters/${promoter.id}`)}>
+                          <Button
+                            size="sm"
+                            onClick={() => router.push(`/manage-promoters/${promoter.id}`)}
+                          >
                             View
                           </Button>
                         </div>
@@ -1835,12 +2023,12 @@ export default function AdvancedPromotersManagement() {
 
             {/* System Notifications */}
             <div className="space-y-2">
-              <h4 className="font-medium text-blue-600 flex items-center gap-2">
+              <h4 className="flex items-center gap-2 font-medium text-blue-600">
                 <Activity className="h-4 w-4" />
                 System Updates
               </h4>
               <Card className="border-blue-200 bg-blue-50">
-                <CardContent className="pt-3 pb-3">
+                <CardContent className="pb-3 pt-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Database Sync Complete</p>
@@ -1858,23 +2046,23 @@ export default function AdvancedPromotersManagement() {
 
             {/* Recent Activity */}
             <div className="space-y-2">
-              <h4 className="font-medium text-green-600 flex items-center gap-2">
+              <h4 className="flex items-center gap-2 font-medium text-green-600">
                 <History className="h-4 w-4" />
                 Recent Activity
               </h4>
-              {recentlyViewed.slice(0, 5).map(promoterId => {
-                const promoter = promoters.find(p => p.id === promoterId)
+              {recentlyViewed.slice(0, 5).map((promoterId) => {
+                const promoter = promoters.find((p) => p.id === promoterId)
                 if (!promoter) return null
                 return (
                   <Card key={promoterId} className="border-green-200 bg-green-50">
-                    <CardContent className="pt-3 pb-3">
+                    <CardContent className="pb-3 pt-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{promoter.name_en}</p>
                           <p className="text-sm text-muted-foreground">Recently viewed</p>
                         </div>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => router.push(`/manage-promoters/${promoter.id}`)}
                         >
@@ -1889,27 +2077,36 @@ export default function AdvancedPromotersManagement() {
 
             {/* Notification Settings */}
             <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Notification Settings</h4>
+              <h4 className="mb-3 font-medium">Notification Settings</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Document expiry alerts</Label>
-                  <Switch 
+                  <Switch
                     checked={notificationSettings.expiry_alerts}
-                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, expiry_alerts: checked }))}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, expiry_alerts: checked }))
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Activity updates</Label>
-                  <Switch 
+                  <Switch
                     checked={notificationSettings.activity_updates}
-                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, activity_updates: checked }))}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, activity_updates: checked }))
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>System notifications</Label>
-                  <Switch 
+                  <Switch
                     checked={notificationSettings.system_notifications}
-                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, system_notifications: checked }))}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({
+                        ...prev,
+                        system_notifications: checked,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -1920,13 +2117,15 @@ export default function AdvancedPromotersManagement() {
             <Button variant="outline" onClick={() => setIsNotificationCenterOpen(false)}>
               Close
             </Button>
-            <Button onClick={() => {
-              // Mark all as read
-              toast({
-                title: "Notifications cleared",
-                description: "All notifications have been marked as read"
-              })
-            }}>
+            <Button
+              onClick={() => {
+                // Mark all as read
+                toast({
+                  title: "Notifications cleared",
+                  description: "All notifications have been marked as read",
+                })
+              }}
+            >
               Mark All as Read
             </Button>
           </DialogFooter>

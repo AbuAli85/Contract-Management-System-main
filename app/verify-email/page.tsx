@@ -12,7 +12,9 @@ export default function VerifyEmailPage() {
 
   const handleResend = async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (user && user.email) {
       await supabase.auth.resend({ type: "signup", email: user.email })
       setResent(true)
@@ -23,7 +25,9 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     // Optionally, poll for email confirmation and redirect
     const interval = setInterval(async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (session?.user?.email_confirmed_at) {
         router.replace("/profile")
       }
@@ -32,12 +36,19 @@ export default function VerifyEmailPage() {
   }, [router])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
-        <h1 className="text-2xl font-bold mb-2">Verify your email</h1>
-        <p className="mb-4">Please check your inbox and click the verification link. This page will update automatically once your email is verified.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <div className="w-full max-w-md rounded bg-white p-8 shadow dark:bg-gray-900">
+        <h1 className="mb-2 text-2xl font-bold">Verify your email</h1>
+        <p className="mb-4">
+          Please check your inbox and click the verification link. This page will update
+          automatically once your email is verified.
+        </p>
         <Button onClick={handleResend} disabled={loading || resent} className="w-full">
-          {resent ? "Verification Email Sent!" : loading ? "Resending..." : "Resend Verification Email"}
+          {resent
+            ? "Verification Email Sent!"
+            : loading
+              ? "Resending..."
+              : "Resend Verification Email"}
         </Button>
       </div>
     </div>

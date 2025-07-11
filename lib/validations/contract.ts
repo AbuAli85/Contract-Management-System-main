@@ -11,7 +11,7 @@ const dateSchemaDdMmYyyy = z
       const parsedDate = parse(value, "dd-MM-yyyy", new Date())
       return isValid(parsedDate)
     },
-    { message: "Invalid date format. Use DD-MM-YYYY." },
+    { message: "Invalid date format. Use DD-MM-YYYY." }
   )
   .transform((value) => parse(value, "dd-MM-yyyy", new Date())) // Transform to Date object for internal use
 
@@ -28,7 +28,7 @@ const fileSchemaOptional = createOptionalFileSchema(
   MAX_FILE_SIZE,
   ACCEPTED_IMAGE_TYPES,
   "Max file size is 5MB.",
-  ".jpg, .jpeg, .png, .webp, and .pdf files are accepted.",
+  ".jpg, .jpeg, .png, .webp, and .pdf files are accepted."
 )
 
 export const ContractFormSchema = z
@@ -84,7 +84,7 @@ export const ContractFormSchema = z
     {
       message: "Contract end date cannot be before the start date.",
       path: ["contractEndDate"], // Point error to this field
-    },
+    }
   )
 
 export type ContractFormData = z.infer<typeof ContractFormSchema>

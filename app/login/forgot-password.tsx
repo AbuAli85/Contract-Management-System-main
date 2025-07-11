@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-12">
+    <Card className="mx-auto mt-12 w-full max-w-md">
       <CardHeader>
         <CardTitle>Forgot Password</CardTitle>
         <CardDescription>Enter your email to receive a password reset link.</CardDescription>
@@ -61,8 +61,10 @@ export default function ForgotPasswordPage() {
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Reset Link
             </Button>
-            <div className="text-sm mt-2">
-              <Link href="/login" className="text-blue-600 hover:underline">Back to Login</Link>
+            <div className="mt-2 text-sm">
+              <Link href="/login" className="text-blue-600 hover:underline">
+                Back to Login
+              </Link>
             </div>
           </form>
         )}

@@ -8,17 +8,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Settings, 
-  FileText, 
-  Download, 
-  Play, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Settings,
+  FileText,
+  Download,
+  Play,
+  CheckCircle,
+  AlertTriangle,
   ExternalLink,
   Copy,
-  Zap
+  Zap,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -62,35 +68,35 @@ export default function MakecomContractTemplates() {
   useEffect(() => {
     const loadContractTypes = async () => {
       try {
-        const response = await fetch('/api/contracts/makecom/generate?action=types')
-        
+        const response = await fetch("/api/contracts/makecom/generate?action=types")
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
-        
+
         const result = await response.json()
-        
+
         if (result.success && Array.isArray(result.data)) {
           setContractTypes(result.data)
           if (result.data.length > 0) {
             setSelectedType(result.data[0].id)
           }
         } else {
-          console.error('Invalid response format:', result)
+          console.error("Invalid response format:", result)
           setContractTypes([])
           toast({
             title: "Error",
             description: "Invalid response format from server",
-            variant: "destructive"
+            variant: "destructive",
           })
         }
       } catch (error) {
-        console.error('Failed to load contract types:', error)
+        console.error("Failed to load contract types:", error)
         setContractTypes([])
         toast({
           title: "Error",
           description: "Failed to load Make.com contract types",
-          variant: "destructive"
+          variant: "destructive",
         })
       } finally {
         setLoading(false)
@@ -110,24 +116,26 @@ export default function MakecomContractTemplates() {
   const loadTemplateConfig = async (contractType: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/contracts/makecom/generate?action=template&type=${contractType}`)
+      const response = await fetch(
+        `/api/contracts/makecom/generate?action=template&type=${contractType}`
+      )
       const result = await response.json()
-      
+
       if (result.success) {
         setTemplateConfig(result.data.templateConfig)
       } else {
         toast({
           title: "Error",
           description: "Failed to load template configuration",
-          variant: "destructive"
+          variant: "destructive",
         })
       }
     } catch (error) {
-      console.error('Failed to load template config:', error)
+      console.error("Failed to load template config:", error)
       toast({
         title: "Error",
         description: "Failed to load template configuration",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -136,32 +144,34 @@ export default function MakecomContractTemplates() {
 
   const generateBlueprint = async () => {
     if (!selectedType) return
-    
+
     setLoading(true)
     try {
-      const response = await fetch(`/api/contracts/makecom/generate?action=blueprint&type=${selectedType}`)
+      const response = await fetch(
+        `/api/contracts/makecom/generate?action=blueprint&type=${selectedType}`
+      )
       const result = await response.json()
-      
+
       if (result.success) {
         setBlueprint(result.data)
         setActiveTab("blueprint")
         toast({
           title: "Success",
-          description: "Make.com blueprint generated successfully"
+          description: "Make.com blueprint generated successfully",
         })
       } else {
         toast({
           title: "Error",
           description: "Failed to generate blueprint",
-          variant: "destructive"
+          variant: "destructive",
         })
       }
     } catch (error) {
-      console.error('Failed to generate blueprint:', error)
+      console.error("Failed to generate blueprint:", error)
       toast({
         title: "Error",
         description: "Failed to generate blueprint",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -172,25 +182,25 @@ export default function MakecomContractTemplates() {
     navigator.clipboard.writeText(text)
     toast({
       title: "Copied!",
-      description: "Content copied to clipboard"
+      description: "Content copied to clipboard",
     })
   }
 
   const downloadBlueprint = () => {
     if (!blueprint) return
-    
+
     const dataStr = JSON.stringify(blueprint, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+
     const exportFileDefaultName = `makecom_blueprint_${selectedType}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
+
+    const linkElement = document.createElement("a")
+    linkElement.setAttribute("href", dataUri)
+    linkElement.setAttribute("download", exportFileDefaultName)
     linkElement.click()
   }
 
-  const selectedContractType = contractTypes.find(type => type.id === selectedType)
+  const selectedContractType = contractTypes.find((type) => type.id === selectedType)
 
   return (
     <motion.div
@@ -200,7 +210,7 @@ export default function MakecomContractTemplates() {
       className="mx-auto max-w-6xl space-y-6"
     >
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -209,7 +219,7 @@ export default function MakecomContractTemplates() {
           <h1 className="font-heading text-3xl font-bold md:text-4xl">
             Make.com Contract Templates
           </h1>
-          <p className="text-lg text-muted-foreground mt-2">
+          <p className="mt-2 text-lg text-muted-foreground">
             Manage and configure automated contract generation with Make.com integration
           </p>
         </motion.div>
@@ -253,21 +263,24 @@ export default function MakecomContractTemplates() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-center py-12"
+          className="py-12 text-center"
         >
           <Card>
             <CardContent className="pt-6">
               <div className="text-center text-muted-foreground">
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
                     <span>Loading Make.com contract templates...</span>
                   </div>
                 ) : (
                   <div>
-                    <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-amber-500" />
-                    <h3 className="text-lg font-semibold mb-2">No Contract Templates Found</h3>
-                    <p>Make.com contract templates are not available. Please check your configuration.</p>
+                    <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
+                    <h3 className="mb-2 text-lg font-semibold">No Contract Templates Found</h3>
+                    <p>
+                      Make.com contract templates are not available. Please check your
+                      configuration.
+                    </p>
                   </div>
                 )}
               </div>
@@ -275,11 +288,7 @@ export default function MakecomContractTemplates() {
           </Card>
         </motion.div>
       ) : selectedContractType ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -296,60 +305,70 @@ export default function MakecomContractTemplates() {
                     <FileText className="h-5 w-5" />
                     {selectedContractType.name}
                   </CardTitle>
-                  <CardDescription>
-                    {selectedContractType.description}
-                  </CardDescription>
+                  <CardDescription>{selectedContractType.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{selectedContractType.category}</Badge>
                     {selectedContractType.omanCompliant && (
                       <Badge variant="outline" className="text-green-600">
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                        <CheckCircle className="mr-1 h-3 w-3" />
                         Oman Compliant
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-blue-600">
-                      <Zap className="h-3 w-3 mr-1" />
+                      <Zap className="mr-1 h-3 w-3" />
                       Make.com Enabled
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <h4 className="font-medium mb-2">Required Fields</h4>
+                      <h4 className="mb-2 font-medium">Required Fields</h4>
                       <div className="space-y-1">
                         {selectedContractType && selectedContractType.requiredFields ? (
                           selectedContractType.requiredFields.map((field, idx) => (
-                            <div key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 text-sm text-muted-foreground"
+                            >
                               <CheckCircle className="h-3 w-3 text-green-600" />
-                              {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              {field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                             </div>
                           ))
                         ) : (
-                          <div className="text-sm text-muted-foreground">No required fields defined</div>
+                          <div className="text-sm text-muted-foreground">
+                            No required fields defined
+                          </div>
                         )}
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-medium mb-2">Business Rules</h4>
+                      <h4 className="mb-2 font-medium">Business Rules</h4>
                       <div className="space-y-1">
                         {selectedContractType && selectedContractType.businessRules ? (
                           selectedContractType.businessRules.slice(0, 4).map((rule, idx) => (
-                            <div key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <AlertTriangle className="h-3 w-3 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <div
+                              key={idx}
+                              className="flex items-start gap-2 text-sm text-muted-foreground"
+                            >
+                              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0 text-amber-600" />
                               <span>{rule}</span>
                             </div>
                           ))
                         ) : (
-                          <div className="text-sm text-muted-foreground">No business rules defined</div>
-                        )}
-                        {selectedContractType && selectedContractType.businessRules && selectedContractType.businessRules.length > 4 && (
-                          <div className="text-sm text-blue-600">
-                            +{selectedContractType.businessRules.length - 4} more rules
+                          <div className="text-sm text-muted-foreground">
+                            No business rules defined
                           </div>
                         )}
+                        {selectedContractType &&
+                          selectedContractType.businessRules &&
+                          selectedContractType.businessRules.length > 4 && (
+                            <div className="text-sm text-blue-600">
+                              +{selectedContractType.businessRules.length - 4} more rules
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -360,7 +379,7 @@ export default function MakecomContractTemplates() {
             {/* Template Tab */}
             <TabsContent value="template" className="space-y-6">
               {templateConfig ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -374,12 +393,12 @@ export default function MakecomContractTemplates() {
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium">Google Docs Template ID</label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <code className="bg-muted px-2 py-1 rounded text-sm flex-1">
+                        <div className="mt-1 flex items-center gap-2">
+                          <code className="flex-1 rounded bg-muted px-2 py-1 text-sm">
                             {templateConfig.googleDocsTemplateId}
                           </code>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => copyToClipboard(templateConfig.googleDocsTemplateId)}
                           >
@@ -390,16 +409,25 @@ export default function MakecomContractTemplates() {
 
                       <div>
                         <label className="text-sm font-medium">Template Placeholders</label>
-                        <div className="space-y-2 mt-2">
+                        <div className="mt-2 space-y-2">
                           {templateConfig && templateConfig.templatePlaceholders ? (
-                            Object.entries(templateConfig.templatePlaceholders).map(([key, description]) => (
-                              <div key={key} className="flex items-center justify-between p-2 bg-muted rounded">
-                                <code className="text-sm text-blue-600">{key}</code>
-                                <span className="text-xs text-muted-foreground">{description}</span>
-                              </div>
-                            ))
+                            Object.entries(templateConfig.templatePlaceholders).map(
+                              ([key, description]) => (
+                                <div
+                                  key={key}
+                                  className="flex items-center justify-between rounded bg-muted p-2"
+                                >
+                                  <code className="text-sm text-blue-600">{key}</code>
+                                  <span className="text-xs text-muted-foreground">
+                                    {description}
+                                  </span>
+                                </div>
+                              )
+                            )
                           ) : (
-                            <div className="text-sm text-muted-foreground">No template placeholders defined</div>
+                            <div className="text-sm text-muted-foreground">
+                              No template placeholders defined
+                            </div>
                           )}
                         </div>
                       </div>
@@ -412,29 +440,33 @@ export default function MakecomContractTemplates() {
                         <Settings className="h-5 w-5" />
                         Make.com Module Config
                       </CardTitle>
-                      <CardDescription>
-                        Webhook triggers and template variables
-                      </CardDescription>
+                      <CardDescription>Webhook triggers and template variables</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium">Webhook Trigger Fields</label>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {templateConfig && templateConfig.makecomModuleConfig && templateConfig.makecomModuleConfig.webhookTriggerFields ? (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {templateConfig &&
+                          templateConfig.makecomModuleConfig &&
+                          templateConfig.makecomModuleConfig.webhookTriggerFields ? (
                             templateConfig.makecomModuleConfig.webhookTriggerFields.map((field) => (
                               <Badge key={field} variant="outline" className="text-xs">
                                 {field}
                               </Badge>
                             ))
                           ) : (
-                            <div className="text-sm text-muted-foreground">No webhook trigger fields defined</div>
+                            <div className="text-sm text-muted-foreground">
+                              No webhook trigger fields defined
+                            </div>
                           )}
                         </div>
                       </div>
 
                       <div>
                         <label className="text-sm font-medium">Output Format</label>
-                        <Badge className="ml-2">{templateConfig.makecomModuleConfig.outputFormat.toUpperCase()}</Badge>
+                        <Badge className="ml-2">
+                          {templateConfig.makecomModuleConfig.outputFormat.toUpperCase()}
+                        </Badge>
                       </div>
 
                       {templateConfig.makecomModuleConfig.googleDriveSettings && (
@@ -442,14 +474,14 @@ export default function MakecomContractTemplates() {
                           <label className="text-sm font-medium">Google Drive Settings</label>
                           <div className="mt-2 space-y-2">
                             <div className="text-sm">
-                              <span className="font-medium">Folder ID:</span>{' '}
-                              <code className="bg-muted px-1 rounded">
+                              <span className="font-medium">Folder ID:</span>{" "}
+                              <code className="rounded bg-muted px-1">
                                 {templateConfig.makecomModuleConfig.googleDriveSettings.folderId}
                               </code>
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Naming Pattern:</span>{' '}
-                              <code className="bg-muted px-1 rounded">
+                              <span className="font-medium">Naming Pattern:</span>{" "}
+                              <code className="rounded bg-muted px-1">
                                 {templateConfig.makecomModuleConfig.googleDriveSettings.naming}
                               </code>
                             </div>
@@ -463,7 +495,9 @@ export default function MakecomContractTemplates() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground">
-                      {loading ? "Loading template configuration..." : "Select a contract type to view template configuration"}
+                      {loading
+                        ? "Loading template configuration..."
+                        : "Select a contract type to view template configuration"}
                     </div>
                   </CardContent>
                 </Card>
@@ -485,12 +519,12 @@ export default function MakecomContractTemplates() {
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={generateBlueprint} disabled={loading}>
-                      <Play className="h-4 w-4 mr-2" />
+                      <Play className="mr-2 h-4 w-4" />
                       Generate Blueprint
                     </Button>
                     {blueprint && (
                       <Button variant="outline" onClick={downloadBlueprint}>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="mr-2 h-4 w-4" />
                         Download JSON
                       </Button>
                     )}
@@ -502,20 +536,23 @@ export default function MakecomContractTemplates() {
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Blueprint generated successfully! Import this JSON file into Make.com to create the automated workflow.
+                          Blueprint generated successfully! Import this JSON file into Make.com to
+                          create the automated workflow.
                         </AlertDescription>
                       </Alert>
-                      
+
                       <div>
                         <label className="text-sm font-medium">Blueprint JSON</label>
-                        <pre className="mt-2 bg-muted p-4 rounded-lg text-xs overflow-auto max-h-96">
+                        <pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-muted p-4 text-xs">
                           {JSON.stringify(blueprint, null, 2)}
                         </pre>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      {loading ? "Generating blueprint..." : "Click 'Generate Blueprint' to create Make.com workflow configuration"}
+                    <div className="py-8 text-center text-muted-foreground">
+                      {loading
+                        ? "Generating blueprint..."
+                        : "Click 'Generate Blueprint' to create Make.com workflow configuration"}
                     </div>
                   )}
                 </CardContent>
@@ -530,21 +567,20 @@ export default function MakecomContractTemplates() {
                     <Play className="h-5 w-5" />
                     Test Contract Generation
                   </CardTitle>
-                  <CardDescription>
-                    Test the Make.com integration with sample data
-                  </CardDescription>
+                  <CardDescription>Test the Make.com integration with sample data</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      Testing functionality will be available once you have configured your Make.com webhook URLs in the environment variables.
+                      Testing functionality will be available once you have configured your Make.com
+                      webhook URLs in the environment variables.
                     </AlertDescription>
                   </Alert>
-                  
+
                   <div className="mt-4">
                     <Button variant="outline" disabled>
-                      <ExternalLink className="h-4 w-4 mr-2" />
+                      <ExternalLink className="mr-2 h-4 w-4" />
                       Test Webhook (Coming Soon)
                     </Button>
                   </div>

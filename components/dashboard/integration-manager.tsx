@@ -9,13 +9,25 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Zap, 
-  Settings, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Zap,
+  Settings,
+  CheckCircle,
+  AlertCircle,
   ExternalLink,
   Plus,
   Edit3,
@@ -29,7 +41,7 @@ import {
   DollarSign,
   Globe,
   Shield,
-  Activity
+  Activity,
 } from "lucide-react"
 // import { useTranslations } from "next-intl"
 
@@ -76,14 +88,14 @@ interface IntegrationManagerProps {
   onSyncIntegration: (id: string) => void
 }
 
-export function IntegrationManager({ 
-  integrations, 
-  templates, 
-  onCreateIntegration, 
-  onUpdateIntegration, 
+export function IntegrationManager({
+  integrations,
+  templates,
+  onCreateIntegration,
+  onUpdateIntegration,
   onDeleteIntegration,
   onTestIntegration,
-  onSyncIntegration 
+  onSyncIntegration,
 }: IntegrationManagerProps) {
   // const t = useTranslations("IntegrationManager")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -93,23 +105,35 @@ export function IntegrationManager({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "connected": return "bg-green-100 text-green-800"
-      case "disconnected": return "bg-gray-100 text-gray-800"
-      case "error": return "bg-red-100 text-red-800"
-      case "pending": return "bg-yellow-100 text-yellow-800"
-      default: return "bg-gray-100 text-gray-800"
+      case "connected":
+        return "bg-green-100 text-green-800"
+      case "disconnected":
+        return "bg-gray-100 text-gray-800"
+      case "error":
+        return "bg-red-100 text-red-800"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
   }
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "storage": return <Database className="h-5 w-5" />
-      case "communication": return <MessageSquare className="h-5 w-5" />
-      case "payment": return <DollarSign className="h-5 w-5" />
-      case "automation": return <Zap className="h-5 w-5" />
-      case "analytics": return <Activity className="h-5 w-5" />
-      case "security": return <Shield className="h-5 w-5" />
-      default: return <Globe className="h-5 w-5" />
+      case "storage":
+        return <Database className="h-5 w-5" />
+      case "communication":
+        return <MessageSquare className="h-5 w-5" />
+      case "payment":
+        return <DollarSign className="h-5 w-5" />
+      case "automation":
+        return <Zap className="h-5 w-5" />
+      case "analytics":
+        return <Activity className="h-5 w-5" />
+      case "security":
+        return <Shield className="h-5 w-5" />
+      default:
+        return <Globe className="h-5 w-5" />
     }
   }
 
@@ -120,23 +144,23 @@ export function IntegrationManager({
     { value: "payment", label: "Payment" },
     { value: "automation", label: "Automation" },
     { value: "analytics", label: "Analytics" },
-    { value: "security", label: "Security" }
+    { value: "security", label: "Security" },
   ]
 
-  const filteredIntegrations = integrations.filter(integration => 
-    selectedCategory === "all" || integration.category === selectedCategory
+  const filteredIntegrations = integrations.filter(
+    (integration) => selectedCategory === "all" || integration.category === selectedCategory
   )
 
-  const filteredTemplates = templates.filter(template => 
-    selectedCategory === "all" || template.category === selectedCategory
+  const filteredTemplates = templates.filter(
+    (template) => selectedCategory === "all" || template.category === selectedCategory
   )
 
   const IntegrationCard = ({ integration }: { integration: Integration }) => (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
+            <div className="rounded-lg bg-gray-100 p-2">
               {getCategoryIcon(integration.category)}
             </div>
             <div>
@@ -150,7 +174,7 @@ export function IntegrationManager({
             </Badge>
             <Switch
               checked={integration.enabled}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 onUpdateIntegration(integration.id, { enabled: checked })
               }
             />
@@ -163,23 +187,15 @@ export function IntegrationManager({
             <span className="text-muted-foreground">Last Sync</span>
             <span>{new Date(integration.last_sync).toLocaleString()}</span>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onTestIntegration(integration.id)}
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => onTestIntegration(integration.id)}>
+                <CheckCircle className="mr-1 h-4 w-4" />
                 Test
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSyncIntegration(integration.id)}
-              >
-                <RefreshCw className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => onSyncIntegration(integration.id)}>
+                <RefreshCw className="mr-1 h-4 w-4" />
                 Sync
               </Button>
             </div>
@@ -193,11 +209,7 @@ export function IntegrationManager({
               >
                 <Edit3 className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDeleteIntegration(integration.id)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => onDeleteIntegration(integration.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -208,16 +220,17 @@ export function IntegrationManager({
   )
 
   const TemplateCard = ({ template }: { template: IntegrationTemplate }) => (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
-      setSelectedTemplate(template)
-      setIsCreateDialogOpen(true)
-    }}>
+    <Card
+      className="cursor-pointer transition-shadow hover:shadow-md"
+      onClick={() => {
+        setSelectedTemplate(template)
+        setIsCreateDialogOpen(true)
+      }}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              {getCategoryIcon(template.category)}
-            </div>
+            <div className="rounded-lg bg-gray-100 p-2">{getCategoryIcon(template.category)}</div>
             <div>
               <CardTitle className="text-lg">{template.name}</CardTitle>
               <p className="text-sm text-muted-foreground">{template.description}</p>
@@ -238,25 +251,23 @@ export function IntegrationManager({
 
   const IntegrationForm = ({ template }: { template: IntegrationTemplate }) => (
     <div className="space-y-4">
-      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-        <div className="p-2 bg-white rounded-lg">
-          {getCategoryIcon(template.category)}
-        </div>
+      <div className="flex items-center space-x-3 rounded-lg bg-gray-50 p-4">
+        <div className="rounded-lg bg-white p-2">{getCategoryIcon(template.category)}</div>
         <div>
           <h3 className="font-medium">{template.name}</h3>
           <p className="text-sm text-muted-foreground">{template.description}</p>
         </div>
       </div>
-      
+
       <div className="space-y-4">
         {template.config_fields.map((field) => (
           <div key={field.name}>
             <Label htmlFor={field.name} className="text-sm font-medium">
               {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
+              {field.required && <span className="ml-1 text-red-500">*</span>}
             </Label>
-            <p className="text-xs text-muted-foreground mb-2">{field.description}</p>
-            
+            <p className="mb-2 text-xs text-muted-foreground">{field.description}</p>
+
             {field.type === "text" && (
               <Input
                 id={field.name}
@@ -265,7 +276,7 @@ export function IntegrationManager({
                 required={field.required}
               />
             )}
-            
+
             {field.type === "password" && (
               <Input
                 id={field.name}
@@ -275,7 +286,7 @@ export function IntegrationManager({
                 required={field.required}
               />
             )}
-            
+
             {field.type === "url" && (
               <Input
                 id={field.name}
@@ -285,7 +296,7 @@ export function IntegrationManager({
                 required={field.required}
               />
             )}
-            
+
             {field.type === "select" && field.options && (
               <Select
                 value={configData[field.name] || ""}
@@ -303,13 +314,13 @@ export function IntegrationManager({
                 </SelectContent>
               </Select>
             )}
-            
+
             {field.type === "boolean" && (
               <div className="flex items-center space-x-2">
                 <Switch
                   id={field.name}
                   checked={configData[field.name] || false}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setConfigData({ ...configData, [field.name]: checked })
                   }
                 />
@@ -321,10 +332,10 @@ export function IntegrationManager({
           </div>
         ))}
       </div>
-      
+
       <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => {
             setIsCreateDialogOpen(false)
             setSelectedTemplate(null)
@@ -333,7 +344,7 @@ export function IntegrationManager({
         >
           Cancel
         </Button>
-        <Button 
+        <Button
           onClick={() => {
             onCreateIntegration(template, configData)
             setIsCreateDialogOpen(false)
@@ -356,7 +367,7 @@ export function IntegrationManager({
           <p className="text-muted-foreground">Manage your third-party integrations</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="mr-1 h-4 w-4" />
           Add Integration
         </Button>
       </div>
@@ -377,7 +388,7 @@ export function IntegrationManager({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {integrations.filter(i => i.status === "connected" && i.enabled).length}
+              {integrations.filter((i) => i.status === "connected" && i.enabled).length}
             </div>
           </CardContent>
         </Card>
@@ -387,7 +398,7 @@ export function IntegrationManager({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {integrations.filter(i => i.status === "error").length}
+              {integrations.filter((i) => i.status === "error").length}
             </div>
           </CardContent>
         </Card>
@@ -411,7 +422,7 @@ export function IntegrationManager({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {categories.map(category => (
+            {categories.map((category) => (
               <SelectItem key={category.value} value={category.value}>
                 {category.label}
               </SelectItem>
@@ -426,33 +437,33 @@ export function IntegrationManager({
           <TabsTrigger value="active">My Integrations</TabsTrigger>
           <TabsTrigger value="available">Available Integrations</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="active" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {filteredIntegrations.map(integration => (
+            {filteredIntegrations.map((integration) => (
               <IntegrationCard key={integration.id} integration={integration} />
             ))}
           </div>
-          
+
           {filteredIntegrations.length === 0 && (
-            <div className="text-center py-12">
-              <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="py-12 text-center">
+              <Zap className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="text-lg font-medium">No integrations found</h3>
               <p className="text-muted-foreground">Connect your first integration to get started</p>
             </div>
           )}
         </TabsContent>
-        
+
         <TabsContent value="available" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTemplates.map(template => (
+            {filteredTemplates.map((template) => (
               <TemplateCard key={template.id} template={template} />
             ))}
           </div>
-          
+
           {filteredTemplates.length === 0 && (
-            <div className="text-center py-12">
-              <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="py-12 text-center">
+              <Globe className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="text-lg font-medium">No templates available</h3>
               <p className="text-muted-foreground">Check back later for more integration options</p>
             </div>
@@ -472,14 +483,14 @@ export function IntegrationManager({
             <div className="space-y-4">
               <p className="text-muted-foreground">Select an integration template to get started</p>
               <div className="grid gap-3">
-                {templates.map(template => (
+                {templates.map((template) => (
                   <div
                     key={template.id}
-                    className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                    className="cursor-pointer rounded-lg border p-3 hover:bg-gray-50"
                     onClick={() => setSelectedTemplate(template)}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gray-100 rounded">
+                      <div className="rounded bg-gray-100 p-2">
                         {getCategoryIcon(template.category)}
                       </div>
                       <div>

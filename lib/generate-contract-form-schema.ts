@@ -14,15 +14,18 @@ export const formSchema = z
     contentEnglish: z.string().optional(),
     contentSpanish: z.string().optional(),
   })
-  .refine((d) => {
-    if (d.effectiveDate && d.terminationDate) {
-      return d.terminationDate > d.effectiveDate
+  .refine(
+    (d) => {
+      if (d.effectiveDate && d.terminationDate) {
+        return d.terminationDate > d.effectiveDate
+      }
+      return true
+    },
+    {
+      path: ["terminationDate"],
+      message: "Termination date must be after effective date",
     }
-    return true
-  }, {
-    path: ["terminationDate"],
-    message: "Termination date must be after effective date",
-  })
+  )
 
 // Export the schema with the expected name
 export const generateContractFormSchema = formSchema

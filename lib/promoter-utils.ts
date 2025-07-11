@@ -25,7 +25,7 @@ export interface PromoterStats {
  * Get document status type based on expiry date
  */
 export const getDocumentStatusType = (
-  daysUntilExpiry: number | null, 
+  daysUntilExpiry: number | null,
   dateString: string | null
 ): "valid" | "expiring" | "expired" | "missing" => {
   if (!dateString) return "missing"
@@ -38,24 +38,26 @@ export const getDocumentStatusType = (
 /**
  * Get overall status based on contract count and document status
  */
-export const getOverallStatus = (promoter: Promoter): "active" | "warning" | "critical" | "inactive" => {
+export const getOverallStatus = (
+  promoter: Promoter
+): "active" | "warning" | "critical" | "inactive" => {
   if (!promoter.status || promoter.status === "inactive") return "inactive"
-  
-  const idExpiry = promoter.id_card_expiry_date 
-    ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date()) 
+
+  const idExpiry = promoter.id_card_expiry_date
+    ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
     : null
-  const passportExpiry = promoter.passport_expiry_date 
-    ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date()) 
+  const passportExpiry = promoter.passport_expiry_date
+    ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
     : null
-  
+
   if ((idExpiry !== null && idExpiry < 0) || (passportExpiry !== null && passportExpiry < 0)) {
     return "critical"
   }
-  
+
   if ((idExpiry !== null && idExpiry <= 30) || (passportExpiry !== null && passportExpiry <= 30)) {
     return "warning"
   }
-  
+
   return "active"
 }
 
@@ -63,7 +65,7 @@ export const getOverallStatus = (promoter: Promoter): "active" | "warning" | "cr
  * Enhance promoter data with calculated fields
  */
 export const enhancePromoter = (promoter: Promoter): EnhancedPromoter => {
-  const idExpiryDays = promoter.id_card_expiry_date 
+  const idExpiryDays = promoter.id_card_expiry_date
     ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
     : null
 
@@ -74,7 +76,10 @@ export const enhancePromoter = (promoter: Promoter): EnhancedPromoter => {
   return {
     ...promoter,
     id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date || null),
-    passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date || null),
+    passport_status: getDocumentStatusType(
+      passportExpiryDays,
+      promoter.passport_expiry_date || null
+    ),
     overall_status: getOverallStatus(promoter),
     days_until_id_expiry: idExpiryDays || undefined,
     days_until_passport_expiry: passportExpiryDays || undefined,
@@ -86,11 +91,11 @@ export const enhancePromoter = (promoter: Promoter): EnhancedPromoter => {
  */
 export const calculatePromoterStats = (promoters: EnhancedPromoter[]): PromoterStats => {
   const total = promoters.length
-  const active = promoters.filter(p => p.overall_status === "active").length
-  const expiring = promoters.filter(p => p.overall_status === "warning").length
-  const expired = promoters.filter(p => p.overall_status === "critical").length
+  const active = promoters.filter((p) => p.overall_status === "active").length
+  const expiring = promoters.filter((p) => p.overall_status === "warning").length
+  const expired = promoters.filter((p) => p.overall_status === "critical").length
   const totalContracts = promoters.reduce((sum, p) => sum + (p.active_contracts_count || 0), 0)
-  const withContracts = promoters.filter(p => (p.active_contracts_count || 0) > 0).length
+  const withContracts = promoters.filter((p) => (p.active_contracts_count || 0) > 0).length
   const withoutContracts = total - withContracts
 
   return {
@@ -111,37 +116,37 @@ export const calculatePromoterStats = (promoters: EnhancedPromoter[]): PromoterS
  */
 export const exportPromotersToCSV = (promoters: EnhancedPromoter[]): string => {
   const headers = [
-    'Name (EN)',
-    'Name (AR)', 
-    'ID Card Number',
-    'ID Card Status',
-    'ID Card Expiry',
-    'Passport Status', 
-    'Passport Expiry',
-    'Active Contracts',
-    'Overall Status',
-    'Created Date',
-    'Notes'
+    "Name (EN)",
+    "Name (AR)",
+    "ID Card Number",
+    "ID Card Status",
+    "ID Card Expiry",
+    "Passport Status",
+    "Passport Expiry",
+    "Active Contracts",
+    "Overall Status",
+    "Created Date",
+    "Notes",
   ]
 
-  const rows = promoters.map(promoter => [
+  const rows = promoters.map((promoter) => [
     promoter.name_en,
     promoter.name_ar,
     promoter.id_card_number,
     promoter.id_card_status,
-    promoter.id_card_expiry_date || 'N/A',
+    promoter.id_card_expiry_date || "N/A",
     promoter.passport_status,
-    promoter.passport_expiry_date || 'N/A', 
+    promoter.passport_expiry_date || "N/A",
     (promoter.active_contracts_count || 0).toString(),
     promoter.overall_status,
-    promoter.created_at || 'N/A',
-    promoter.notes || ''
+    promoter.created_at || "N/A",
+    promoter.notes || "",
   ])
 
   const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n')
+    headers.join(","),
+    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+  ].join("\n")
 
   return csvContent
 }
@@ -155,16 +160,18 @@ export const filterPromoters = (
   filterStatus: string,
   documentFilter: string
 ): Promoter[] => {
-  return promoters.filter(promoter => {
+  return promoters.filter((promoter) => {
     // Search filter
-    const searchMatch = !searchTerm || 
+    const searchMatch =
+      !searchTerm ||
       promoter.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
       promoter.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
       promoter.id_card_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (promoter.notes && promoter.notes.toLowerCase().includes(searchTerm.toLowerCase()))
 
     // Status filter
-    const statusMatch = filterStatus === "all" ||
+    const statusMatch =
+      filterStatus === "all" ||
       (filterStatus === "active" && (promoter.active_contracts_count || 0) > 0) ||
       (filterStatus === "inactive" && (promoter.active_contracts_count || 0) === 0)
 
@@ -182,7 +189,7 @@ export const sortPromoters = (
 ): EnhancedPromoter[] => {
   return [...promoters].sort((a, b) => {
     let aValue: any, bValue: any
-    
+
     switch (sortBy) {
       case "name":
         aValue = a.name_en.toLowerCase()

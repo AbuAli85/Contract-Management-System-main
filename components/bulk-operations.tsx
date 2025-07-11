@@ -22,29 +22,29 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { 
-  ChevronDown, 
-  Archive, 
-  Trash2, 
-  Download, 
-  Send, 
+import {
+  ChevronDown,
+  Archive,
+  Trash2,
+  Download,
+  Send,
   RefreshCw,
   FileText,
   CheckCircle2,
-  Clock
+  Clock,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 
 interface ContractForBulkOps {
-  id: string;
-  status: string;
-  first_party_name?: string;
-  second_party_name?: string;
-  start_date?: string;
-  end_date?: string;
-  contract_value?: number;
-  created_at?: string;
+  id: string
+  status: string
+  first_party_name?: string
+  second_party_name?: string
+  start_date?: string
+  end_date?: string
+  contract_value?: number
+  created_at?: string
 }
 
 interface BulkOperationsProps {
@@ -58,7 +58,7 @@ export function BulkOperations({
   selectedContracts,
   allContracts,
   onSelectionChange,
-  onRefresh
+  onRefresh,
 }: BulkOperationsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -71,7 +71,7 @@ export function BulkOperations({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(allContracts.map(contract => contract.id))
+      onSelectionChange(allContracts.map((contract) => contract.id))
     } else {
       onSelectionChange([])
     }
@@ -85,9 +85,9 @@ export function BulkOperations({
 
     try {
       const { error } = await supabase
-        .from('contracts')
+        .from("contracts")
         .update({ status: newStatus })
-        .in('id', selectedContracts)
+        .in("id", selectedContracts)
 
       if (error) throw error
 
@@ -117,10 +117,7 @@ export function BulkOperations({
     setOperation(`Deleting ${selectedContracts.length} contracts...`)
 
     try {
-      const { error } = await supabase
-        .from('contracts')
-        .delete()
-        .in('id', selectedContracts)
+      const { error } = await supabase.from("contracts").delete().in("id", selectedContracts)
 
       if (error) throw error
 
@@ -151,36 +148,46 @@ export function BulkOperations({
     setOperation(`Exporting ${selectedContracts.length} contracts...`)
 
     try {
-      const selectedContractData = allContracts.filter(contract => 
+      const selectedContractData = allContracts.filter((contract) =>
         selectedContracts.includes(contract.id)
       )
 
       // Create CSV content
       const headers = [
-        'ID', 'Party A', 'Party B', 'Status', 'Start Date', 
-        'End Date', 'Contract Value', 'Created At'
+        "ID",
+        "Party A",
+        "Party B",
+        "Status",
+        "Start Date",
+        "End Date",
+        "Contract Value",
+        "Created At",
       ]
-      
+
       const csvContent = [
-        headers.join(','),
-        ...selectedContractData.map(contract => [
-          contract.id,
-          contract.first_party_name || '',
-          contract.second_party_name || '',
-          contract.status || '',
-          contract.start_date || '',
-          contract.end_date || '',
-          contract.contract_value || '',
-          contract.created_at || ''
-        ].map(field => `"${field}"`).join(','))
-      ].join('\n')
+        headers.join(","),
+        ...selectedContractData.map((contract) =>
+          [
+            contract.id,
+            contract.first_party_name || "",
+            contract.second_party_name || "",
+            contract.status || "",
+            contract.start_date || "",
+            contract.end_date || "",
+            contract.contract_value || "",
+            contract.created_at || "",
+          ]
+            .map((field) => `"${field}"`)
+            .join(",")
+        ),
+      ].join("\n")
 
       // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const blob = new Blob([csvContent], { type: "text/csv" })
       const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
+      const link = document.createElement("a")
       link.href = url
-      link.download = `contracts_export_${new Date().toISOString().split('T')[0]}.csv`
+      link.download = `contracts_export_${new Date().toISOString().split("T")[0]}.csv`
       link.click()
       window.URL.revokeObjectURL(url)
 
@@ -201,15 +208,16 @@ export function BulkOperations({
   }
 
   const getStatusCounts = () => {
-    const selectedData = allContracts.filter(contract => 
-      selectedContracts.includes(contract.id)
+    const selectedData = allContracts.filter((contract) => selectedContracts.includes(contract.id))
+
+    const counts = selectedData.reduce(
+      (acc, contract) => {
+        const status = contract.status || "unknown"
+        acc[status] = (acc[status] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
     )
-    
-    const counts = selectedData.reduce((acc, contract) => {
-      const status = contract.status || 'unknown';
-      acc[status] = (acc[status] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
 
     return counts
   }
@@ -235,7 +243,7 @@ export function BulkOperations({
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-center space-x-4">
           <Checkbox
             checked={isIndeterminate ? "indeterminate" : isAllSelected}
@@ -261,19 +269,11 @@ export function BulkOperations({
           </div>
         ) : (
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onSelectionChange([])}
-            >
+            <Button variant="outline" size="sm" onClick={() => onSelectionChange([])}>
               Clear Selection
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkExport}
-            >
+            <Button variant="outline" size="sm" onClick={handleBulkExport}>
               <Download className="mr-2 h-4 w-4" />
               Export ({selectedCount})
             </Button>
@@ -287,34 +287,30 @@ export function BulkOperations({
               <DropdownMenuContent>
                 <DropdownMenuLabel>Change Status To:</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate('draft')}>
+                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("draft")}>
                   <FileText className="mr-2 h-4 w-4" />
                   Draft
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate('pending_review')}>
+                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("pending_review")}>
                   <Clock className="mr-2 h-4 w-4" />
                   Pending Review
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate('active')}>
+                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("active")}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   Active
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate('suspended')}>
+                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("suspended")}>
                   <Archive className="mr-2 h-4 w-4" />
                   Suspended
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate('archived')}>
+                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("archived")}>
                   <Archive className="mr-2 h-4 w-4" />
                   Archived
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-            >
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete ({selectedCount})
             </Button>
@@ -327,16 +323,13 @@ export function BulkOperations({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedCount} contracts?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the selected 
-              contracts and remove all associated data from our servers.
+              This action cannot be undone. This will permanently delete the selected contracts and
+              remove all associated data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleBulkDelete} 
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
               Delete {selectedCount} Contracts
             </AlertDialogAction>
           </AlertDialogFooter>

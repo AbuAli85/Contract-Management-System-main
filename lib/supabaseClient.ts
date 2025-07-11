@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
-/** 
+/**
  * Single shared Supabase client instance.
  * Never recreate this on every render.
  */
@@ -13,7 +13,9 @@ if (!supabaseUrl) {
   throw new Error("Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL.")
 }
 if (!supabaseAnonKey) {
-  throw new Error("Supabase Anon Key is required. Please set NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY.")
+  throw new Error(
+    "Supabase Anon Key is required. Please set NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY."
+  )
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)

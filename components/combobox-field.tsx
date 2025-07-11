@@ -49,7 +49,7 @@ export function ComboboxField({
           className={cn(
             "w-full justify-between",
             !field.value && "text-muted-foreground",
-            disabled && "cursor-not-allowed bg-muted/50 opacity-50",
+            disabled && "cursor-not-allowed bg-muted/50 opacity-50"
           )}
           disabled={disabled}
           ref={field.ref}
@@ -79,7 +79,7 @@ export function ComboboxField({
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        field.value === option.value ? "opacity-100" : "opacity-0",
+                        field.value === option.value ? "opacity-100" : "opacity-0"
                       )}
                     />
                     {option.label}

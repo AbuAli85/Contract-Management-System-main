@@ -9,7 +9,7 @@ const fileSchema = createOptionalFileSchema(
   MAX_FILE_SIZE,
   ACCEPTED_IMAGE_TYPES,
   "Max file size is 5MB.",
-  ".jpg, .jpeg, .png and .webp files are accepted.",
+  ".jpg, .jpeg, .png and .webp files are accepted."
 )
 
 const dateOptionalNullableSchema = z

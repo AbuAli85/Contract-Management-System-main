@@ -7,23 +7,35 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  FileText, 
-  Plus, 
-  Edit3, 
-  Copy, 
-  Trash2, 
-  Star, 
-  Clock, 
-  Users, 
+import {
+  FileText,
+  Plus,
+  Edit3,
+  Copy,
+  Trash2,
+  Star,
+  Clock,
+  Users,
   Settings,
   Search,
   Filter,
   Download,
-  Upload
+  Upload,
 } from "lucide-react"
 // import { useTranslations } from "next-intl"
 
@@ -44,18 +56,18 @@ interface ContractTemplate {
 
 interface SmartTemplateManagerProps {
   templates: ContractTemplate[]
-  onCreateTemplate: (template: Omit<ContractTemplate, 'id' | 'created_at' | 'updated_at'>) => void
+  onCreateTemplate: (template: Omit<ContractTemplate, "id" | "created_at" | "updated_at">) => void
   onUpdateTemplate: (id: string, template: Partial<ContractTemplate>) => void
   onDeleteTemplate: (id: string) => void
   onUseTemplate: (templateId: string) => void
 }
 
-export function SmartTemplateManager({ 
-  templates, 
-  onCreateTemplate, 
-  onUpdateTemplate, 
+export function SmartTemplateManager({
+  templates,
+  onCreateTemplate,
+  onUpdateTemplate,
   onDeleteTemplate,
-  onUseTemplate 
+  onUseTemplate,
 }: SmartTemplateManagerProps) {
   // const t = useTranslations("SmartTemplateManager")
   const [searchTerm, setSearchTerm] = useState("")
@@ -71,24 +83,25 @@ export function SmartTemplateManager({
     { value: "sales", label: "Sales" },
     { value: "partnership", label: "Partnership" },
     { value: "rental", label: "Rental" },
-    { value: "custom", label: "Custom" }
+    { value: "custom", label: "Custom" },
   ]
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredTemplates = templates.filter((template) => {
+    const matchesSearch =
+      template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = selectedCategory === "all" || template.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
   const TemplateCard = ({ template }: { template: ContractTemplate }) => (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">{template.name}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -96,7 +109,9 @@ export function SmartTemplateManager({
               size="sm"
               onClick={() => onUpdateTemplate(template.id, { is_favorite: !template.is_favorite })}
             >
-              <Star className={`h-4 w-4 ${template.is_favorite ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+              <Star
+                className={`h-4 w-4 ${template.is_favorite ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}`}
+              />
             </Button>
           </div>
         </div>
@@ -110,10 +125,12 @@ export function SmartTemplateManager({
               <span>{template.usage_count} uses</span>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-1">
-            {template.tags.map(tag => (
-              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+            {template.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
             ))}
           </div>
 
@@ -131,20 +148,20 @@ export function SmartTemplateManager({
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-2">
               <Button size="sm" onClick={() => onUseTemplate(template.id)}>
-                <FileText className="h-4 w-4 mr-1" />
+                <FileText className="mr-1 h-4 w-4" />
                 Use Template
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onCreateTemplate({ ...template, name: `${template.name} (Copy)` })}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex items-center space-x-1">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSelectedTemplate(template)
@@ -153,11 +170,7 @@ export function SmartTemplateManager({
               >
                 <Edit3 className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => onDeleteTemplate(template.id)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => onDeleteTemplate(template.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -167,14 +180,14 @@ export function SmartTemplateManager({
     </Card>
   )
 
-  const TemplateForm = ({ 
-    template, 
-    onSubmit, 
-    onCancel 
-  }: { 
-    template?: ContractTemplate; 
-    onSubmit: (data: any) => void; 
-    onCancel: () => void 
+  const TemplateForm = ({
+    template,
+    onSubmit,
+    onCancel,
+  }: {
+    template?: ContractTemplate
+    onSubmit: (data: any) => void
+    onCancel: () => void
   }) => {
     const [formData, setFormData] = useState({
       name: template?.name || "",
@@ -183,17 +196,23 @@ export function SmartTemplateManager({
       content_english: template?.content_english || "",
       content_spanish: template?.content_spanish || "",
       variables: template?.variables.join(", ") || "",
-      tags: template?.tags.join(", ") || ""
+      tags: template?.tags.join(", ") || "",
     })
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
       onSubmit({
         ...formData,
-        variables: formData.variables.split(",").map(v => v.trim()).filter(v => v),
-        tags: formData.tags.split(",").map(t => t.trim()).filter(t => t),
+        variables: formData.variables
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v),
+        tags: formData.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t),
         usage_count: template?.usage_count || 0,
-        is_favorite: template?.is_favorite || false
+        is_favorite: template?.is_favorite || false,
       })
     }
 
@@ -211,12 +230,15 @@ export function SmartTemplateManager({
           </div>
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {categories.slice(1).map(category => (
+                {categories.slice(1).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
                   </SelectItem>
@@ -261,7 +283,7 @@ export function SmartTemplateManager({
             <TabsTrigger value="english">English Content</TabsTrigger>
             <TabsTrigger value="spanish">Spanish Content</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="english">
             <div>
               <Label htmlFor="content_english">Template Content (English)</Label>
@@ -274,7 +296,7 @@ export function SmartTemplateManager({
               />
             </div>
           </TabsContent>
-          
+
           <TabsContent value="spanish">
             <div>
               <Label htmlFor="content_spanish">Template Content (Spanish)</Label>
@@ -293,9 +315,7 @@ export function SmartTemplateManager({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">
-            {template ? "Update Template" : "Create Template"}
-          </Button>
+          <Button type="submit">{template ? "Update Template" : "Create Template"}</Button>
         </div>
       </form>
     )
@@ -311,25 +331,25 @@ export function SmartTemplateManager({
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-1" />
+            <Upload className="mr-1 h-4 w-4" />
             Import
           </Button>
           <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-1" />
+            <Download className="mr-1 h-4 w-4" />
             Export
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="mr-1 h-4 w-4" />
                 Create Template
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Template</DialogTitle>
               </DialogHeader>
-              <TemplateForm 
+              <TemplateForm
                 onSubmit={(data) => {
                   onCreateTemplate(data)
                   setIsCreateDialogOpen(false)
@@ -343,7 +363,7 @@ export function SmartTemplateManager({
 
       {/* Filters */}
       <div className="flex items-center space-x-4">
-        <div className="flex-1 max-w-sm">
+        <div className="max-w-sm flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -356,11 +376,11 @@ export function SmartTemplateManager({
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-48">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="mr-2 h-4 w-4" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {categories.map(category => (
+            {categories.map((category) => (
               <SelectItem key={category.value} value={category.value}>
                 {category.label}
               </SelectItem>
@@ -371,14 +391,14 @@ export function SmartTemplateManager({
 
       {/* Templates Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredTemplates.map(template => (
+        {filteredTemplates.map((template) => (
           <TemplateCard key={template.id} template={template} />
         ))}
       </div>
 
       {filteredTemplates.length === 0 && (
-        <div className="text-center py-12">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <div className="py-12 text-center">
+          <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="text-lg font-medium">No templates found</h3>
           <p className="text-muted-foreground">Create your first template to get started</p>
         </div>
@@ -386,12 +406,12 @@ export function SmartTemplateManager({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Template</DialogTitle>
           </DialogHeader>
           {selectedTemplate && (
-            <TemplateForm 
+            <TemplateForm
               template={selectedTemplate}
               onSubmit={(data) => {
                 onUpdateTemplate(selectedTemplate.id, data)

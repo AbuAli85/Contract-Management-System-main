@@ -54,10 +54,7 @@ export default function EditPromoterPage() {
 
     setIsSaving(true)
     try {
-      const { error } = await supabase
-        .from("promoters")
-        .update(promoter)
-        .eq("id", promoterId)
+      const { error } = await supabase.from("promoters").update(promoter).eq("id", promoterId)
 
       if (error) throw error
 
@@ -91,7 +88,7 @@ export default function EditPromoterPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || "Promoter not found"}</p>
+          <p className="mb-4 text-red-600">{error || "Promoter not found"}</p>
           <Button onClick={() => router.push("/manage-promoters")}>
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoters
@@ -122,9 +119,7 @@ export default function EditPromoterPage() {
         <Card>
           <CardHeader>
             <CardTitle>Edit Promoter Information</CardTitle>
-            <CardDescription>
-              Update the promoter's details and information
-            </CardDescription>
+            <CardDescription>Update the promoter's details and information</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -134,9 +129,7 @@ export default function EditPromoterPage() {
                   <Input
                     id="name_en"
                     value={promoter.name_en || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, name_en: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, name_en: e.target.value })}
                     required
                   />
                 </div>
@@ -145,9 +138,7 @@ export default function EditPromoterPage() {
                   <Input
                     id="name_ar"
                     value={promoter.name_ar || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, name_ar: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, name_ar: e.target.value })}
                     dir="rtl"
                   />
                 </div>
@@ -160,9 +151,7 @@ export default function EditPromoterPage() {
                     id="email"
                     type="email"
                     value={promoter.email || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, email: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -170,9 +159,7 @@ export default function EditPromoterPage() {
                   <Input
                     id="phone"
                     value={promoter.phone || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, phone: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, phone: e.target.value })}
                   />
                 </div>
               </div>
@@ -183,9 +170,7 @@ export default function EditPromoterPage() {
                   <Input
                     id="national_id"
                     value={promoter.national_id || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, national_id: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, national_id: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -193,9 +178,7 @@ export default function EditPromoterPage() {
                   <Input
                     id="crn"
                     value={promoter.crn || ""}
-                    onChange={(e) =>
-                      setPromoter({ ...promoter, crn: e.target.value })
-                    }
+                    onChange={(e) => setPromoter({ ...promoter, crn: e.target.value })}
                   />
                 </div>
               </div>
@@ -230,9 +213,7 @@ export default function EditPromoterPage() {
                 <Textarea
                   id="address"
                   value={promoter.address || ""}
-                  onChange={(e) =>
-                    setPromoter({ ...promoter, address: e.target.value })
-                  }
+                  onChange={(e) => setPromoter({ ...promoter, address: e.target.value })}
                   rows={3}
                 />
               </div>

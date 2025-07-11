@@ -22,7 +22,7 @@ export function createOptionalFileSchema(
   maxFileSize: number,
   acceptedTypes: string[],
   sizeMessage: string,
-  typeMessage: string,
+  typeMessage: string
 ) {
   return z
     .any()
@@ -30,7 +30,7 @@ export function createOptionalFileSchema(
       (file) =>
         !file ||
         (isBrowser ? file instanceof File && file.size <= maxFileSize : file.size <= maxFileSize),
-      sizeMessage,
+      sizeMessage
     )
     .refine(
       (file) =>
@@ -38,23 +38,23 @@ export function createOptionalFileSchema(
         (isBrowser
           ? file instanceof File && acceptedTypes.includes(file.type)
           : acceptedTypes.includes(file.type)),
-      typeMessage,
+      typeMessage
     )
     .optional()
     .nullable()
 }
 
 export function getPartyDetails(parties: any[]) {
-    const employer = parties.find(p => p.role === 'employer');
-    const employee = parties.find(p => p.role === 'employee');
-    const promoter = parties.find(p => p.role === 'promoter');
-    return {employer, employee, promoter};
+  const employer = parties.find((p) => p.role === "employer")
+  const employee = parties.find((p) => p.role === "employee")
+  const promoter = parties.find((p) => p.role === "promoter")
+  return { employer, employee, promoter }
 }
 
 export function calculateDuration(startDate: string, endDate: string): string {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffInMs = end.getTime() - start.getTime();
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    return `${diffInDays} days`;
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diffInMs = end.getTime() - start.getTime()
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+  return `${diffInDays} days`
 }

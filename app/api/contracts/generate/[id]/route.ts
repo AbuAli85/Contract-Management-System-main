@@ -7,7 +7,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const contractId = params.id
 
     // Verify user is authenticated
-    const supabase = createClient()
+    const supabase = await createClient()
     const {
       data: { user },
       error: authError,

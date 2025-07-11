@@ -30,20 +30,17 @@ import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
 import { useToast } from "@/hooks/use-toast"
 import type { Database } from "@/types/supabase"
-import {
-  contractGeneratorSchema,
-  type ContractGeneratorFormData,
-} from "@/lib/schema-generator"
+import { contractGeneratorSchema, type ContractGeneratorFormData } from "@/lib/schema-generator"
 import { useParties, type Party as PartyType } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import type { Promoter } from "@/types/custom"
-import { 
-  JOB_TITLES, 
-  DEPARTMENTS, 
-  CONTRACT_TYPES, 
-  CURRENCIES, 
+import {
+  JOB_TITLES,
+  DEPARTMENTS,
+  CONTRACT_TYPES,
+  CURRENCIES,
   WORK_LOCATIONS,
-  getOptionLabel 
+  getOptionLabel,
 } from "@/constants/contract-options"
 import { validateContractData } from "@/lib/contract-utils"
 
@@ -73,20 +70,14 @@ export default function ContractGeneratorForm({
     error: clientPartiesError,
   } = useParties()
   const {
-    data: employerParties, // Party B  
+    data: employerParties, // Party B
     isLoading: isLoadingEmployerParties,
     error: employerPartiesError,
   } = useParties()
-  const {
-    data: promoters,
-    isLoading: isLoadingPromoters,
-    error: promotersError,
-  } = usePromoters()
+  const { data: promoters, isLoading: isLoadingPromoters, error: promotersError } = usePromoters()
 
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null)
-  const [promoterOptions, setPromoterOptions] = useState<
-    { value: string; label: string }[]
-  >([])
+  const [promoterOptions, setPromoterOptions] = useState<{ value: string; label: string }[]>([])
 
   const { reset, ...form } = useForm<ContractGeneratorFormData>({
     resolver: zodResolver(contractGeneratorSchema),
@@ -160,38 +151,38 @@ export default function ContractGeneratorForm({
 
   // When Party A (Client) is selected, auto-fill fields
   useEffect(() => {
-    if (form.watch('first_party_id') && clientParties) {
-      const party = clientParties.find(p => p.id === form.watch('first_party_id'))
+    if (form.watch("first_party_id") && clientParties) {
+      const party = clientParties.find((p) => p.id === form.watch("first_party_id"))
       setSelectedClient(party || null)
       if (party) {
-        form.setValue('first_party_name_en', party.name_en)
-        form.setValue('first_party_name_ar', party.name_ar)
-        form.setValue('first_party_crn', party.crn)
+        form.setValue("first_party_name_en", party.name_en)
+        form.setValue("first_party_name_ar", party.name_ar)
+        form.setValue("first_party_crn", party.crn)
       }
     }
-  }, [form.watch('first_party_id'), clientParties])
+  }, [form.watch("first_party_id"), clientParties])
 
   // When Party B (Employer) is selected, auto-fill fields
   useEffect(() => {
-    if (form.watch('second_party_id') && employerParties) {
-      const party = employerParties.find(p => p.id === form.watch('second_party_id'))
+    if (form.watch("second_party_id") && employerParties) {
+      const party = employerParties.find((p) => p.id === form.watch("second_party_id"))
       setSelectedEmployer(party || null)
       if (party) {
-        form.setValue('second_party_name_en', party.name_en)
-        form.setValue('second_party_name_ar', party.name_ar)
-        form.setValue('second_party_crn', party.crn)
+        form.setValue("second_party_name_en", party.name_en)
+        form.setValue("second_party_name_ar", party.name_ar)
+        form.setValue("second_party_crn", party.crn)
       }
     }
-  }, [form.watch('second_party_id'), employerParties])
+  }, [form.watch("second_party_id"), employerParties])
 
   // When promoter is selected, auto-fill fields
   useEffect(() => {
     if (selectedPromoter) {
-      form.setValue('promoter_name_en', selectedPromoter.name_en)
-      form.setValue('promoter_name_ar', selectedPromoter.name_ar)
-      form.setValue('id_card_number', selectedPromoter.id_card_number)
-      form.setValue('promoter_id_card_url', selectedPromoter.id_card_url || '')
-      form.setValue('promoter_passport_url', selectedPromoter.passport_url || '')
+      form.setValue("promoter_name_en", selectedPromoter.name_en)
+      form.setValue("promoter_name_ar", selectedPromoter.name_ar)
+      form.setValue("id_card_number", selectedPromoter.id_card_number)
+      form.setValue("promoter_id_card_url", selectedPromoter.id_card_url || "")
+      form.setValue("promoter_passport_url", selectedPromoter.passport_url || "")
     }
   }, [selectedPromoter])
 
@@ -265,9 +256,7 @@ export default function ContractGeneratorForm({
     onSuccess: async (data) => {
       toast({
         title: contract?.id ? "Contract Updated!" : "Contract Created!",
-        description: data.pdf_url
-          ? `PDF: ${data.pdf_url}`
-          : "PDF generation pending.",
+        description: data.pdf_url ? `PDF: ${data.pdf_url}` : "PDF generation pending.",
       })
       reset()
       queryClient.invalidateQueries({ queryKey: ["contracts"] })
@@ -276,20 +265,20 @@ export default function ContractGeneratorForm({
       // trigger webhook processing using the new service
       try {
         // Import the webhook service dynamically to avoid SSR issues
-        const { WebhookService } = await import('@/lib/webhook-service')
-        
+        const { WebhookService } = await import("@/lib/webhook-service")
+
         // Process contract through both webhooks
         await WebhookService.processContract({
           contract_id: data.id,
           contract_number: data.contract_number,
-          client_name: data.client_name || 'N/A',
-          employer_name: data.employer_name || 'N/A',
-          status: 'processing'
+          client_name: data.client_name || "N/A",
+          employer_name: data.employer_name || "N/A",
+          status: "processing",
         })
-        
-        console.log('✅ Webhook processing initiated for contract:', data.id)
+
+        console.log("✅ Webhook processing initiated for contract:", data.id)
       } catch (err) {
-        console.error('❌ Webhook processing error:', err)
+        console.error("❌ Webhook processing error:", err)
         // Don't fail the contract creation, just log the error
       }
     },
@@ -335,9 +324,7 @@ export default function ContractGeneratorForm({
     return (
       <div className="flex min-h-[300px] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ms-4 text-lg text-muted-foreground">
-          Loading form data...
-        </p>
+        <p className="ms-4 text-lg text-muted-foreground">Loading form data...</p>
       </div>
     )
   }
@@ -377,14 +364,10 @@ export default function ContractGeneratorForm({
                     disabled={isSubmitting || isLoadingClientParties}
                   >
                     <FormControl>
-                      <SelectTrigger
-                        className={getInputStateClasses("first_party_id")}
-                      >
+                      <SelectTrigger className={getInputStateClasses("first_party_id")}>
                         <SelectValue
                           placeholder={
-                            isLoadingClientParties
-                              ? "Loading Clients..."
-                              : "Select Client"
+                            isLoadingClientParties ? "Loading Clients..." : "Select Client"
                           }
                         />
                       </SelectTrigger>
@@ -395,17 +378,15 @@ export default function ContractGeneratorForm({
                           Loading...
                         </SelectItem>
                       )}
-                      {!isLoadingClientParties &&
-                        clientParties?.length === 0 && (
-                          <SelectItem value="no-data" disabled>
-                            No clients found
-                          </SelectItem>
-                        )}
+                      {!isLoadingClientParties && clientParties?.length === 0 && (
+                        <SelectItem value="no-data" disabled>
+                          No clients found
+                        </SelectItem>
+                      )}
                       {!isLoadingClientParties &&
                         clientParties?.map((party: PartyType) => (
                           <SelectItem key={party.id} value={party.id}>
-                            {party.name_en} / {party.name_ar}{" "}
-                            {party.crn && `(CRN: ${party.crn})`}
+                            {party.name_en} / {party.name_ar} {party.crn && `(CRN: ${party.crn})`}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -427,14 +408,10 @@ export default function ContractGeneratorForm({
                     disabled={isSubmitting || isLoadingEmployerParties}
                   >
                     <FormControl>
-                      <SelectTrigger
-                        className={getInputStateClasses("second_party_id")}
-                      >
+                      <SelectTrigger className={getInputStateClasses("second_party_id")}>
                         <SelectValue
                           placeholder={
-                            isLoadingEmployerParties
-                              ? "Loading Employers..."
-                              : "Select Employer"
+                            isLoadingEmployerParties ? "Loading Employers..." : "Select Employer"
                           }
                         />
                       </SelectTrigger>
@@ -445,17 +422,15 @@ export default function ContractGeneratorForm({
                           Loading...
                         </SelectItem>
                       )}
-                      {!isLoadingEmployerParties &&
-                        employerParties?.length === 0 && (
-                          <SelectItem value="no-data" disabled>
-                            No employers found
-                          </SelectItem>
-                        )}
+                      {!isLoadingEmployerParties && employerParties?.length === 0 && (
+                        <SelectItem value="no-data" disabled>
+                          No employers found
+                        </SelectItem>
+                      )}
                       {!isLoadingEmployerParties &&
                         employerParties?.map((party: PartyType) => (
                           <SelectItem key={party.id} value={party.id}>
-                            {party.name_en} / {party.name_ar}{" "}
-                            {party.crn && `(CRN: ${party.crn})`}
+                            {party.name_en} / {party.name_ar} {party.crn && `(CRN: ${party.crn})`}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -486,11 +461,7 @@ export default function ContractGeneratorForm({
                 <ComboboxField
                   field={field}
                   options={promoterOptions}
-                  placeholder={
-                    isLoadingPromoters
-                      ? "Loading Promoters..."
-                      : "Select a promoter"
-                  }
+                  placeholder={isLoadingPromoters ? "Loading Promoters..." : "Select a promoter"}
                   searchPlaceholder="Search promoters..."
                   emptyStateMessage="No promoter found."
                   disabled={isSubmitting || isLoadingPromoters}
@@ -502,22 +473,17 @@ export default function ContractGeneratorForm({
           {selectedPromoter ? (
             <div className="space-y-1 rounded-md border bg-muted/50 p-3 text-sm">
               <p>
-                <span className="font-medium">Name (EN):</span>{" "}
-                {selectedPromoter.name_en}
+                <span className="font-medium">Name (EN):</span> {selectedPromoter.name_en}
               </p>
               <p dir="rtl">
-                <span className="font-medium">Name (AR):</span>{" "}
-                {selectedPromoter.name_ar}
+                <span className="font-medium">Name (AR):</span> {selectedPromoter.name_ar}
               </p>
               <p>
-                <span className="font-medium">ID Card:</span>{" "}
-                {selectedPromoter.id_card_number}
+                <span className="font-medium">ID Card:</span> {selectedPromoter.id_card_number}
               </p>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Select a promoter to view details.
-            </p>
+            <p className="text-sm text-muted-foreground">Select a promoter to view details.</p>
           )}
         </motion.div>
 
@@ -563,8 +529,7 @@ export default function ContractGeneratorForm({
                     placeholder="dd-MM-yyyy"
                     disabled={
                       (form.getValues("contract_start_date")
-                        ? field.value! <=
-                          form.getValues("contract_start_date")!
+                        ? field.value! <= form.getValues("contract_start_date")!
                         : false) || isSubmitting
                     }
                   />
@@ -599,9 +564,7 @@ export default function ContractGeneratorForm({
                     className={getInputStateClasses("email") || ""}
                   />
                 </FormControl>
-                <FormDescription>
-                  Email address for contract-related notifications.
-                </FormDescription>
+                <FormDescription>Email address for contract-related notifications.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -627,9 +590,7 @@ export default function ContractGeneratorForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Choose the job title for this contract position
-                </FormDescription>
+                <FormDescription>Choose the job title for this contract position</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -655,9 +616,7 @@ export default function ContractGeneratorForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Choose the department this position belongs to
-                </FormDescription>
+                <FormDescription>Choose the department this position belongs to</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -683,9 +642,7 @@ export default function ContractGeneratorForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Choose the type of employment contract
-                </FormDescription>
+                <FormDescription>Choose the type of employment contract</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -711,9 +668,7 @@ export default function ContractGeneratorForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Choose the currency for this contract
-                </FormDescription>
+                <FormDescription>Choose the currency for this contract</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -768,17 +723,17 @@ export default function ContractGeneratorForm({
         </motion.div>
 
         {/* Add hidden fields to the form */}
-        <input type="hidden" {...form.register('first_party_name_en')} />
-        <input type="hidden" {...form.register('first_party_name_ar')} />
-        <input type="hidden" {...form.register('first_party_crn')} />
-        <input type="hidden" {...form.register('second_party_name_en')} />
-        <input type="hidden" {...form.register('second_party_name_ar')} />
-        <input type="hidden" {...form.register('second_party_crn')} />
-        <input type="hidden" {...form.register('promoter_name_en')} />
-        <input type="hidden" {...form.register('promoter_name_ar')} />
-        <input type="hidden" {...form.register('id_card_number')} />
-        <input type="hidden" {...form.register('promoter_id_card_url')} />
-        <input type="hidden" {...form.register('promoter_passport_url')} />
+        <input type="hidden" {...form.register("first_party_name_en")} />
+        <input type="hidden" {...form.register("first_party_name_ar")} />
+        <input type="hidden" {...form.register("first_party_crn")} />
+        <input type="hidden" {...form.register("second_party_name_en")} />
+        <input type="hidden" {...form.register("second_party_name_ar")} />
+        <input type="hidden" {...form.register("second_party_crn")} />
+        <input type="hidden" {...form.register("promoter_name_en")} />
+        <input type="hidden" {...form.register("promoter_name_ar")} />
+        <input type="hidden" {...form.register("id_card_number")} />
+        <input type="hidden" {...form.register("promoter_id_card_url")} />
+        <input type="hidden" {...form.register("promoter_passport_url")} />
       </form>
     </Form>
   )

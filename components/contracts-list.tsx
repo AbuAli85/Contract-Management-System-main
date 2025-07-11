@@ -6,12 +6,20 @@ import { useRealtimeContracts } from "@/hooks/use-realtime-contracts"
 import { ContractStatusIndicator } from "./contract-status-indicator"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Download, RotateCcw, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 export function ContractsList() {
-  const { contracts, fetchContracts, retryContract, generateContract, isLoading } = useContractsStore()
+  const { contracts, fetchContracts, retryContract, generateContract, isLoading } =
+    useContractsStore()
 
   // Set up real-time subscriptions
   useRealtimeContracts()
@@ -46,7 +54,7 @@ export function ContractsList() {
         terms: "Standard terms and conditions",
         first_party_id: "partyA-id-placeholder",
         second_party_id: "partyB-id-placeholder",
-        promoter_id: "promoter-id-placeholder"
+        promoter_id: "promoter-id-placeholder",
       })
       toast.success("Contract generation started")
     } catch (error) {
@@ -97,7 +105,9 @@ export function ContractsList() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDownload(contract.id, contract.contract_name || "Contract")}
+                        onClick={() =>
+                          handleDownload(contract.id, contract.contract_name || "Contract")
+                        }
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -114,7 +124,7 @@ export function ContractsList() {
           </TableBody>
         </Table>
         {contracts.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No contracts found. Generate your first contract to get started.
           </div>
         )}

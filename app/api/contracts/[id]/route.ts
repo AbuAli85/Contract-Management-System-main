@@ -1,12 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { getSupabaseAdmin }         from "@/lib/supabase/admin"
-import { contractGeneratorSchema }  from "@/lib/schema-generator"
-import { format }                   from "date-fns"
+import { getSupabaseAdmin } from "@/lib/supabase/admin"
+import { contractGeneratorSchema } from "@/lib/schema-generator"
+import { format } from "date-fns"
 
-export async function PUT(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabaseAdmin = getSupabaseAdmin()
   const { id } = await params
 
@@ -14,7 +11,10 @@ export async function PUT(
   const body = await request.json()
   const parsed = contractGeneratorSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ message: "Invalid input", errors: parsed.error.format() }, { status: 400 })
+    return NextResponse.json(
+      { message: "Invalid input", errors: parsed.error.format() },
+      { status: 400 }
+    )
   }
 
   // 2) Build update payload (format dates)

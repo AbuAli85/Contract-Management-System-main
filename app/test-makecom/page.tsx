@@ -19,10 +19,8 @@ export default function TestMakecomTemplates() {
           <Button onClick={() => setShowComponent(!showComponent)}>
             {showComponent ? "Hide" : "Show"} Make.com Templates Component
           </Button>
-          
-          <div className="mt-6">
-            {showComponent && <MakecomContractTemplates />}
-          </div>
+
+          <div className="mt-6">{showComponent && <MakecomContractTemplates />}</div>
         </CardContent>
       </Card>
     </div>

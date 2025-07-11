@@ -7,24 +7,24 @@ export async function GET() {
       hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceRoleKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-      serviceRoleKeyStart: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'N/A',
+      serviceRoleKeyStart: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || "N/A",
       nodeEnv: process.env.NODE_ENV,
     }
-    
+
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: "Environment variables check",
-        envVars 
+        envVars,
       },
       { status: 200 }
     )
   } catch (error: any) {
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to check environment variables",
-        details: error.message 
+        details: error.message,
       },
       { status: 500 }
     )

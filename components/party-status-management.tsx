@@ -4,31 +4,37 @@ import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
-import { 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  Search, 
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Search,
   Filter,
   Users,
   Activity,
   MoreHorizontal,
   RefreshCw,
   Download,
-  Upload
+  Upload,
 } from "lucide-react"
-import { 
-  updatePartyStatus, 
-  bulkUpdatePartyStatus, 
+import {
+  updatePartyStatus,
+  bulkUpdatePartyStatus,
   fetchPartiesWithContractCount,
-  searchParties 
+  searchParties,
 } from "@/lib/party-service"
 import type { Party } from "@/lib/types"
 import { getOverallStatus } from "@/lib/party-utils"
@@ -44,7 +50,7 @@ interface PartyWithStatus extends Party {
 export function PartyStatusManagement() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const { toast } = useToast()
-  
+
   const [parties, setParties] = useState<PartyWithStatus[]>([])
   const [filteredParties, setFilteredParties] = useState<PartyWithStatus[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,21 +76,21 @@ export function PartyStatusManagement() {
       setError(null)
       setLoading(true)
       const data = await fetchPartiesWithContractCount()
-      
+
       // Enhance with overall status
-      const enhancedData = data.map(party => ({
+      const enhancedData = data.map((party) => ({
         ...party,
-        overall_status: getOverallStatus(party)
+        overall_status: getOverallStatus(party),
       }))
-      
+
       setParties(enhancedData)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch parties'
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch parties"
       setError(errorMessage)
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -96,17 +102,18 @@ export function PartyStatusManagement() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(party =>
-        party.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.crn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (party) =>
+          party.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.crn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(party => party.status === statusFilter)
+      filtered = filtered.filter((party) => party.status === statusFilter)
     }
 
     setFilteredParties(filtered)
@@ -117,7 +124,7 @@ export function PartyStatusManagement() {
       toast({
         title: "Error",
         description: "Authentication required",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
@@ -125,24 +132,30 @@ export function PartyStatusManagement() {
     setActionLoading(partyId)
     try {
       await updatePartyStatus(partyId, newStatus)
-      
+
       // Update local state
-      setParties(prev => prev.map(party => 
-        party.id === partyId 
-          ? { ...party, status: newStatus, overall_status: getOverallStatus({ ...party, status: newStatus }) }
-          : party
-      ))
+      setParties((prev) =>
+        prev.map((party) =>
+          party.id === partyId
+            ? {
+                ...party,
+                status: newStatus,
+                overall_status: getOverallStatus({ ...party, status: newStatus }),
+              }
+            : party
+        )
+      )
 
       toast({
         title: "Success",
         description: `Party status updated to ${newStatus}`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update status'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update status"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -154,7 +167,7 @@ export function PartyStatusManagement() {
       toast({
         title: "Error",
         description: "Authentication required",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
@@ -163,21 +176,27 @@ export function PartyStatusManagement() {
       toast({
         title: "Error",
         description: "Please select parties to update",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
 
-    setActionLoading('bulk')
+    setActionLoading("bulk")
     try {
       await bulkUpdatePartyStatus(selectedParties, bulkStatus)
-      
+
       // Update local state
-      setParties(prev => prev.map(party => 
-        selectedParties.includes(party.id)
-          ? { ...party, status: bulkStatus, overall_status: getOverallStatus({ ...party, status: bulkStatus }) }
-          : party
-      ))
+      setParties((prev) =>
+        prev.map((party) =>
+          selectedParties.includes(party.id)
+            ? {
+                ...party,
+                status: bulkStatus,
+                overall_status: getOverallStatus({ ...party, status: bulkStatus }),
+              }
+            : party
+        )
+      )
 
       setSelectedParties([])
       toast({
@@ -185,11 +204,11 @@ export function PartyStatusManagement() {
         description: `Updated ${selectedParties.length} parties to ${bulkStatus}`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update statuses'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update statuses"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -198,7 +217,7 @@ export function PartyStatusManagement() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedParties(filteredParties.map(party => party.id))
+      setSelectedParties(filteredParties.map((party) => party.id))
     } else {
       setSelectedParties([])
     }
@@ -206,20 +225,32 @@ export function PartyStatusManagement() {
 
   const handleSelectParty = (partyId: string, checked: boolean) => {
     if (checked) {
-      setSelectedParties(prev => [...prev, partyId])
+      setSelectedParties((prev) => [...prev, partyId])
     } else {
-      setSelectedParties(prev => prev.filter(id => id !== partyId))
+      setSelectedParties((prev) => prev.filter((id) => id !== partyId))
     }
   }
 
   const getStatusBadge = (status?: string | null) => {
     switch (status) {
       case "Active":
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Active
+          </Badge>
+        )
       case "Inactive":
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Inactive</Badge>
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            Inactive
+          </Badge>
+        )
       case "Suspended":
-        return <Badge variant="destructive" className="bg-red-100 text-red-800">Suspended</Badge>
+        return (
+          <Badge variant="destructive" className="bg-red-100 text-red-800">
+            Suspended
+          </Badge>
+        )
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
@@ -228,31 +259,53 @@ export function PartyStatusManagement() {
   const getOverallStatusBadge = (status?: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle2 className="w-3 h-3 mr-1" />Active</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle2 className="mr-1 h-3 w-3" />
+            Active
+          </Badge>
+        )
       case "warning":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Warning</Badge>
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="mr-1 h-3 w-3" />
+            Warning
+          </Badge>
+        )
       case "critical":
-        return <Badge variant="destructive" className="bg-red-100 text-red-800"><AlertTriangle className="w-3 h-3 mr-1" />Critical</Badge>
+        return (
+          <Badge variant="destructive" className="bg-red-100 text-red-800">
+            <AlertTriangle className="mr-1 h-3 w-3" />
+            Critical
+          </Badge>
+        )
       case "inactive":
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800">Inactive</Badge>
+        return (
+          <Badge variant="outline" className="bg-gray-100 text-gray-800">
+            Inactive
+          </Badge>
+        )
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
   }
 
   const getStatusStats = () => {
-    const stats = parties.reduce((acc, party) => {
-      const status = party.status || 'Unknown'
-      acc[status] = (acc[status] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const stats = parties.reduce(
+      (acc, party) => {
+        const status = party.status || "Unknown"
+        acc[status] = (acc[status] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return {
       total: parties.length,
       active: stats.Active || 0,
       inactive: stats.Inactive || 0,
       suspended: stats.Suspended || 0,
-      unknown: stats.Unknown || 0
+      unknown: stats.Unknown || 0,
     }
   }
 
@@ -265,7 +318,7 @@ export function PartyStatusManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             <span className="ml-2">Checking authentication...</span>
           </div>
         </CardContent>
@@ -282,7 +335,7 @@ export function PartyStatusManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="h-5 w-5 mr-2" />
+            <AlertTriangle className="mr-2 h-5 w-5" />
             <span>Authentication required to access party status management</span>
           </div>
         </CardContent>
@@ -305,12 +358,12 @@ export function PartyStatusManagement() {
             Manage party statuses, view overall health, and perform bulk operations
           </CardDescription>
           {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+            <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4" />
               <span>{error}</span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setError(null)}
                 className="ml-auto h-auto p-1"
               >
@@ -334,7 +387,7 @@ export function PartyStatusManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -346,7 +399,7 @@ export function PartyStatusManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -358,7 +411,7 @@ export function PartyStatusManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -370,7 +423,7 @@ export function PartyStatusManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -389,7 +442,7 @@ export function PartyStatusManagement() {
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <div className="flex-1">
                 <Label htmlFor="search">Search Parties</Label>
                 <div className="relative">
@@ -403,10 +456,13 @@ export function PartyStatusManagement() {
                   />
                 </div>
               </div>
-              
+
               <div className="sm:w-48">
                 <Label htmlFor="status-filter">Filter by Status</Label>
-                <Select value={statusFilter} onValueChange={(value: FilterStatus) => setStatusFilter(value)}>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value: FilterStatus) => setStatusFilter(value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
@@ -418,14 +474,10 @@ export function PartyStatusManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  onClick={fetchParties}
-                  disabled={loading}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <Button variant="outline" onClick={fetchParties} disabled={loading}>
+                  <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                   Refresh
                 </Button>
               </div>
@@ -434,17 +486,20 @@ export function PartyStatusManagement() {
             <Separator />
 
             {/* Bulk Operations */}
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex flex-col items-end gap-4 sm:flex-row">
               <div className="flex-1">
                 <Label>Bulk Status Update</Label>
                 <p className="text-sm text-muted-foreground">
                   {selectedParties.length} parties selected
                 </p>
               </div>
-              
+
               <div className="sm:w-48">
                 <Label htmlFor="bulk-status">New Status</Label>
-                <Select value={bulkStatus} onValueChange={(value: PartyStatus) => setBulkStatus(value)}>
+                <Select
+                  value={bulkStatus}
+                  onValueChange={(value: PartyStatus) => setBulkStatus(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -455,13 +510,13 @@ export function PartyStatusManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={handleBulkStatusUpdate}
-                disabled={selectedParties.length === 0 || actionLoading === 'bulk'}
+                disabled={selectedParties.length === 0 || actionLoading === "bulk"}
               >
-                {actionLoading === 'bulk' ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                {actionLoading === "bulk" ? (
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
                 ) : null}
                 Update Selected
               </Button>
@@ -478,12 +533,12 @@ export function PartyStatusManagement() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
               <span className="ml-2">Loading parties...</span>
             </div>
           ) : filteredParties.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="mx-auto h-12 w-12 mb-4" />
+            <div className="py-8 text-center text-muted-foreground">
+              <Users className="mx-auto mb-4 h-12 w-12" />
               <p>No parties found matching your criteria</p>
             </div>
           ) : (
@@ -491,31 +546,36 @@ export function PartyStatusManagement() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-2">
+                    <th className="px-2 py-3 text-left">
                       <Checkbox
-                        checked={selectedParties.length === filteredParties.length && filteredParties.length > 0}
+                        checked={
+                          selectedParties.length === filteredParties.length &&
+                          filteredParties.length > 0
+                        }
                         onCheckedChange={handleSelectAll}
                       />
                     </th>
-                    <th className="text-left py-3 px-2 font-medium">Party Name</th>
-                    <th className="text-left py-3 px-2 font-medium">CRN</th>
-                    <th className="text-left py-3 px-2 font-medium">Type</th>
-                    <th className="text-left py-3 px-2 font-medium">Status</th>
-                    <th className="text-left py-3 px-2 font-medium">Overall Health</th>
-                    <th className="text-left py-3 px-2 font-medium">Contracts</th>
-                    <th className="text-left py-3 px-2 font-medium">Actions</th>
+                    <th className="px-2 py-3 text-left font-medium">Party Name</th>
+                    <th className="px-2 py-3 text-left font-medium">CRN</th>
+                    <th className="px-2 py-3 text-left font-medium">Type</th>
+                    <th className="px-2 py-3 text-left font-medium">Status</th>
+                    <th className="px-2 py-3 text-left font-medium">Overall Health</th>
+                    <th className="px-2 py-3 text-left font-medium">Contracts</th>
+                    <th className="px-2 py-3 text-left font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredParties.map((party) => (
                     <tr key={party.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-2">
+                      <td className="px-2 py-3">
                         <Checkbox
                           checked={selectedParties.includes(party.id)}
-                          onCheckedChange={(checked) => handleSelectParty(party.id, checked as boolean)}
+                          onCheckedChange={(checked) =>
+                            handleSelectParty(party.id, checked as boolean)
+                          }
                         />
                       </td>
-                      <td className="py-3 px-2">
+                      <td className="px-2 py-3">
                         <div>
                           <p className="font-medium">{party.name_en}</p>
                           {party.name_ar && (
@@ -523,24 +583,22 @@ export function PartyStatusManagement() {
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-2">{party.crn}</td>
-                      <td className="py-3 px-2">
-                        <Badge variant="outline">{party.type || 'N/A'}</Badge>
+                      <td className="px-2 py-3">{party.crn}</td>
+                      <td className="px-2 py-3">
+                        <Badge variant="outline">{party.type || "N/A"}</Badge>
                       </td>
-                      <td className="py-3 px-2">
-                        {getStatusBadge(party.status)}
-                      </td>
-                      <td className="py-3 px-2">
-                        {getOverallStatusBadge(party.overall_status)}
-                      </td>
-                      <td className="py-3 px-2">
+                      <td className="px-2 py-3">{getStatusBadge(party.status)}</td>
+                      <td className="px-2 py-3">{getOverallStatusBadge(party.overall_status)}</td>
+                      <td className="px-2 py-3">
                         <Badge variant="secondary">{party.contract_count || 0}</Badge>
                       </td>
-                      <td className="py-3 px-2">
+                      <td className="px-2 py-3">
                         <div className="flex gap-2">
                           <Select
                             value={party.status || ""}
-                            onValueChange={(value: PartyStatus) => handleStatusUpdate(party.id, value)}
+                            onValueChange={(value: PartyStatus) =>
+                              handleStatusUpdate(party.id, value)
+                            }
                             disabled={actionLoading === party.id}
                           >
                             <SelectTrigger className="w-32">
@@ -554,7 +612,7 @@ export function PartyStatusManagement() {
                           </Select>
                           {actionLoading === party.id && (
                             <div className="flex items-center">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                              <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-primary"></div>
                             </div>
                           )}
                         </div>

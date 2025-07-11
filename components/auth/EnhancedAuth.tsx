@@ -11,7 +11,7 @@ interface UserProfile {
   email: string
   full_name?: string
   avatar_url?: string
-  role?: 'admin' | 'manager' | 'user'
+  role?: "admin" | "manager" | "user"
   department?: string
   phone?: string
   timezone?: string
@@ -58,23 +58,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession()
-        
+        const {
+          data: { session: currentSession },
+          error,
+        } = await supabase.auth.getSession()
+
         if (error) {
-          console.error('Error getting session:', error)
+          console.error("Error getting session:", error)
           return
         }
 
         if (mounted) {
           setSession(currentSession)
           setUser(currentSession?.user ?? null)
-          
+
           if (currentSession?.user) {
             await fetchUserProfile(currentSession.user.id)
           }
         }
       } catch (error) {
-        console.error('Error initializing auth:', error)
+        console.error("Error initializing auth:", error)
       } finally {
         if (mounted) {
           setLoading(false)
@@ -85,27 +88,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        if (!mounted) return
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return
 
-        setSession(currentSession)
-        setUser(currentSession?.user ?? null)
-        
-        if (currentSession?.user) {
-          await fetchUserProfile(currentSession.user.id)
-          
-          // Update last login
-          if (event === 'SIGNED_IN') {
-            await updateLastLogin(currentSession.user.id)
-          }
-        } else {
-          setProfile(null)
+      setSession(currentSession)
+      setUser(currentSession?.user ?? null)
+
+      if (currentSession?.user) {
+        await fetchUserProfile(currentSession.user.id)
+
+        // Update last login
+        if (event === "SIGNED_IN") {
+          await updateLastLogin(currentSession.user.id)
         }
-        
-        setLoading(false)
+      } else {
+        setProfile(null)
       }
-    )
+
+      setLoading(false)
+    })
 
     return () => {
       mounted = false
@@ -116,14 +119,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Fetch user profile from database
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error)
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching profile:", error)
         return
       }
 
@@ -134,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await createUserProfile(userId)
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error)
+      console.error("Error fetching user profile:", error)
     }
   }
 
@@ -149,30 +148,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const newProfile: Partial<UserProfile> = {
         id: userId,
         email: user.email!,
-        full_name: user.user_metadata?.full_name || '',
-        role: 'user',
+        full_name: user.user_metadata?.full_name || "",
+        role: "user",
         email_notifications: true,
         push_notifications: true,
         two_factor_enabled: false,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: 'en',
-        created_at: new Date().toISOString()
+        language: "en",
+        created_at: new Date().toISOString(),
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert(newProfile)
-        .select()
-        .single()
+      const { data, error } = await supabase.from("profiles").insert(newProfile).select().single()
 
       if (error) {
-        console.error('Error creating profile:', error)
+        console.error("Error creating profile:", error)
         return
       }
 
       setProfile(data)
     } catch (error) {
-      console.error('Error creating user profile:', error)
+      console.error("Error creating user profile:", error)
     }
   }
 
@@ -180,11 +175,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateLastLogin = async (userId: string) => {
     try {
       await supabase
-        .from('profiles')
+        .from("profiles")
         .update({ last_login: new Date().toISOString() })
-        .eq('id', userId)
+        .eq("id", userId)
     } catch (error) {
-      console.error('Error updating last login:', error)
+      console.error("Error updating last login:", error)
     }
   }
 
@@ -192,10 +187,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true)
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       })
 
       if (error) {
@@ -209,7 +204,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return {}
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
       return { error: errorMessage }
     } finally {
       setLoading(false)
@@ -220,15 +215,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true)
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName || ''
-          }
-        }
+            full_name: fullName || "",
+          },
+        },
       })
 
       if (error) {
@@ -242,7 +237,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return {}
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
       return { error: errorMessage }
     } finally {
       setLoading(false)
@@ -253,14 +248,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true)
-      
+
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         toast({
           title: "Error",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         })
         return
       }
@@ -274,11 +269,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         description: "You have been signed out successfully.",
       })
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error("Error signing out:", error)
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -289,23 +284,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       if (!user) {
-        return { error: 'No user logged in' }
+        return { error: "No user logged in" }
       }
 
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           ...updates,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id)
+        .eq("id", user.id)
 
       if (error) {
         return { error: error.message }
       }
 
       // Update local profile state
-      setProfile(prev => prev ? { ...prev, ...updates } : null)
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null))
 
       toast({
         title: "Profile updated",
@@ -314,7 +309,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return {}
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile'
+      const errorMessage = error instanceof Error ? error.message : "Failed to update profile"
       return { error: errorMessage }
     }
   }
@@ -323,7 +318,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updatePassword = async (newPassword: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       })
 
       if (error) {
@@ -337,7 +332,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return {}
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update password'
+      const errorMessage = error instanceof Error ? error.message : "Failed to update password"
       return { error: errorMessage }
     }
   }
@@ -346,7 +341,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/reset-password`,
       })
 
       if (error) {
@@ -360,7 +355,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return {}
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email'
+      const errorMessage = error instanceof Error ? error.message : "Failed to send reset email"
       return { error: errorMessage }
     }
   }
@@ -384,21 +379,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateProfile,
     updatePassword,
     resetPassword,
-    refreshProfile
+    refreshProfile,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 // Hook to use auth context
 export function useEnhancedAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useEnhancedAuth must be used within an AuthProvider')
+    throw new Error("useEnhancedAuth must be used within an AuthProvider")
   }
   return context
 }
@@ -407,7 +398,7 @@ export function useEnhancedAuth() {
 interface RequireAuthProps {
   children: ReactNode
   fallback?: ReactNode
-  requiredRole?: 'admin' | 'manager' | 'user'
+  requiredRole?: "admin" | "manager" | "user"
 }
 
 export function RequireAuth({ children, fallback, requiredRole }: RequireAuthProps) {
@@ -417,20 +408,22 @@ export function RequireAuth({ children, fallback, requiredRole }: RequireAuthPro
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     )
   }
 
   if (!isAuthenticated) {
-    return fallback || (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-          <p className="text-muted-foreground">Please sign in to access this page.</p>
+    return (
+      fallback || (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <h2 className="mb-4 text-2xl font-bold">Authentication Required</h2>
+            <p className="text-muted-foreground">Please sign in to access this page.</p>
+          </div>
         </div>
-      </div>
+      )
     )
   }
 
@@ -442,9 +435,9 @@ export function RequireAuth({ children, fallback, requiredRole }: RequireAuthPro
 
     if (userLevel < requiredLevel) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+            <h2 className="mb-4 text-2xl font-bold">Access Denied</h2>
             <p className="text-muted-foreground">You don't have permission to access this page.</p>
           </div>
         </div>
@@ -458,35 +451,40 @@ export function RequireAuth({ children, fallback, requiredRole }: RequireAuthPro
 // User avatar component
 interface UserAvatarProps {
   user?: UserProfile | null
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   className?: string
 }
 
-export function UserAvatar({ user, size = 'md', className = '' }: UserAvatarProps) {
+export function UserAvatar({ user, size = "md", className = "" }: UserAvatarProps) {
   const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-10 h-10 text-base',
-    lg: 'w-12 h-12 text-lg'
+    sm: "w-8 h-8 text-sm",
+    md: "w-10 h-10 text-base",
+    lg: "w-12 h-12 text-lg",
   }
 
-  const initials = user?.full_name
-    ?.split(' ')
-    .map(name => name[0])
-    .join('')
-    .toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'
+  const initials =
+    user?.full_name
+      ?.split(" ")
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase() ||
+    user?.email?.[0]?.toUpperCase() ||
+    "?"
 
   if (user?.avatar_url) {
     return (
       <img
         src={user.avatar_url}
-        alt={user.full_name || user.email || 'User'}
+        alt={user.full_name || user.email || "User"}
         className={`${sizeClasses[size]} rounded-full object-cover ${className}`}
       />
     )
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium ${className}`}>
+    <div
+      className={`${sizeClasses[size]} flex items-center justify-center rounded-full bg-primary font-medium text-primary-foreground ${className}`}
+    >
       {initials}
     </div>
   )
@@ -498,19 +496,21 @@ interface UserRoleBadgeProps {
   className?: string
 }
 
-export function UserRoleBadge({ role, className = '' }: UserRoleBadgeProps) {
+export function UserRoleBadge({ role, className = "" }: UserRoleBadgeProps) {
   if (!role) return null
 
   const roleColors = {
-    admin: 'bg-red-100 text-red-800',
-    manager: 'bg-blue-100 text-blue-800',
-    user: 'bg-gray-100 text-gray-800'
+    admin: "bg-red-100 text-red-800",
+    manager: "bg-blue-100 text-blue-800",
+    user: "bg-gray-100 text-gray-800",
   }
 
   const colorClass = roleColors[role as keyof typeof roleColors] || roleColors.user
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass} ${className}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass} ${className}`}
+    >
       {role.charAt(0).toUpperCase() + role.slice(1)}
     </span>
   )

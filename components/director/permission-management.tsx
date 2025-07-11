@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import React, { useEffect, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -13,9 +13,9 @@ export const PermissionManagement = () => {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/users").then(res => res.json()),
-      fetch("/api/admin/permissions").then(res => res.json()),
-      fetch("/api/admin/user-permissions").then(res => res.json())
+      fetch("/api/admin/users").then((res) => res.json()),
+      fetch("/api/admin/permissions").then((res) => res.json()),
+      fetch("/api/admin/user-permissions").then((res) => res.json()),
     ]).then(([userRes, permRes, userPermRes]) => {
       setUsers(userRes.users || [])
       setPermissions(permRes.permissions || [])
@@ -34,9 +34,9 @@ export const PermissionManagement = () => {
     await fetch("/api/admin/user-permissions", {
       method: hasPerm ? "DELETE" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: userId, permission_id: permissionId })
+      body: JSON.stringify({ user_id: userId, permission_id: permissionId }),
     })
-    setUserPermissions(prev => {
+    setUserPermissions((prev) => {
       const perms = new Set(prev[userId] || [])
       if (hasPerm) perms.delete(permissionId)
       else perms.add(permissionId)
@@ -64,7 +64,7 @@ export const PermissionManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
+              {users.map((u) => (
                 <tr key={u.id} className="border-b">
                   <td>{u.email}</td>
                   {permissions.map((p: any) => {

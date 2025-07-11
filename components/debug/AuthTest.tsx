@@ -20,16 +20,16 @@ export function AuthTest() {
   const runAuthTest = async () => {
     setTesting(true)
     try {
-      const response = await fetch('/api/test-auth', {
-        credentials: 'include'
+      const response = await fetch("/api/test-auth", {
+        credentials: "include",
       })
       const result = await response.json()
       setTestResult({ ...result, status: response.status })
     } catch (error) {
-      setTestResult({ 
-        error: 'Network error', 
-        details: error instanceof Error ? error.message : 'Unknown error',
-        status: 0
+      setTestResult({
+        error: "Network error",
+        details: error instanceof Error ? error.message : "Unknown error",
+        status: 0,
       })
     } finally {
       setTesting(false)
@@ -39,9 +39,15 @@ export function AuthTest() {
   const runDirectSupabaseTest = async () => {
     try {
       // Test direct Supabase client
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
       setDirectTest({
         session: !!session,
         sessionError: sessionError?.message,
@@ -50,12 +56,12 @@ export function AuthTest() {
         userId: user?.id,
         userEmail: user?.email,
         sessionExpiry: session?.expires_at,
-        accessToken: session?.access_token ? 'Present' : 'Missing',
-        refreshToken: session?.refresh_token ? 'Present' : 'Missing'
+        accessToken: session?.access_token ? "Present" : "Missing",
+        refreshToken: session?.refresh_token ? "Present" : "Missing",
       })
     } catch (error) {
       setDirectTest({
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       })
     }
   }
@@ -67,17 +73,17 @@ export function AuthTest() {
         loading,
         initialized,
         userId: user?.id,
-        userEmail: user?.email
+        userEmail: user?.email,
       },
       serverTest: testResult,
       directTest: directTest,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
-    
+
     navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2))
     toast({
       title: "Debug info copied",
-      description: "Debug information copied to clipboard"
+      description: "Debug information copied to clipboard",
     })
   }
 
@@ -102,12 +108,12 @@ export function AuthTest() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={copyDebugInfo}>
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="mr-2 h-4 w-4" />
               Copy Debug Info
             </Button>
             <Button variant="outline" size="sm" onClick={() => setShowDetails(!showDetails)}>
               {showDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {showDetails ? 'Hide' : 'Show'} Details
+              {showDetails ? "Hide" : "Show"} Details
             </Button>
           </div>
         </CardTitle>
@@ -115,13 +121,13 @@ export function AuthTest() {
       <CardContent className="space-y-6">
         {/* Client-side Auth Status */}
         <div className="space-y-3">
-          <h3 className="font-medium flex items-center gap-2">
+          <h3 className="flex items-center gap-2 font-medium">
             Client-side Authentication Status
             <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
-              <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
             </Button>
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div className="space-y-1">
               <span className="text-muted-foreground">Initialized:</span>
               <Badge variant={initialized ? "default" : "destructive"}>
@@ -130,9 +136,7 @@ export function AuthTest() {
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">Loading:</span>
-              <Badge variant={loading ? "default" : "outline"}>
-                {loading ? "Yes" : "No"}
-              </Badge>
+              <Badge variant={loading ? "default" : "outline"}>{loading ? "Yes" : "No"}</Badge>
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">Authenticated:</span>
@@ -142,25 +146,19 @@ export function AuthTest() {
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">User Present:</span>
-              <Badge variant={user ? "default" : "destructive"}>
-                {user ? "Yes" : "No"}
-              </Badge>
+              <Badge variant={user ? "default" : "destructive"}>{user ? "Yes" : "No"}</Badge>
             </div>
           </div>
-          
+
           {user && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
               <div>
                 <span className="text-muted-foreground">User ID:</span>
-                <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
-                  {user.id}
-                </div>
+                <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs">{user.id}</div>
               </div>
               <div>
                 <span className="text-muted-foreground">Email:</span>
-                <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
-                  {user.email}
-                </div>
+                <div className="mt-1 rounded bg-gray-100 p-2 font-mono text-xs">{user.email}</div>
               </div>
             </div>
           )}
@@ -171,22 +169,25 @@ export function AuthTest() {
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Direct Supabase Client Test</h3>
             <Button variant="outline" size="sm" onClick={runDirectSupabaseTest}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Test
             </Button>
           </div>
-          
+
           {directTest && (
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="rounded-lg bg-gray-50 p-4">
               {directTest.error ? (
                 <div className="text-red-600">
                   <span className="font-medium">Error:</span> {directTest.error}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                   <div>
                     <span className="text-muted-foreground">Session:</span>
-                    <Badge variant={directTest.session ? "default" : "destructive"} className="ml-2">
+                    <Badge
+                      variant={directTest.session ? "default" : "destructive"}
+                      className="ml-2"
+                    >
                       {directTest.session ? "Present" : "Missing"}
                     </Badge>
                   </div>
@@ -198,45 +199,57 @@ export function AuthTest() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Access Token:</span>
-                    <Badge variant={directTest.accessToken === 'Present' ? "default" : "destructive"} className="ml-2">
+                    <Badge
+                      variant={directTest.accessToken === "Present" ? "default" : "destructive"}
+                      className="ml-2"
+                    >
                       {directTest.accessToken}
                     </Badge>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Refresh Token:</span>
-                    <Badge variant={directTest.refreshToken === 'Present' ? "default" : "destructive"} className="ml-2">
+                    <Badge
+                      variant={directTest.refreshToken === "Present" ? "default" : "destructive"}
+                      className="ml-2"
+                    >
                       {directTest.refreshToken}
                     </Badge>
                   </div>
                 </div>
               )}
-              
+
               {showDetails && directTest && !directTest.error && (
                 <div className="mt-4 space-y-2 text-xs">
                   <div>
                     <span className="font-medium">User ID:</span>
-                    <div className="font-mono bg-white p-2 rounded mt-1">{directTest.userId || 'N/A'}</div>
+                    <div className="mt-1 rounded bg-white p-2 font-mono">
+                      {directTest.userId || "N/A"}
+                    </div>
                   </div>
                   <div>
                     <span className="font-medium">Email:</span>
-                    <div className="font-mono bg-white p-2 rounded mt-1">{directTest.userEmail || 'N/A'}</div>
+                    <div className="mt-1 rounded bg-white p-2 font-mono">
+                      {directTest.userEmail || "N/A"}
+                    </div>
                   </div>
                   <div>
                     <span className="font-medium">Session Expiry:</span>
-                    <div className="font-mono bg-white p-2 rounded mt-1">
-                      {directTest.sessionExpiry ? new Date(directTest.sessionExpiry * 1000).toLocaleString() : 'N/A'}
+                    <div className="mt-1 rounded bg-white p-2 font-mono">
+                      {directTest.sessionExpiry
+                        ? new Date(directTest.sessionExpiry * 1000).toLocaleString()
+                        : "N/A"}
                     </div>
                   </div>
                   {directTest.sessionError && (
                     <div>
                       <span className="font-medium text-red-600">Session Error:</span>
-                      <div className="bg-red-50 p-2 rounded mt-1">{directTest.sessionError}</div>
+                      <div className="mt-1 rounded bg-red-50 p-2">{directTest.sessionError}</div>
                     </div>
                   )}
                   {directTest.userError && (
                     <div>
                       <span className="font-medium text-red-600">User Error:</span>
-                      <div className="bg-red-50 p-2 rounded mt-1">{directTest.userError}</div>
+                      <div className="mt-1 rounded bg-red-50 p-2">{directTest.userError}</div>
                     </div>
                   )}
                 </div>
@@ -250,20 +263,20 @@ export function AuthTest() {
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Server-side Authentication Test</h3>
             <Button variant="outline" size="sm" onClick={runAuthTest} disabled={testing}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${testing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`mr-2 h-4 w-4 ${testing ? "animate-spin" : ""}`} />
               Test API
             </Button>
           </div>
-          
+
           {testResult && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="mb-3 flex items-center gap-2">
                 <span className="text-sm font-medium">API Status:</span>
                 <Badge variant={testResult.status === 200 ? "default" : "destructive"}>
                   {testResult.status}
                 </Badge>
               </div>
-              
+
               {testResult.authenticated ? (
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2">
@@ -273,13 +286,13 @@ export function AuthTest() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <span className="text-muted-foreground">User ID:</span>
-                      <div className="font-mono text-xs bg-white p-2 rounded mt-1">
+                      <div className="mt-1 rounded bg-white p-2 font-mono text-xs">
                         {testResult.user?.id}
                       </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Email:</span>
-                      <div className="font-mono text-xs bg-white p-2 rounded mt-1">
+                      <div className="mt-1 rounded bg-white p-2 font-mono text-xs">
                         {testResult.user?.email}
                       </div>
                     </div>
@@ -291,14 +304,17 @@ export function AuthTest() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Profile:</span>
-                      <Badge variant={testResult.profile ? "default" : "destructive"} className="ml-2">
+                      <Badge
+                        variant={testResult.profile ? "default" : "destructive"}
+                        className="ml-2"
+                      >
                         {testResult.profile ? "Found" : "Missing"}
                       </Badge>
                     </div>
                   </div>
-                  
+
                   {testResult.profileError && (
-                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                    <div className="mt-2 rounded border border-yellow-200 bg-yellow-50 p-2 text-xs">
                       <span className="font-medium">Profile Error:</span> {testResult.profileError}
                     </div>
                   )}
@@ -313,7 +329,7 @@ export function AuthTest() {
                     <span className="font-medium">Error:</span> {testResult.error}
                   </div>
                   {testResult.details && (
-                    <div className="text-red-600 text-xs">
+                    <div className="text-xs text-red-600">
                       <span className="font-medium">Details:</span> {testResult.details}
                     </div>
                   )}
@@ -324,8 +340,8 @@ export function AuthTest() {
         </div>
 
         {/* Troubleshooting */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-3">Common Issues & Solutions:</h4>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h4 className="mb-3 font-medium text-blue-900">Common Issues & Solutions:</h4>
           <div className="space-y-2 text-sm text-blue-800">
             <div className="flex items-start gap-2">
               <span className="font-medium">1.</span>
@@ -367,17 +383,25 @@ export function AuthTest() {
           <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             Refresh Page
           </Button>
-          <Button variant="outline" size="sm" onClick={() => {
-            localStorage.clear()
-            sessionStorage.clear()
-            window.location.reload()
-          }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              localStorage.clear()
+              sessionStorage.clear()
+              window.location.reload()
+            }}
+          >
             Clear Storage & Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={async () => {
-            await supabase.auth.signOut()
-            window.location.href = '/login'
-          }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.href = "/login"
+            }}
+          >
             Sign Out & Redirect
           </Button>
         </div>

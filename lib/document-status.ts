@@ -2,19 +2,17 @@ import type React from "react"
 import { format, parseISO, differenceInDays, isPast } from "date-fns"
 import { AlertTriangleIcon, ShieldCheckIcon, ShieldAlertIcon } from "lucide-react"
 
-export type DocumentStatus = "valid" | "expiring_soon" | "expired" | "missing";
+export type DocumentStatus = "valid" | "expiring_soon" | "expired" | "missing"
 
 export interface DocumentStatusInfo {
-  status: DocumentStatus;
-  text: string;
-  Icon: React.ElementType;
-  colorClass: string;
-  tooltip?: string;
+  status: DocumentStatus
+  text: string
+  Icon: React.ElementType
+  colorClass: string
+  tooltip?: string
 }
 
-export const getDocumentStatus = (
-  expiryDate: string | null | undefined,
-): DocumentStatusInfo => {
+export const getDocumentStatus = (expiryDate: string | null | undefined): DocumentStatusInfo => {
   if (!expiryDate) {
     return {
       status: "missing",

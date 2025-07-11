@@ -6,18 +6,18 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import { useSupabase } from '@/components/supabase-provider'
+import { useSupabase } from "@/components/supabase-provider"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form"
 import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react"
 
@@ -49,54 +49,53 @@ type AuthFormValues = z.infer<typeof authFormSchema>
 type AuthMode = "signin" | "signup"
 
 // Password input component
-const PasswordInput = React.memo(({ 
-  field, 
-  showPassword, 
-  onToggleVisibility, 
-  disabled, 
-  error 
-}: {
-  field: any
-  showPassword: boolean
-  onToggleVisibility: () => void
-  disabled: boolean
-  error?: string
-}) => (
-  <div className="relative">
-    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-    <Input
-      {...field}
-      type={showPassword ? "text" : "password"}
-      placeholder="Enter your password"
-      className={`pl-10 pr-12 transition-colors ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
-      disabled={disabled}
-      aria-invalid={!!error}
-      autoComplete="current-password"
-    />
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-      onClick={onToggleVisibility}
-      disabled={disabled}
-      aria-label={showPassword ? "Hide password" : "Show password"}
-      tabIndex={-1}
-    >
-      {showPassword ? (
-        <EyeOff className="h-4 w-4 text-muted-foreground" />
-      ) : (
-        <Eye className="h-4 w-4 text-muted-foreground" />
-      )}
-    </Button>
-  </div>
-))
+const PasswordInput = React.memo(
+  ({
+    field,
+    showPassword,
+    onToggleVisibility,
+    disabled,
+    error,
+  }: {
+    field: any
+    showPassword: boolean
+    onToggleVisibility: () => void
+    disabled: boolean
+    error?: string
+  }) => (
+    <div className="relative">
+      <Lock className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      <Input
+        {...field}
+        type={showPassword ? "text" : "password"}
+        placeholder="Enter your password"
+        className={`pl-10 pr-12 transition-colors ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+        disabled={disabled}
+        aria-invalid={!!error}
+        autoComplete="current-password"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+        onClick={onToggleVisibility}
+        disabled={disabled}
+        aria-label={showPassword ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        {showPassword ? (
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        )}
+      </Button>
+    </div>
+  )
+)
 PasswordInput.displayName = "PasswordInput"
 
-export default function AuthForm({ 
-  className, 
-  redirectTo = "/generate-contract" 
-}: AuthFormProps) {
+export default function AuthForm({ className, redirectTo = "/generate-contract" }: AuthFormProps) {
   // State management
   const [authMode, setAuthMode] = useState<AuthMode>("signin")
   const [showPassword, setShowPassword] = useState(false)
@@ -129,102 +128,102 @@ export default function AuthForm({
 
   // Event handlers
   const togglePasswordVisibility = useCallback(() => {
-    setShowPassword(prev => !prev)
+    setShowPassword((prev) => !prev)
   }, [])
 
   const toggleAuthMode = useCallback(() => {
-    setAuthMode(prev => prev === "signin" ? "signup" : "signin")
+    setAuthMode((prev) => (prev === "signin" ? "signup" : "signin"))
     form.reset()
     setShowPassword(false)
   }, [form])
 
   // Authentication handlers
-  const handleEmailAuth = useCallback(async (data: AuthFormValues) => {
-    startTransition(async () => {
-      try {
-        if (isSignUp) {
-          const { data: authData, error } = await supabase.auth.signUp({
-            email: data.email.trim(),
-            password: data.password,
-            options: {
-              emailRedirectTo: `${window.location.origin}${redirectTo}`
+  const handleEmailAuth = useCallback(
+    async (data: AuthFormValues) => {
+      startTransition(async () => {
+        try {
+          if (isSignUp) {
+            const { data: authData, error } = await supabase.auth.signUp({
+              email: data.email.trim(),
+              password: data.password,
+              options: {
+                emailRedirectTo: `${window.location.origin}${redirectTo}`,
+              },
+            })
+
+            if (error) throw error
+
+            if (authData.user) {
+              // Create user profile
+              const fullName = data.email.split("@")[0]
+              const { error: profileError } = await supabase.from("profiles").insert([
+                {
+                  id: authData.user.id,
+                  full_name: fullName,
+                  role: "user",
+                },
+              ])
+
+              if (profileError) {
+                console.error("Profile creation error:", profileError)
+              }
+
+              toast({
+                title: "Account Created Successfully!",
+                description: "Please check your email to confirm your account.",
+              })
+
+              // If email confirmation is disabled, navigate immediately
+              if (authData.session) {
+                navigateToApp()
+              }
             }
-          })
+          } else {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: data.email.trim(),
+              password: data.password,
+            })
 
-          if (error) throw error
-
-          if (authData.user) {
-            // Create user profile
-            const fullName = data.email.split('@')[0]
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert([{
-                id: authData.user.id,
-                full_name: fullName,
-                role: 'user'
-              }])
-
-            if (profileError) {
-              console.error("Profile creation error:", profileError)
-            }
+            if (error) throw error
 
             toast({
-              title: "Account Created Successfully!",
-              description: "Please check your email to confirm your account.",
+              title: "Welcome back!",
+              description: "You have been signed in successfully.",
             })
-            
-            // If email confirmation is disabled, navigate immediately
-            if (authData.session) {
-              navigateToApp()
-            }
+            navigateToApp()
           }
-        } else {
-          const { error } = await supabase.auth.signInWithPassword({
-            email: data.email.trim(),
-            password: data.password,
-          })
-
-          if (error) throw error
-
+        } catch (error: any) {
+          console.error("Authentication error:", error)
           toast({
-            title: "Welcome back!",
-            description: "You have been signed in successfully.",
+            title: isSignUp ? "Sign Up Failed" : "Sign In Failed",
+            description: error.message || "An unexpected error occurred. Please try again.",
+            variant: "destructive",
           })
-          navigateToApp()
         }
-      } catch (error: any) {
-        console.error("Authentication error:", error)
-        toast({
-          title: isSignUp ? "Sign Up Failed" : "Sign In Failed",
-          description: error.message || "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        })
-      }
-    })
-  }, [isSignUp, redirectTo, toast, navigateToApp, supabase])
+      })
+    },
+    [isSignUp, redirectTo, toast, navigateToApp, supabase]
+  )
 
   return (
-    <Card className={`w-full max-w-md mx-auto shadow-xl border-0 bg-card/50 backdrop-blur-sm ${className || ""}`}>
-      <CardHeader className="space-y-2 text-center pb-6">
-        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+    <Card
+      className={`mx-auto w-full max-w-md border-0 bg-card/50 shadow-xl backdrop-blur-sm ${className || ""}`}
+    >
+      <CardHeader className="space-y-2 pb-6 text-center">
+        <CardTitle className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-3xl font-bold text-transparent">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </CardTitle>
         <CardDescription className="text-base">
-          {isSignUp 
-            ? "Create a new account to get started with our platform" 
-            : "Sign in to your account to continue where you left off"
-          }
+          {isSignUp
+            ? "Create a new account to get started with our platform"
+            : "Sign in to your account to continue where you left off"}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Email/Password Form */}
         <Form {...form}>
-          <form 
-            onSubmit={form.handleSubmit(handleEmailAuth)}
-            className="space-y-5"
-            noValidate
-          >
+          <form onSubmit={form.handleSubmit(handleEmailAuth)} className="space-y-5" noValidate>
             {/* Email Field */}
             <FormField
               control={form.control}
@@ -234,7 +233,7 @@ export default function AuthForm({
                   <FormLabel className="text-sm font-medium">Email Address</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Mail className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         {...field}
                         type="email"
@@ -269,7 +268,7 @@ export default function AuthForm({
                   </FormControl>
                   <FormMessage />
                   {isSignUp && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Password must contain uppercase, lowercase, and number
                     </p>
                   )}
@@ -280,7 +279,7 @@ export default function AuthForm({
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-11 text-base font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="h-11 w-full text-base font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               disabled={isPending || !isFormValid}
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -294,7 +293,7 @@ export default function AuthForm({
           <div className="text-center">
             <Button
               variant="link"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
               onClick={() => router.push("/forgot-password")}
               disabled={isPending}
             >
@@ -304,13 +303,13 @@ export default function AuthForm({
         )}
 
         {/* Toggle Auth Mode */}
-        <div className="text-center text-sm border-t pt-6">
+        <div className="border-t pt-6 text-center text-sm">
           <span className="text-muted-foreground">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}
           </span>{" "}
           <Button
             variant="link"
-            className="p-0 h-auto font-semibold text-primary hover:text-primary/80 transition-colors"
+            className="h-auto p-0 font-semibold text-primary transition-colors hover:text-primary/80"
             onClick={toggleAuthMode}
             disabled={isPending}
           >

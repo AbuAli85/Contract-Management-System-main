@@ -8,21 +8,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { 
-  ArrowLeftIcon, 
-  SaveIcon, 
-  FileTextIcon, 
+import {
+  ArrowLeftIcon,
+  SaveIcon,
+  FileTextIcon,
   CalendarIcon,
   DollarSignIcon,
   UsersIcon,
   AlertCircleIcon,
   CheckCircleIcon,
-  LoaderIcon
+  LoaderIcon,
 } from "lucide-react"
 import { useContract } from "@/hooks/useContract"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
@@ -35,47 +41,47 @@ export default function EditContractPage() {
   const router = useRouter()
   const contractId = params?.id as string
   const locale = params?.locale as string
-  
+
   const { contract, loading, error, refetch } = useContract(contractId)
-  
+
   // Form state - only fields that exist in ContractDetail type
   const [formData, setFormData] = useState({
     // Basic Info
     status: "",
-    
+
     // Dates
     contract_start_date: "",
     contract_end_date: "",
-    
+
     // Financial
     salary: "",
     currency: "USD",
-    
+
     // Party Information
     first_party_name_en: "",
     first_party_name_ar: "",
     second_party_name_en: "",
     second_party_name_ar: "",
-    
+
     // Employment Details
     job_title: "",
     department: "",
     work_location: "",
     email: "",
-    
+
     // Contract Terms
     contract_type: "",
     contract_number: "",
     id_card_number: "",
-    
+
     // Documents
     google_doc_url: "",
     pdf_url: "",
-    
+
     // Error details
-    error_details: ""
+    error_details: "",
   })
-  
+
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -103,7 +109,7 @@ export default function EditContractPage() {
         id_card_number: contract.id_card_number || "",
         google_doc_url: contract.google_doc_url || "",
         pdf_url: contract.pdf_url || "",
-        error_details: contract.error_details || ""
+        error_details: contract.error_details || "",
       })
     }
   }, [contract])
@@ -113,18 +119,18 @@ export default function EditContractPage() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         e.preventDefault()
-        e.returnValue = ''
+        e.returnValue = ""
       }
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [hasUnsavedChanges])
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
     // Clear success/error messages when user starts editing
     setSaveSuccess(false)
@@ -143,24 +149,21 @@ export default function EditContractPage() {
         const startDate = new Date(formData.contract_start_date)
         const endDate = new Date(formData.contract_end_date)
         if (startDate > endDate) {
-          throw new Error('Contract start date cannot be after end date')
+          throw new Error("Contract start date cannot be after end date")
         }
       }
 
       if (formData.salary && parseFloat(formData.salary) < 0) {
-        throw new Error('Salary cannot be negative')
+        throw new Error("Salary cannot be negative")
       }
 
       const updateData = {
         ...formData,
         salary: formData.salary ? parseFloat(formData.salary) : null,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
-      const { error } = await supabase
-        .from('contracts')
-        .update(updateData)
-        .eq('id', contractId)
+      const { error } = await supabase.from("contracts").update(updateData).eq("id", contractId)
 
       if (error) throw error
 
@@ -168,11 +171,11 @@ export default function EditContractPage() {
       // Refresh contract data
       await refetch()
       setHasUnsavedChanges(false)
-      
+
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000)
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save contract')
+      setSaveError(err instanceof Error ? err.message : "Failed to save contract")
     } finally {
       setSaving(false)
     }
@@ -192,9 +195,11 @@ export default function EditContractPage() {
         <div className="mx-auto max-w-4xl">
           <Card className="shadow-lg">
             <CardContent className="p-12 text-center">
-              <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
-              <p className="text-gray-600 mb-6">The contract you're trying to edit doesn't exist or has been removed.</p>
+              <FileTextIcon className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">Contract Not Found</h3>
+              <p className="mb-6 text-gray-600">
+                The contract you're trying to edit doesn't exist or has been removed.
+              </p>
               <Button asChild>
                 <Link href={`/${locale}/contracts`}>
                   <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -213,7 +218,7 @@ export default function EditContractPage() {
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="mb-6 flex items-center gap-4">
             <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
               <Link href={`/${locale}/contracts/${contractId}`}>
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -227,39 +232,39 @@ export default function EditContractPage() {
               <span>Edit Contract</span>
             </nav>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
-            <div className="flex items-start justify-between mb-6">
+
+          <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-lg">
+            <div className="mb-6 flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="mb-4 flex items-center gap-3">
                   <h1 className="text-3xl font-bold text-gray-900">Edit Contract</h1>
                   <StatusBadge status={contract.status} />
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+                <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                   <div>
                     <label className="font-medium text-gray-500">Contract ID</label>
-                    <p className="text-gray-900 mt-1 font-mono text-xs">{contractId}</p>
+                    <p className="mt-1 font-mono text-xs text-gray-900">{contractId}</p>
                   </div>
                   <div>
                     <label className="font-medium text-gray-500">Last Modified</label>
-                    <p className="text-gray-900 mt-1">{contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : 'Never'}</p>
+                    <p className="mt-1 text-gray-900">
+                      {contract.updated_at
+                        ? new Date(contract.updated_at).toLocaleDateString()
+                        : "Never"}
+                    </p>
                   </div>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2 ml-6">
-                <Button 
-                  onClick={handleSave} 
-                  disabled={saving}
-                  className="min-w-24"
-                >
+
+              <div className="ml-6 flex items-center gap-2">
+                <Button onClick={handleSave} disabled={saving} className="min-w-24">
                   {saving ? (
                     <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <SaveIcon className="mr-2 h-4 w-4" />
                   )}
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
@@ -287,7 +292,7 @@ export default function EditContractPage() {
 
         {/* Form Tabs */}
         <Tabs defaultValue="basic" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200 rounded-lg p-1">
+          <TabsList className="grid w-full grid-cols-5 rounded-lg border border-gray-200 bg-white p-1">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <FileTextIcon className="h-4 w-4" />
               Basic Info
@@ -315,25 +320,26 @@ export default function EditContractPage() {
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
-                <CardDescription>
-                  Update the basic contract information and status
-                </CardDescription>
+                <CardDescription>Update the basic contract information and status</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contract_number">Contract Number</Label>
                     <Input
                       id="contract_number"
                       value={formData.contract_number}
-                      onChange={(e) => handleInputChange('contract_number', e.target.value)}
+                      onChange={(e) => handleInputChange("contract_number", e.target.value)}
                       placeholder="CON-2024-001"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => handleInputChange("status", value)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -350,24 +356,24 @@ export default function EditContractPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="id_card_number">ID Card Number</Label>
                     <Input
                       id="id_card_number"
                       value={formData.id_card_number}
-                      onChange={(e) => handleInputChange('id_card_number', e.target.value)}
+                      onChange={(e) => handleInputChange("id_card_number", e.target.value)}
                       placeholder="Employee ID Card Number"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
                       placeholder="employee@company.com"
                     />
                   </div>
@@ -378,7 +384,7 @@ export default function EditContractPage() {
                   <Textarea
                     id="error_details"
                     value={formData.error_details}
-                    onChange={(e) => handleInputChange('error_details', e.target.value)}
+                    onChange={(e) => handleInputChange("error_details", e.target.value)}
                     placeholder="Any error details or issues with the contract..."
                     rows={4}
                   />
@@ -397,27 +403,29 @@ export default function EditContractPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                   {/* First Party */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">First Party (Employer)</h3>
+                    <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">
+                      First Party (Employer)
+                    </h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="first_party_name_en">Name (English)</Label>
                         <Input
                           id="first_party_name_en"
                           value={formData.first_party_name_en}
-                          onChange={(e) => handleInputChange('first_party_name_en', e.target.value)}
+                          onChange={(e) => handleInputChange("first_party_name_en", e.target.value)}
                           placeholder="Company Name"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="first_party_name_ar">Name (Arabic)</Label>
                         <Input
                           id="first_party_name_ar"
                           value={formData.first_party_name_ar}
-                          onChange={(e) => handleInputChange('first_party_name_ar', e.target.value)}
+                          onChange={(e) => handleInputChange("first_party_name_ar", e.target.value)}
                           placeholder="اسم الشركة"
                           dir="rtl"
                         />
@@ -427,24 +435,30 @@ export default function EditContractPage() {
 
                   {/* Second Party */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Second Party (Employee)</h3>
+                    <h3 className="border-b pb-2 text-lg font-semibold text-gray-900">
+                      Second Party (Employee)
+                    </h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="second_party_name_en">Name (English)</Label>
                         <Input
                           id="second_party_name_en"
                           value={formData.second_party_name_en}
-                          onChange={(e) => handleInputChange('second_party_name_en', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("second_party_name_en", e.target.value)
+                          }
                           placeholder="Employee Name"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="second_party_name_ar">Name (Arabic)</Label>
                         <Input
                           id="second_party_name_ar"
                           value={formData.second_party_name_ar}
-                          onChange={(e) => handleInputChange('second_party_name_ar', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("second_party_name_ar", e.target.value)
+                          }
                           placeholder="اسم الموظف"
                           dir="rtl"
                         />
@@ -466,43 +480,46 @@ export default function EditContractPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="job_title">Job Title</Label>
                     <Input
                       id="job_title"
                       value={formData.job_title}
-                      onChange={(e) => handleInputChange('job_title', e.target.value)}
+                      onChange={(e) => handleInputChange("job_title", e.target.value)}
                       placeholder="Software Developer"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
                     <Input
                       id="department"
                       value={formData.department}
-                      onChange={(e) => handleInputChange('department', e.target.value)}
+                      onChange={(e) => handleInputChange("department", e.target.value)}
                       placeholder="IT Department"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="salary">Salary</Label>
                     <Input
                       id="salary"
                       type="number"
                       value={formData.salary}
-                      onChange={(e) => handleInputChange('salary', e.target.value)}
+                      onChange={(e) => handleInputChange("salary", e.target.value)}
                       placeholder="50000"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
-                    <Select value={formData.currency} onValueChange={(value) => handleInputChange('currency', value)}>
+                    <Select
+                      value={formData.currency}
+                      onValueChange={(value) => handleInputChange("currency", value)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Currency" />
                       </SelectTrigger>
@@ -522,7 +539,7 @@ export default function EditContractPage() {
                   <Input
                     id="work_location"
                     value={formData.work_location}
-                    onChange={(e) => handleInputChange('work_location', e.target.value)}
+                    onChange={(e) => handleInputChange("work_location", e.target.value)}
                     placeholder="Remote / Office Address"
                   />
                 </div>
@@ -535,36 +552,37 @@ export default function EditContractPage() {
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle>Contract Dates & Terms</CardTitle>
-                <CardDescription>
-                  Important dates and contractual terms
-                </CardDescription>
+                <CardDescription>Important dates and contractual terms</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="contract_start_date">Start Date</Label>
                     <Input
                       id="contract_start_date"
                       type="date"
                       value={formData.contract_start_date}
-                      onChange={(e) => handleInputChange('contract_start_date', e.target.value)}
+                      onChange={(e) => handleInputChange("contract_start_date", e.target.value)}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="contract_end_date">End Date</Label>
                     <Input
                       id="contract_end_date"
                       type="date"
                       value={formData.contract_end_date}
-                      onChange={(e) => handleInputChange('contract_end_date', e.target.value)}
+                      onChange={(e) => handleInputChange("contract_end_date", e.target.value)}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="contract_type">Contract Type</Label>
-                  <Select value={formData.contract_type} onValueChange={(value) => handleInputChange('contract_type', value)}>
+                  <Select
+                    value={formData.contract_type}
+                    onValueChange={(value) => handleInputChange("contract_type", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -586,9 +604,7 @@ export default function EditContractPage() {
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle>Contract Documents</CardTitle>
-                <CardDescription>
-                  Links to contract documents and files
-                </CardDescription>
+                <CardDescription>Links to contract documents and files</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
@@ -598,30 +614,40 @@ export default function EditContractPage() {
                       id="google_doc_url"
                       type="url"
                       value={formData.google_doc_url}
-                      onChange={(e) => handleInputChange('google_doc_url', e.target.value)}
+                      onChange={(e) => handleInputChange("google_doc_url", e.target.value)}
                       placeholder="https://docs.google.com/document/..."
                     />
                     {formData.google_doc_url && (
                       <p className="text-sm text-gray-500">
-                        <a href={formData.google_doc_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        <a
+                          href={formData.google_doc_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
                           View document →
                         </a>
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="pdf_url">PDF Document URL</Label>
                     <Input
                       id="pdf_url"
                       type="url"
                       value={formData.pdf_url}
-                      onChange={(e) => handleInputChange('pdf_url', e.target.value)}
+                      onChange={(e) => handleInputChange("pdf_url", e.target.value)}
                       placeholder="https://example.com/contract.pdf"
                     />
                     {formData.pdf_url && (
                       <p className="text-sm text-gray-500">
-                        <a href={formData.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        <a
+                          href={formData.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
                           View PDF →
                         </a>
                       </p>
@@ -629,13 +655,14 @@ export default function EditContractPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                   <div className="flex items-start gap-3">
-                    <AlertCircleIcon className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <AlertCircleIcon className="mt-0.5 h-5 w-5 text-blue-600" />
                     <div>
                       <h4 className="font-medium text-blue-900">Document Management</h4>
-                      <p className="text-sm text-blue-700 mt-1">
-                        You can update document URLs here. For security, actual file uploads should be handled through your document management system.
+                      <p className="mt-1 text-sm text-blue-700">
+                        You can update document URLs here. For security, actual file uploads should
+                        be handled through your document management system.
                       </p>
                     </div>
                   </div>
@@ -646,7 +673,7 @@ export default function EditContractPage() {
         </Tabs>
 
         {/* Bottom Action Bar */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 rounded-t-lg shadow-lg">
+        <div className="sticky bottom-0 rounded-t-lg border-t border-gray-200 bg-white p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button asChild variant="outline">
@@ -656,7 +683,7 @@ export default function EditContractPage() {
                 </Link>
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {hasUnsavedChanges ? (
                 <Badge variant="destructive" className="text-xs">
@@ -667,8 +694,8 @@ export default function EditContractPage() {
                   All changes saved
                 </Badge>
               )}
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 disabled={saving || !hasUnsavedChanges}
                 size="lg"
                 className={hasUnsavedChanges ? "bg-orange-600 hover:bg-orange-700" : ""}
@@ -678,7 +705,7 @@ export default function EditContractPage() {
                 ) : (
                   <SaveIcon className="mr-2 h-4 w-4" />
                 )}
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>

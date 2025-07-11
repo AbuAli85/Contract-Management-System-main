@@ -16,7 +16,9 @@ interface ContractsStore {
   error: string | null
   isLoading: boolean
   fetchContracts: () => Promise<void>
-  generateContract: (contractData: Omit<Contract, "id" | "created_at" | "updated_at">) => Promise<void>
+  generateContract: (
+    contractData: Omit<Contract, "id" | "created_at" | "updated_at">
+  ) => Promise<void>
   retryContract: (contractId: string) => Promise<void>
   clearError: () => void
   getContractById: (id: string) => Contract | undefined
@@ -37,7 +39,10 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
   fetchContracts: async () => {
     set({ isLoading: true })
     try {
-      const { data, error } = await supabase.from("contracts").select("*").order("created_at", { ascending: false })
+      const { data, error } = await supabase
+        .from("contracts")
+        .select("*")
+        .order("created_at", { ascending: false })
 
       if (error) throw error
 
@@ -79,7 +84,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     // In a real app, you'd call an API to retry the contract generation
     // For now, we'll just move it back to 'pending'
     const updatedContracts = get().contracts.map((contract) =>
-      contract.id === contractId ? { ...contract, status: "pending" } : contract,
+      contract.id === contractId ? { ...contract, status: "pending" } : contract
     )
     set({ contracts: updatedContracts })
     get().updateStats()
@@ -89,9 +94,9 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     const contracts = get().contracts
     const stats = {
       total: contracts.length,
-      pending: contracts.filter(c => c.status === "generating" || c.status === "pending").length,
-      completed: contracts.filter(c => c.status === "completed").length,
-      failed: contracts.filter(c => c.status === "failed").length,
+      pending: contracts.filter((c) => c.status === "generating" || c.status === "pending").length,
+      completed: contracts.filter((c) => c.status === "completed").length,
+      failed: contracts.filter((c) => c.status === "failed").length,
     }
     set({ stats })
   },
@@ -99,7 +104,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
   clearError: () => set({ error: null }),
 
   getContractById: (id: string) => {
-    return get().contracts.find(c => c.id === id)
+    return get().contracts.find((c) => c.id === id)
   },
 })
 

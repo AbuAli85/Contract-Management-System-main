@@ -37,7 +37,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", labelAr: "لوحة التحكم", icon: Home },
-  { href: "/dashboard/generate-contract", label: "Generate Contract", labelAr: "إنشاء عقد", icon: FilePlus },
+  {
+    href: "/dashboard/generate-contract",
+    label: "Generate Contract",
+    labelAr: "إنشاء عقد",
+    icon: FilePlus,
+  },
   { href: "/contracts", label: "View Contracts", labelAr: "عرض العقود", icon: FileText },
   { href: "/dashboard/analytics", label: "Analytics", labelAr: "التحليلات", icon: BarChartBig },
   { href: "/dashboard/users", label: "Users", labelAr: "المستخدمون", icon: Users },
@@ -57,12 +62,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [currentYear, setCurrentYear] = useState("")
 
   // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
-  
+  const locale =
+    pathname && pathname.startsWith("/en/")
+      ? "en"
+      : pathname && pathname.startsWith("/ar/")
+        ? "ar"
+        : "en"
+
   // Create locale-aware nav items
-  const localeNavItems = navItems.map(item => ({
+  const localeNavItems = navItems.map((item) => ({
     ...item,
-    href: `/${locale}${item.href}`
+    href: `/${locale}${item.href}`,
   }))
 
   useEffect(() => {
@@ -76,7 +86,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
         pathname === item.href ? "bg-muted text-primary" : "text-muted-foreground",
-        isMobile ? "text-lg" : "text-sm",
+        isMobile ? "text-lg" : "text-sm"
       )}
     >
       <item.icon className="h-5 w-5" />
@@ -92,7 +102,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             href={item.href}
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8",
-              pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+              pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground"
             )}
           >
             <item.icon className="h-5 w-5" />

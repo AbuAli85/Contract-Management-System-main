@@ -1,28 +1,20 @@
-'use client'
+"use client"
 
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { 
-  FileText, 
-  Users, 
-  BarChart3, 
-  Settings,
-  Plus,
-  Search,
-  TrendingUp
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import { useTheme } from 'next-themes'
-import { useTranslations } from 'next-intl'
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { useTheme } from "next-themes"
+import { useTranslations } from "next-intl"
 import AuthStatus from "@/components/auth-status"
 
 // --- Types ---
 interface Profile {
-  role: string | null;
-  is_premium: boolean | null;
+  role: string | null
+  is_premium: boolean | null
 }
 
 interface HomePageContentProps {
@@ -39,73 +31,73 @@ interface Stats {
 // --- Static Data (outside component for performance) ---
 const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => [
   {
-    title: t('generateContract'),
-    description: t('generateContractDesc'),
+    title: t("generateContract"),
+    description: t("generateContractDesc"),
     icon: <Plus className="h-6 w-6" />,
     href: `/${locale}/generate-contract`,
-    color: 'bg-blue-500'
+    color: "bg-blue-500",
   },
   {
-    title: t('viewContracts'),
-    description: t('viewContractsDesc'),
+    title: t("viewContracts"),
+    description: t("viewContractsDesc"),
     icon: <FileText className="h-6 w-6" />,
     href: `/${locale}/contracts`,
-    color: 'bg-green-500'
+    color: "bg-green-500",
   },
   {
-    title: t('manageParties'),
-    description: t('managePartiesDesc'),
+    title: t("manageParties"),
+    description: t("managePartiesDesc"),
     icon: <Users className="h-6 w-6" />,
     href: `/${locale}/manage-parties`,
-    color: 'bg-purple-500'
+    color: "bg-purple-500",
   },
   {
-    title: t('analytics'),
-    description: t('analyticsDesc'),
+    title: t("analytics"),
+    description: t("analyticsDesc"),
     icon: <BarChart3 className="h-6 w-6" />,
     href: `/${locale}/dashboard`,
-    color: 'bg-orange-500'
-  }
-];
+    color: "bg-orange-500",
+  },
+]
 
 const getStatsCards = (t: ReturnType<typeof useTranslations>, stats: Stats) => [
   {
-    title: t('totalContracts'),
+    title: t("totalContracts"),
     value: stats.contracts,
     icon: <FileText className="h-8 w-8 text-blue-600" />,
-    description: t('allContracts')
+    description: t("allContracts"),
   },
   {
-    title: t('activeContracts'),
+    title: t("activeContracts"),
     value: stats.activeContracts,
     icon: <TrendingUp className="h-8 w-8 text-green-600" />,
-    description: t('currentlyActive')
+    description: t("currentlyActive"),
   },
   {
-    title: t('totalParties'),
+    title: t("totalParties"),
     value: stats.parties,
     icon: <Users className="h-8 w-8 text-purple-600" />,
-    description: t('registeredParties')
+    description: t("registeredParties"),
   },
   {
-    title: t('promoters'),
+    title: t("promoters"),
     value: stats.promoters,
     icon: <Users className="h-8 w-8 text-orange-600" />,
-    description: t('activePromoters')
-  }
-];
+    description: t("activePromoters"),
+  },
+]
 
 export function HomePageContent({ locale }: HomePageContentProps) {
-  const t = useTranslations('Home')
+  const t = useTranslations("Home")
   const { theme, setTheme } = useTheme()
   const [stats, setStats] = useState<Stats>({
     contracts: 0,
     parties: 0,
     promoters: 0,
-    activeContracts: 0
+    activeContracts: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<import('@supabase/supabase-js').User | null>(null)
+  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isPremium, setIsPremium] = useState<boolean>(false)
   const [statsError, setStatsError] = useState<string | null>(null)
@@ -115,7 +107,9 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
     async function fetchUserAndStats() {
       // Fetch user session
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       const currentUser = session?.user ?? null
       setUser(currentUser)
 
@@ -128,16 +122,16 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
       // Fetch user profile from 'profiles' table
       const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role, is_premium')
-        .eq('id', currentUser.id)
+        .from("profiles")
+        .select("role, is_premium")
+        .eq("id", currentUser.id)
         .single<Profile>()
 
-      if (error || !profile || 'code' in profile) {
+      if (error || !profile || "code" in profile) {
         setUserRole(null)
         setIsPremium(false)
         setLoading(false)
-        setStatsError('Could not load user profile.')
+        setStatsError("Could not load user profile.")
         return
       }
 
@@ -145,35 +139,35 @@ export function HomePageContent({ locale }: HomePageContentProps) {
       setIsPremium(!!profile.is_premium)
 
       // Fetch stats if user is admin or premium
-      if (profile.role === 'admin' || profile.is_premium) {
+      if (profile.role === "admin" || profile.is_premium) {
         try {
           const { count: contractsCount } = await supabase
-            .from('contracts')
-            .select('*', { count: 'exact', head: true })
+            .from("contracts")
+            .select("*", { count: "exact", head: true })
           const { count: partiesCount } = await supabase
-            .from('parties')
-            .select('*', { count: 'exact', head: true })
+            .from("parties")
+            .select("*", { count: "exact", head: true })
           const { count: promotersCount } = await supabase
-            .from('promoters')
-            .select('*', { count: 'exact', head: true })
+            .from("promoters")
+            .select("*", { count: "exact", head: true })
           const { count: activeContractsCount } = await supabase
-            .from('contracts')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'active')
+            .from("contracts")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "active")
           if (isMounted) {
             setStats({
               contracts: contractsCount || 0,
               parties: partiesCount || 0,
               promoters: promotersCount || 0,
-              activeContracts: activeContractsCount || 0
+              activeContracts: activeContractsCount || 0,
             })
             setLoading(false)
             setStatsError(null)
           }
         } catch (error) {
-          console.error('Error fetching stats:', error)
+          console.error("Error fetching stats:", error)
           if (isMounted) {
-            setStatsError('Failed to load statistics.')
+            setStatsError("Failed to load statistics.")
             setLoading(false)
           }
         }
@@ -183,7 +177,9 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     }
 
     fetchUserAndStats()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const quickActions = getQuickActions(t, locale)
@@ -193,12 +189,15 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     // Skeleton loader for stats
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-100 rounded-lg h-32 w-full flex flex-col justify-center items-center">
-              <div className="h-8 w-8 bg-gray-300 rounded-full mb-2" aria-hidden="true"></div>
-              <div className="h-4 w-1/2 bg-gray-300 rounded mb-1" aria-hidden="true"></div>
-              <div className="h-3 w-1/3 bg-gray-200 rounded" aria-hidden="true"></div>
+            <div
+              key={i}
+              className="flex h-32 w-full animate-pulse flex-col items-center justify-center rounded-lg bg-gray-100"
+            >
+              <div className="mb-2 h-8 w-8 rounded-full bg-gray-300" aria-hidden="true"></div>
+              <div className="mb-1 h-4 w-1/2 rounded bg-gray-300" aria-hidden="true"></div>
+              <div className="h-3 w-1/3 rounded bg-gray-200" aria-hidden="true"></div>
             </div>
           ))}
         </div>
@@ -208,23 +207,27 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   if (statsError) {
     return (
-      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
         <AuthStatus />
-        <div className="mt-8 p-6 bg-red-100 border border-red-300 rounded-lg text-red-800 text-center max-w-lg">
-          <h2 className="text-2xl font-bold mb-2">Error</h2>
+        <div className="mt-8 max-w-lg rounded-lg border border-red-300 bg-red-100 p-6 text-center text-red-800">
+          <h2 className="mb-2 text-2xl font-bold">Error</h2>
           <p className="mb-4">{statsError}</p>
         </div>
       </div>
     )
   }
 
-  if (!user || (userRole !== 'admin' && !isPremium)) {
+  if (!user || (userRole !== "admin" && !isPremium)) {
     return (
-      <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
         <AuthStatus />
-        <div className="mt-8 p-6 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-center max-w-lg">
-          <h2 className="text-2xl font-bold mb-2">Premium Access Required</h2>
-          <p className="mb-4">You must have a <span className="font-semibold">premium</span> or <span className="font-semibold">admin</span> account to access the contract management features.</p>
+        <div className="mt-8 max-w-lg rounded-lg border border-yellow-300 bg-yellow-100 p-6 text-center text-yellow-800">
+          <h2 className="mb-2 text-2xl font-bold">Premium Access Required</h2>
+          <p className="mb-4">
+            You must have a <span className="font-semibold">premium</span> or{" "}
+            <span className="font-semibold">admin</span> account to access the contract management
+            features.
+          </p>
           <p>If you believe this is a mistake or want to upgrade, please contact support.</p>
         </div>
       </div>
@@ -238,31 +241,43 @@ export function HomePageContent({ locale }: HomePageContentProps) {
         <AuthStatus />
       </div>
       {/* Dark mode toggle */}
-      <div className="flex justify-end mb-4">
+      <div className="mb-4 flex justify-end">
         <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          aria-label={theme === 'dark' ? t('lightMode') : t('darkMode')}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="rounded bg-gray-200 px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-gray-200"
+          aria-label={theme === "dark" ? t("lightMode") : t("darkMode")}
         >
-          {theme === 'dark' ? t('lightMode') : t('darkMode')}
+          {theme === "dark" ? t("lightMode") : t("darkMode")}
         </button>
       </div>
       {/* Header */}
       <header className="mb-8" aria-label="Page header">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
-        <p className="text-xl text-gray-600 dark:text-gray-300">{t('subtitle')}</p>
+        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300">{t("subtitle")}</p>
       </header>
 
       {/* Stats Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="System statistics">
+      <section
+        className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+        aria-label="System statistics"
+      >
         {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow dark:bg-gray-800" tabIndex={0} aria-label={stat.title}>
+          <Card
+            key={index}
+            className="transition-shadow hover:shadow-lg dark:bg-gray-800"
+            tabIndex={0}
+            aria-label={stat.title}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {stat.title}
+              </CardTitle>
               {stat.icon}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {stat.value.toLocaleString()}
+              </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">{stat.description}</p>
             </CardContent>
           </Card>
@@ -271,13 +286,21 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
       {/* Quick Actions */}
       <section className="mb-8" aria-label="Quick actions">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">{t('quickActions')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {t("quickActions")}
+        </h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((action, index) => (
             <Link key={index} href={action.href} aria-label={action.title} tabIndex={0}>
-              <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer focus:ring-2 focus:ring-blue-400 focus:outline-none dark:bg-gray-800" tabIndex={-1}>
+              <Card
+                className="cursor-pointer transition-all hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800"
+                tabIndex={-1}
+              >
                 <CardHeader>
-                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center text-white mb-4`} aria-hidden="true">
+                  <div
+                    className={`h-12 w-12 ${action.color} mb-4 flex items-center justify-center rounded-lg text-white`}
+                    aria-hidden="true"
+                  >
                     {action.icon}
                   </div>
                   <CardTitle className="text-lg">{action.title}</CardTitle>
@@ -293,36 +316,48 @@ export function HomePageContent({ locale }: HomePageContentProps) {
       <section aria-label="System overview">
         <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />{t('systemOverview')}</CardTitle>
-            <CardDescription>{t('getStarted')}</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              {t("systemOverview")}
+            </CardTitle>
+            <CardDescription>{t("getStarted")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                 <div>
-                  <h4 className="font-medium">{t('contractGeneration')}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('contractGenerationDesc')}</p>
+                  <h4 className="font-medium">{t("contractGeneration")}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("contractGenerationDesc")}
+                  </p>
                 </div>
-                <Link href={`/${locale}/generate-contract`} aria-label={t('getStartedContractGeneration')}>
-                  <Button>{t('getStarted')}</Button>
+                <Link
+                  href={`/${locale}/generate-contract`}
+                  aria-label={t("getStartedContractGeneration")}
+                >
+                  <Button>{t("getStarted")}</Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                 <div>
-                  <h4 className="font-medium">{t('partyManagement')}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('partyManagementDesc')}</p>
+                  <h4 className="font-medium">{t("partyManagement")}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("partyManagementDesc")}
+                  </p>
                 </div>
-                <Link href={`/${locale}/manage-parties`} aria-label={t('manageContractParties')}>
-                  <Button variant="outline">{t('manage')}</Button>
+                <Link href={`/${locale}/manage-parties`} aria-label={t("manageContractParties")}>
+                  <Button variant="outline">{t("manage")}</Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                 <div>
-                  <h4 className="font-medium">{t('analyticsDashboard')}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('analyticsDashboardDesc')}</p>
+                  <h4 className="font-medium">{t("analyticsDashboard")}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("analyticsDashboardDesc")}
+                  </p>
                 </div>
-                <Link href={`/${locale}/dashboard`} aria-label={t('viewAnalyticsDashboard')}>
-                  <Button variant="outline">{t('viewAnalytics')}</Button>
+                <Link href={`/${locale}/dashboard`} aria-label={t("viewAnalyticsDashboard")}>
+                  <Button variant="outline">{t("viewAnalytics")}</Button>
                 </Link>
               </div>
             </div>

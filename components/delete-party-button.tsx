@@ -62,7 +62,11 @@ export function DeletePartyButton({ partyId }: DeletePartyButtonProps) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" disabled={deleteMutation.isPending}>
-          {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          {deleteMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
           <span className="sr-only">{t("delete")}</span>
         </Button>
       </AlertDialogTrigger>

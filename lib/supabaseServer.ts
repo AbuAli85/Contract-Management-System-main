@@ -9,7 +9,7 @@ export async function createServerComponentClient() {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY are set.",
+      "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY are set."
     )
   }
 

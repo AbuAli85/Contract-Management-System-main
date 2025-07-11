@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, hasRole, checkRateLimit, logAuthEvent } from './utils'
+import { NextRequest, NextResponse } from "next/server"
+import { getCurrentUser, hasRole, checkRateLimit, logAuthEvent } from "./utils"
 
 export interface AuthMiddlewareOptions {
   requireAuth?: boolean
@@ -19,11 +19,10 @@ export function withAuth(
     try {
       // Rate limiting
       if (options.rateLimit) {
-        const identifier = req.headers.get('x-forwarded-for') || 
-                         req.headers.get('x-real-ip') || 
-                         'unknown'
+        const identifier =
+          req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown"
         const action = `${req.method}:${req.nextUrl.pathname}`
-        
+
         const { allowed, remainingAttempts, resetAt } = await checkRateLimit(
           identifier,
           action,
@@ -33,70 +32,75 @@ export function withAuth(
 
         if (!allowed) {
           return NextResponse.json(
-            { 
-              error: 'Too many requests', 
-              resetAt: resetAt?.toISOString() 
+            {
+              error: "Too many requests",
+              resetAt: resetAt?.toISOString(),
             },
-            { 
+            {
               status: 429,
               headers: {
-                'X-RateLimit-Limit': options.rateLimit.maxAttempts.toString(),
-                'X-RateLimit-Remaining': '0',
-                'X-RateLimit-Reset': resetAt?.toISOString() || ''
-              }
+                "X-RateLimit-Limit": options.rateLimit.maxAttempts.toString(),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": resetAt?.toISOString() || "",
+              },
             }
           )
         }
 
         // Add rate limit headers
         const response = await handler(req)
-        response.headers.set('X-RateLimit-Limit', options.rateLimit.maxAttempts.toString())
-        response.headers.set('X-RateLimit-Remaining', remainingAttempts.toString())
-        
+        response.headers.set("X-RateLimit-Limit", options.rateLimit.maxAttempts.toString())
+        response.headers.set("X-RateLimit-Remaining", remainingAttempts.toString())
+
         return response
       }
 
       // Authentication check
       if (options.requireAuth) {
         const user = await getCurrentUser()
-        
+
         if (!user) {
-          await logAuthEvent('unauthorized_access', undefined, {
-            path: req.nextUrl.pathname,
-            method: req.method
-          }, false, 'No authenticated user', req)
-          
-          return NextResponse.json(
-            { error: 'Authentication required' },
-            { status: 401 }
+          await logAuthEvent(
+            "unauthorized_access",
+            undefined,
+            {
+              path: req.nextUrl.pathname,
+              method: req.method,
+            },
+            false,
+            "No authenticated user",
+            req
           )
+
+          return NextResponse.json({ error: "Authentication required" }, { status: 401 })
         }
 
         // Role check
         if (options.requireRoles && options.requireRoles.length > 0) {
-          const hasRequiredRole = options.requireRoles.some(role => user.role === role)
-          
+          const hasRequiredRole = options.requireRoles.some((role) => user.role === role)
+
           if (!hasRequiredRole) {
-            await logAuthEvent('forbidden_access', user.id, {
-              path: req.nextUrl.pathname,
-              method: req.method,
-              requiredRoles: options.requireRoles,
-              userRole: user.role
-            }, false, 'Insufficient permissions', req)
-            
-            return NextResponse.json(
-              { error: 'Insufficient permissions' },
-              { status: 403 }
+            await logAuthEvent(
+              "forbidden_access",
+              user.id,
+              {
+                path: req.nextUrl.pathname,
+                method: req.method,
+                requiredRoles: options.requireRoles,
+                userRole: user.role,
+              },
+              false,
+              "Insufficient permissions",
+              req
             )
+
+            return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
           }
         }
 
         // MFA check
         if (options.requireMFA && !user.mfaEnabled) {
-          return NextResponse.json(
-            { error: 'MFA required for this action' },
-            { status: 403 }
-          )
+          return NextResponse.json({ error: "MFA required for this action" }, { status: 403 })
         }
 
         return handler(req, user)
@@ -104,35 +108,34 @@ export function withAuth(
 
       return handler(req)
     } catch (error) {
-      console.error('Auth middleware error:', error)
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      )
+      console.error("Auth middleware error:", error)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   }
 }
 
 // Specific middleware presets
 export const requireAuth = (handler: any) => withAuth(handler, { requireAuth: true })
-export const requireAdmin = (handler: any) => withAuth(handler, { requireAuth: true, requireRoles: ['admin'] })
-export const requireMFA = (handler: any) => withAuth(handler, { requireAuth: true, requireMFA: true })
+export const requireAdmin = (handler: any) =>
+  withAuth(handler, { requireAuth: true, requireRoles: ["admin"] })
+export const requireMFA = (handler: any) =>
+  withAuth(handler, { requireAuth: true, requireMFA: true })
 
 // CORS middleware
 export function withCORS(handler: any) {
   return async (req: NextRequest) => {
-    const origin = req.headers.get('origin')
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
-    
+    const origin = req.headers.get("origin")
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"]
+
     const response = await handler(req)
-    
+
     if (origin && allowedOrigins.includes(origin)) {
-      response.headers.set('Access-Control-Allow-Origin', origin)
-      response.headers.set('Access-Control-Allow-Credentials', 'true')
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      response.headers.set("Access-Control-Allow-Origin", origin)
+      response.headers.set("Access-Control-Allow-Credentials", "true")
+      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
     }
-    
+
     return response
   }
 }

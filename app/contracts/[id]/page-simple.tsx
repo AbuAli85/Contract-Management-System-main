@@ -44,7 +44,6 @@ export default function ContractDetailPageSimple() {
 
         console.log("Contract data:", contractData)
         setContract(contractData)
-
       } catch (err) {
         console.error("Unexpected error:", err)
         setError("An unexpected error occurred")
@@ -67,7 +66,7 @@ export default function ContractDetailPageSimple() {
   if (error) {
     return (
       <div className="container mx-auto py-8">
-        <div className="text-red-500 text-center">Error: {error}</div>
+        <div className="text-center text-red-500">Error: {error}</div>
       </div>
     )
   }
@@ -87,29 +86,29 @@ export default function ContractDetailPageSimple() {
           <h1 className="text-2xl font-bold">Contract Details</h1>
           <p className="text-gray-600">ID: {contract.id}</p>
         </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Contract Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-lg font-semibold">Contract Information</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="font-medium">Status:</label>
-              <p>{contract.status || 'N/A'}</p>
+              <p>{contract.status || "N/A"}</p>
             </div>
             <div>
               <label className="font-medium">Job Title:</label>
-              <p>{contract.job_title || 'N/A'}</p>
+              <p>{contract.job_title || "N/A"}</p>
             </div>
             <div>
               <label className="font-medium">Party A:</label>
-              <p>{contract.first_party_name_en || 'N/A'}</p>
+              <p>{contract.first_party_name_en || "N/A"}</p>
             </div>
             <div>
               <label className="font-medium">Party B:</label>
-              <p>{contract.second_party_name_en || 'N/A'}</p>
+              <p>{contract.second_party_name_en || "N/A"}</p>
             </div>
             <div>
               <label className="font-medium">Created:</label>
-              <p>{contract.created_at ? new Date(contract.created_at).toLocaleString() : 'N/A'}</p>
+              <p>{contract.created_at ? new Date(contract.created_at).toLocaleString() : "N/A"}</p>
             </div>
           </div>
         </div>

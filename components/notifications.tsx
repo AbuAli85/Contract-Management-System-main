@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
-import type { Notification } from '../lib/notification-types'
+import { useEffect, useState } from "react"
+import { supabase } from "../lib/supabase"
+import type { Notification } from "../lib/notification-types"
 
 export default function Notifications() {
   const [user, setUser] = useState<any>(null)
@@ -9,13 +9,17 @@ export default function Notifications() {
   useEffect(() => {
     // Get current user
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       setUser(user)
     }
     getUser()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
     })
 
@@ -25,23 +29,25 @@ export default function Notifications() {
   useEffect(() => {
     if (user) {
       supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('read', false)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => setNotifications(
-          (data || []).map(n => ({
-            ...n,
-            read: n.read ?? false,
-          }))
-        ))
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .then(({ data }) =>
+          setNotifications(
+            (data || []).map((n) => ({
+              ...n,
+              read: n.read ?? false,
+            }))
+          )
+        )
     }
   }, [user])
 
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
-    setNotifications(notifications.filter(n => n.id !== id))
+    await supabase.from("notifications").update({ read: true }).eq("id", id)
+    setNotifications(notifications.filter((n) => n.id !== id))
   }
 
   if (!user) return null
@@ -49,10 +55,12 @@ export default function Notifications() {
     <div>
       <h3>Notifications</h3>
       <ul>
-        {notifications.map(n => (
+        {notifications.map((n) => (
           <li key={n.id}>
             {n.message}
-            <button onClick={() => markAsRead(n.id)} style={{ marginLeft: 8 }}>Mark as read</button>
+            <button onClick={() => markAsRead(n.id)} style={{ marginLeft: 8 }}>
+              Mark as read
+            </button>
           </li>
         ))}
         {notifications.length === 0 && <li>No new notifications.</li>}

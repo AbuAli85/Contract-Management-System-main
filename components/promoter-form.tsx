@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
+import {
+  promoterProfileSchema,
+  type PromoterProfileFormData,
+  type PromoterStatus,
+} from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
@@ -45,7 +49,7 @@ interface PromoterFormProps {
 const getExpiryAlert = (
   dateString: string | Date | null | undefined,
   alertDays: number | null | undefined,
-  itemName: string,
+  itemName: string
 ): { message: string; className: string } | null => {
   if (!dateString || !alertDays || alertDays <= 0) return null
 
@@ -151,7 +155,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
 
   const uploadFile = async (
     file: File | null | undefined,
-    currentUrl?: string | null | undefined,
+    currentUrl?: string | null | undefined
   ): Promise<string | null | undefined> => {
     if (file) {
       const fileName = `${Date.now()}_${file.name.replace(/\s/g, "_")}`
@@ -407,7 +411,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                       <p
                         className={cn(
                           "mt-1.5 flex items-center text-xs font-medium",
-                          idCardAlert.className,
+                          idCardAlert.className
                         )}
                       >
                         <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" />{" "}
@@ -458,7 +462,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                       <p
                         className={cn(
                           "mt-1.5 flex items-center text-xs font-medium",
-                          passportAlert.className,
+                          passportAlert.className
                         )}
                       >
                         <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" />{" "}
@@ -492,7 +496,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
+                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10)
                           )
                         }
                         disabled={formActuallyDisabled}
@@ -518,7 +522,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
+                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10)
                           )
                         }
                         disabled={formActuallyDisabled}

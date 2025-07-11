@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { LucideIcon } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
+import { LucideIcon } from "lucide-react"
 
 interface KeyMetricCardProps {
   title: string
@@ -9,12 +9,12 @@ interface KeyMetricCardProps {
   className?: string
 }
 
-export function KeyMetricCard({ 
-  title, 
-  value, 
-  icon: Icon, 
+export function KeyMetricCard({
+  title,
+  value,
+  icon: Icon,
   colorClass,
-  className = ''
+  className = "",
 }: KeyMetricCardProps) {
   return (
     <Card className={`${colorClass} shadow-lg ${className}`}>
@@ -24,7 +24,7 @@ export function KeyMetricCard({
             <p className="text-sm font-medium opacity-80">{title}</p>
             <p className="text-2xl font-bold">{value}</p>
           </div>
-          <div className="h-12 w-12 bg-white bg-opacity-50 rounded-lg flex items-center justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white bg-opacity-50">
             <Icon className="h-6 w-6" />
           </div>
         </div>

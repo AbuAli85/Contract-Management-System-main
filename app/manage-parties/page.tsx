@@ -36,12 +36,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  EditIcon, 
-  PlusCircleIcon, 
-  ArrowLeftIcon, 
-  BuildingIcon, 
-  Loader2, 
+import {
+  EditIcon,
+  PlusCircleIcon,
+  ArrowLeftIcon,
+  BuildingIcon,
+  Loader2,
   MoreHorizontal,
   Trash2,
   Search,
@@ -60,7 +60,7 @@ import {
   MapPin,
   Calendar,
   Hash,
-  Eye
+  Eye,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, isAfter, isBefore, addDays } from "date-fns"
@@ -101,17 +101,17 @@ export default function ManagePartiesPage() {
   const stats = useMemo<PartyStats>(() => {
     const now = new Date()
     const thirtyDaysFromNow = addDays(now, 30)
-    
+
     return {
       total: parties.length,
-      active: parties.filter(p => p.status === "Active").length,
-      inactive: parties.filter(p => p.status === "Inactive").length,
-      suspended: parties.filter(p => p.status === "Suspended").length,
-      expiringSoon: parties.filter(p => {
+      active: parties.filter((p) => p.status === "Active").length,
+      inactive: parties.filter((p) => p.status === "Inactive").length,
+      suspended: parties.filter((p) => p.status === "Suspended").length,
+      expiringSoon: parties.filter((p) => {
         if (!p.cr_expiry_date) return false
         const expiryDate = parseISO(p.cr_expiry_date)
         return isAfter(expiryDate, now) && isBefore(expiryDate, thirtyDaysFromNow)
-      }).length
+      }).length,
     }
   }, [parties])
 
@@ -122,15 +122,15 @@ export default function ManagePartiesPage() {
         .from("parties")
         .select("*")
         .order("created_at", { ascending: false })
-      
+
       if (error) throw error
       setParties(data || [])
       setFilteredParties(data || [])
     } catch (error: any) {
-      toast({ 
-        title: "Error fetching parties", 
-        description: error.message, 
-        variant: "destructive" 
+      toast({
+        title: "Error fetching parties",
+        description: error.message,
+        variant: "destructive",
       })
       setParties([])
       setFilteredParties([])
@@ -149,23 +149,24 @@ export default function ManagePartiesPage() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(party => 
-        party.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.name_ar?.includes(searchTerm) ||
-        party.crn?.includes(searchTerm) ||
-        party.contact_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (party) =>
+          party.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.name_ar?.includes(searchTerm) ||
+          party.crn?.includes(searchTerm) ||
+          party.contact_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(party => party.status === statusFilter)
+      filtered = filtered.filter((party) => party.status === statusFilter)
     }
 
     // Type filter
     if (typeFilter !== "all") {
-      filtered = filtered.filter(party => party.type === typeFilter)
+      filtered = filtered.filter((party) => party.type === typeFilter)
     }
 
     setFilteredParties(filtered)
@@ -196,10 +197,7 @@ export default function ManagePartiesPage() {
     if (!partyToDelete) return
 
     try {
-      const { error } = await supabase
-        .from("parties")
-        .delete()
-        .eq("id", partyToDelete.id)
+      const { error } = await supabase.from("parties").delete().eq("id", partyToDelete.id)
 
       if (error) throw error
 
@@ -207,7 +205,7 @@ export default function ManagePartiesPage() {
         title: "Party deleted",
         description: "The party has been successfully deleted.",
       })
-      
+
       fetchParties()
     } catch (error: any) {
       toast({
@@ -223,8 +221,17 @@ export default function ManagePartiesPage() {
 
   const exportParties = () => {
     const csv = [
-      ["Name (EN)", "Name (AR)", "CRN", "Type", "Status", "Contact Person", "Contact Email", "Contact Phone"],
-      ...filteredParties.map(party => [
+      [
+        "Name (EN)",
+        "Name (AR)",
+        "CRN",
+        "Type",
+        "Status",
+        "Contact Person",
+        "Contact Email",
+        "Contact Phone",
+      ],
+      ...filteredParties.map((party) => [
         party.name_en,
         party.name_ar,
         party.crn,
@@ -232,9 +239,11 @@ export default function ManagePartiesPage() {
         party.status,
         party.contact_person || "",
         party.contact_email || "",
-        party.contact_phone || ""
-      ])
-    ].map(row => row.join(",")).join("\n")
+        party.contact_phone || "",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
 
     const blob = new Blob([csv], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
@@ -245,12 +254,15 @@ export default function ManagePartiesPage() {
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", icon: any }> = {
+    const variants: Record<
+      string,
+      { variant: "default" | "secondary" | "destructive" | "outline"; icon: any }
+    > = {
       Active: { variant: "default", icon: CheckCircle },
       Inactive: { variant: "secondary", icon: XCircle },
-      Suspended: { variant: "destructive", icon: AlertCircle }
+      Suspended: { variant: "destructive", icon: AlertCircle },
     }
-    
+
     const config = variants[status] || variants.Active
     const Icon = config.icon
 
@@ -287,9 +299,9 @@ export default function ManagePartiesPage() {
     return (
       <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-7xl">
-          <Skeleton className="h-8 w-48 mb-8" />
-          <div className="grid gap-4 md:grid-cols-4 mb-8">
-            {[1, 2, 3, 4].map(i => (
+          <Skeleton className="mb-8 h-8 w-48" />
+          <div className="mb-8 grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-24" />
             ))}
           </div>
@@ -321,14 +333,16 @@ export default function ManagePartiesPage() {
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Party List
           </Button>
-          
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl">{showDetails.name_en}</CardTitle>
                   {showDetails.name_ar && (
-                    <p className="text-lg text-muted-foreground mt-1" dir="rtl">{showDetails.name_ar}</p>
+                    <p className="mt-1 text-lg text-muted-foreground" dir="rtl">
+                      {showDetails.name_ar}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -340,7 +354,7 @@ export default function ManagePartiesPage() {
             <CardContent className="space-y-6">
               {/* Basic Information */}
               <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
                   <Building2 className="h-4 w-4" />
                   Basic Information
                 </h3>
@@ -361,9 +375,11 @@ export default function ManagePartiesPage() {
               </div>
 
               {/* Contact Information */}
-              {(showDetails.contact_person || showDetails.contact_email || showDetails.contact_phone) && (
+              {(showDetails.contact_person ||
+                showDetails.contact_email ||
+                showDetails.contact_phone) && (
                 <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold">
                     <Users className="h-4 w-4" />
                     Contact Information
                   </h3>
@@ -378,7 +394,10 @@ export default function ManagePartiesPage() {
                     {showDetails.contact_email && (
                       <div className="flex items-center gap-2 text-sm">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a href={`mailto:${showDetails.contact_email}`} className="font-medium text-primary hover:underline">
+                        <a
+                          href={`mailto:${showDetails.contact_email}`}
+                          className="font-medium text-primary hover:underline"
+                        >
                           {showDetails.contact_email}
                         </a>
                       </div>
@@ -386,7 +405,10 @@ export default function ManagePartiesPage() {
                     {showDetails.contact_phone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <a href={`tel:${showDetails.contact_phone}`} className="font-medium text-primary hover:underline">
+                        <a
+                          href={`tel:${showDetails.contact_phone}`}
+                          className="font-medium text-primary hover:underline"
+                        >
                           {showDetails.contact_phone}
                         </a>
                       </div>
@@ -397,7 +419,7 @@ export default function ManagePartiesPage() {
 
               {/* Legal Information */}
               <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 font-semibold">
                   <FileText className="h-4 w-4" />
                   Legal Information
                 </h3>
@@ -406,11 +428,13 @@ export default function ManagePartiesPage() {
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">CR Expiry:</span>
-                      <span className={cn(
-                        "font-medium",
-                        isExpiredDocument(showDetails.cr_expiry_date) && "text-destructive",
-                        isExpiringDocument(showDetails.cr_expiry_date) && "text-orange-600"
-                      )}>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          isExpiredDocument(showDetails.cr_expiry_date) && "text-destructive",
+                          isExpiringDocument(showDetails.cr_expiry_date) && "text-orange-600"
+                        )}
+                      >
                         {format(parseISO(showDetails.cr_expiry_date), "dd MMM yyyy")}
                         {isExpiredDocument(showDetails.cr_expiry_date) && " (Expired)"}
                         {isExpiringDocument(showDetails.cr_expiry_date) && " (Expiring Soon)"}
@@ -435,11 +459,13 @@ export default function ManagePartiesPage() {
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">License Expiry:</span>
-                      <span className={cn(
-                        "font-medium",
-                        isExpiredDocument(showDetails.license_expiry_date) && "text-destructive",
-                        isExpiringDocument(showDetails.license_expiry_date) && "text-orange-600"
-                      )}>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          isExpiredDocument(showDetails.license_expiry_date) && "text-destructive",
+                          isExpiringDocument(showDetails.license_expiry_date) && "text-orange-600"
+                        )}
+                      >
                         {format(parseISO(showDetails.license_expiry_date), "dd MMM yyyy")}
                         {isExpiredDocument(showDetails.license_expiry_date) && " (Expired)"}
                         {isExpiringDocument(showDetails.license_expiry_date) && " (Expiring Soon)"}
@@ -452,16 +478,16 @@ export default function ManagePartiesPage() {
               {/* Address */}
               {(showDetails.address_en || showDetails.address_ar) && (
                 <div>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold">
                     <MapPin className="h-4 w-4" />
                     Address
                   </h3>
                   <div className="space-y-2">
-                    {showDetails.address_en && (
-                      <p className="text-sm">{showDetails.address_en}</p>
-                    )}
+                    {showDetails.address_en && <p className="text-sm">{showDetails.address_en}</p>}
                     {showDetails.address_ar && (
-                      <p className="text-sm" dir="rtl">{showDetails.address_ar}</p>
+                      <p className="text-sm" dir="rtl">
+                        {showDetails.address_ar}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -470,13 +496,15 @@ export default function ManagePartiesPage() {
               {/* Notes */}
               {showDetails.notes && (
                 <div>
-                  <h3 className="font-semibold mb-3">Notes</h3>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{showDetails.notes}</p>
+                  <h3 className="mb-3 font-semibold">Notes</h3>
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                    {showDetails.notes}
+                  </p>
                 </div>
               )}
 
               {/* Metadata */}
-              <div className="pt-4 border-t">
+              <div className="border-t pt-4">
                 <p className="text-xs text-muted-foreground">
                   Created on {format(parseISO(showDetails.created_at), "dd MMM yyyy 'at' HH:mm")}
                 </p>
@@ -493,10 +521,10 @@ export default function ManagePartiesPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Manage Parties</h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="mt-1 text-muted-foreground">
                 Manage your business partners, clients, and employers
               </p>
             </div>
@@ -514,7 +542,7 @@ export default function ManagePartiesPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
+        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -525,40 +553,34 @@ export default function ManagePartiesPage() {
               <div className="text-2xl font-bold">{stats.total}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.active}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Inactive
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-600">{stats.inactive}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Suspended
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Suspended</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.suspended}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -577,7 +599,7 @@ export default function ManagePartiesPage() {
             <CardTitle className="text-lg">Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -652,7 +674,9 @@ export default function ManagePartiesPage() {
                           <div>
                             <p className="font-medium">{party.name_en}</p>
                             {party.name_ar && (
-                              <p className="text-sm text-muted-foreground" dir="rtl">{party.name_ar}</p>
+                              <p className="text-sm text-muted-foreground" dir="rtl">
+                                {party.name_ar}
+                              </p>
                             )}
                           </div>
                         </TableCell>
@@ -681,12 +705,18 @@ export default function ManagePartiesPage() {
                                     CR Expired
                                   </Badge>
                                 ) : isExpiringDocument(party.cr_expiry_date) ? (
-                                  <Badge variant="outline" className="gap-1 border-orange-600 text-orange-600">
+                                  <Badge
+                                    variant="outline"
+                                    className="gap-1 border-orange-600 text-orange-600"
+                                  >
                                     <Clock className="h-3 w-3" />
                                     CR Expiring
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="gap-1 text-green-600 border-green-600">
+                                  <Badge
+                                    variant="outline"
+                                    className="gap-1 border-green-600 text-green-600"
+                                  >
                                     <CheckCircle className="h-3 w-3" />
                                     CR Valid
                                   </Badge>
@@ -714,7 +744,7 @@ export default function ManagePartiesPage() {
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => handleDelete(party)}
                                 className="text-destructive"
                               >
@@ -749,13 +779,16 @@ export default function ManagePartiesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the party "{partyToDelete?.name_en}". 
-              This action cannot be undone.
+              This will permanently delete the party "{partyToDelete?.name_en}". This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

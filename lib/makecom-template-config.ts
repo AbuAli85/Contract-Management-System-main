@@ -20,7 +20,7 @@ export interface MakecomTemplateConfig {
   makecomModuleConfig: {
     webhookTriggerFields: string[]
     templateVariables: Record<string, string>
-    outputFormat: 'pdf' | 'docx' | 'both'
+    outputFormat: "pdf" | "docx" | "both"
     googleDriveSettings?: {
       folderId?: string
       naming: string
@@ -56,16 +56,26 @@ export const MAKECOM_TEMPLATE_CONFIGS: Record<string, MakecomTemplateConfig> = {
       "{{special_terms}}": "Special Terms and Conditions",
       "{{employee_id_number}}": "Employee ID Card Number",
       "{{employer_crn}}": "Employer Commercial Registration Number",
-      "{{contract_date}}": "Contract Signing Date"
+      "{{contract_date}}": "Contract Signing Date",
     },
     requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "basic_salary",
-      "currency", "work_location", "email"
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "job_title",
+      "basic_salary",
+      "currency",
+      "work_location",
+      "email",
     ],
     optionalFields: [
-      "contract_end_date", "probation_period", "allowances",
-      "working_hours", "notice_period", "special_terms"
+      "contract_end_date",
+      "probation_period",
+      "allowances",
+      "working_hours",
+      "notice_period",
+      "special_terms",
     ],
     businessRules: [
       "Must comply with Oman Labor Law Article 35-50",
@@ -74,41 +84,40 @@ export const MAKECOM_TEMPLATE_CONFIGS: Record<string, MakecomTemplateConfig> = {
       "Basic salary must meet Oman minimum wage (325 OMR)",
       "Subject to Ministry of Manpower approval",
       "Must include social security registration",
-      "Working hours limited to 45 hours per week maximum"
+      "Working hours limited to 45 hours per week maximum",
     ],
     omanCompliant: true,
     allowsSalary: true,
     allowsProbation: true,
     allowsRemoteWork: false,
     makecomModuleConfig: {
-      webhookTriggerFields: [
-        "contract_number", "promoter_id", "first_party_id", "second_party_id"
-      ],
+      webhookTriggerFields: ["contract_number", "promoter_id", "first_party_id", "second_party_id"],
       templateVariables: {
-        "employee_name_en": "{{1.promoter_name_en.trim()}}",
-        "employee_name_ar": "{{1.promoter_name_ar.trim()}}",
-        "employer_name_en": "{{1.first_party_name_en.trim()}}",
-        "employer_name_ar": "{{1.first_party_name_ar.trim()}}",
-        "contract_number": "{{1.contract_number.replace(/[^A-Z0-9]/g, \"\")}}",
-        "job_title": "{{1.job_title.trim()}}",
-        "basic_salary": "{{1.basic_salary}}",
-        "currency": "{{1.currency}}",
-        "start_date": "{{formatDate(1.start_date, \"DD/MM/YYYY\")}}",
-        "work_location": "{{1.work_location.trim()}}",
-        "employee_id_number": "{{1.id_card_number.replace(/[^0-9]/g, \"\")}}"
+        employee_name_en: "{{1.promoter_name_en.trim()}}",
+        employee_name_ar: "{{1.promoter_name_ar.trim()}}",
+        employer_name_en: "{{1.first_party_name_en.trim()}}",
+        employer_name_ar: "{{1.first_party_name_ar.trim()}}",
+        contract_number: '{{1.contract_number.replace(/[^A-Z0-9]/g, "")}}',
+        job_title: "{{1.job_title.trim()}}",
+        basic_salary: "{{1.basic_salary}}",
+        currency: "{{1.currency}}",
+        start_date: '{{formatDate(1.start_date, "DD/MM/YYYY")}}',
+        work_location: "{{1.work_location.trim()}}",
+        employee_id_number: '{{1.id_card_number.replace(/[^0-9]/g, "")}}',
       },
-      outputFormat: 'pdf',
+      outputFormat: "pdf",
       googleDriveSettings: {
         folderId: "1GOOGLE_DRIVE_FOLDER_ID", // Replace with actual folder ID
-        naming: "{{contract_number}}_{{employee_name_en.replace(/ /g, \"_\")}}_Unlimited_Contract"
-      }
-    }
+        naming: '{{contract_number}}_{{employee_name_en.replace(/ /g, "_")}}_Unlimited_Contract',
+      },
+    },
   },
 
   "oman-fixed-term-contract": {
     id: "oman-fixed-term-contract",
     name: "Oman Fixed-Term Employment Contract",
-    description: "Fixed duration employment contract with specific end date (Oman Labor Law compliant)",
+    description:
+      "Fixed duration employment contract with specific end date (Oman Labor Law compliant)",
     category: "Oman Labor Law",
     googleDocsTemplateId: "2ABC123DEF456GHI789JKL", // Replace with actual template ID
     templatePlaceholders: {
@@ -126,16 +135,27 @@ export const MAKECOM_TEMPLATE_CONFIGS: Record<string, MakecomTemplateConfig> = {
       "{{contract_duration}}": "Contract Duration (months)",
       "{{work_location}}": "Primary Work Location",
       "{{renewal_clause}}": "Renewal Terms and Conditions",
-      "{{termination_clause}}": "Early Termination Conditions"
+      "{{termination_clause}}": "Early Termination Conditions",
     },
     requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "contract_end_date", "job_title",
-      "basic_salary", "currency", "work_location", "email"
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "contract_end_date",
+      "job_title",
+      "basic_salary",
+      "currency",
+      "work_location",
+      "email",
     ],
     optionalFields: [
-      "probation_period", "allowances", "working_hours",
-      "notice_period", "special_terms", "renewal_terms"
+      "probation_period",
+      "allowances",
+      "working_hours",
+      "notice_period",
+      "special_terms",
+      "renewal_terms",
     ],
     businessRules: [
       "Maximum duration 2 years (renewable)",
@@ -143,40 +163,40 @@ export const MAKECOM_TEMPLATE_CONFIGS: Record<string, MakecomTemplateConfig> = {
       "Renewal requires new contract",
       "Early termination requires mutual consent",
       "Subject to Ministry of Manpower approval",
-      "Must comply with Oman Labor Law Article 51-60"
+      "Must comply with Oman Labor Law Article 51-60",
     ],
     omanCompliant: true,
     maxDuration: 24, // 2 years maximum
-    minDuration: 3,  // 3 months minimum
+    minDuration: 3, // 3 months minimum
     allowsSalary: true,
     allowsProbation: true,
     allowsRemoteWork: false,
     makecomModuleConfig: {
-      webhookTriggerFields: [
-        "contract_number", "promoter_id", "first_party_id", "second_party_id"
-      ],
+      webhookTriggerFields: ["contract_number", "promoter_id", "first_party_id", "second_party_id"],
       templateVariables: {
-        "employee_name_en": "{{1.promoter_name_en.trim()}}",
-        "employee_name_ar": "{{1.promoter_name_ar.trim()}}",
-        "employer_name_en": "{{1.first_party_name_en.trim()}}",
-        "employer_name_ar": "{{1.first_party_name_ar.trim()}}",
-        "contract_number": "{{1.contract_number.replace(/[^A-Z0-9]/g, \"\")}}",
-        "start_date": "{{formatDate(1.start_date, \"DD/MM/YYYY\")}}",
-        "end_date": "{{formatDate(1.end_date, \"DD/MM/YYYY\")}}",
-        "contract_duration": "{{round((parseDate(1.end_date) - parseDate(1.start_date)) / (1000 * 60 * 60 * 24 * 30))}}"
+        employee_name_en: "{{1.promoter_name_en.trim()}}",
+        employee_name_ar: "{{1.promoter_name_ar.trim()}}",
+        employer_name_en: "{{1.first_party_name_en.trim()}}",
+        employer_name_ar: "{{1.first_party_name_ar.trim()}}",
+        contract_number: '{{1.contract_number.replace(/[^A-Z0-9]/g, "")}}',
+        start_date: '{{formatDate(1.start_date, "DD/MM/YYYY")}}',
+        end_date: '{{formatDate(1.end_date, "DD/MM/YYYY")}}',
+        contract_duration:
+          "{{round((parseDate(1.end_date) - parseDate(1.start_date)) / (1000 * 60 * 60 * 24 * 30))}}",
       },
-      outputFormat: 'pdf',
+      outputFormat: "pdf",
       googleDriveSettings: {
         folderId: "2GOOGLE_DRIVE_FOLDER_ID",
-        naming: "{{contract_number}}_{{employee_name_en.replace(/ /g, \"_\")}}_Fixed_Term_Contract"
-      }
-    }
+        naming: '{{contract_number}}_{{employee_name_en.replace(/ /g, "_")}}_Fixed_Term_Contract',
+      },
+    },
   },
 
   "oman-part-time-contract": {
     id: "oman-part-time-contract",
     name: "Oman Part-Time Employment Contract",
-    description: "Part-time employment contract with flexible working hours (Oman Labor Law compliant)",
+    description:
+      "Part-time employment contract with flexible working hours (Oman Labor Law compliant)",
     category: "Oman Labor Law",
     googleDocsTemplateId: "3ABC123DEF456GHI789JKL",
     templatePlaceholders: {
@@ -191,40 +211,48 @@ export const MAKECOM_TEMPLATE_CONFIGS: Record<string, MakecomTemplateConfig> = {
       "{{hourly_rate}}": "Hourly Rate",
       "{{monthly_salary}}": "Estimated Monthly Salary",
       "{{currency}}": "Currency Code",
-      "{{work_schedule}}": "Detailed Work Schedule"
+      "{{work_schedule}}": "Detailed Work Schedule",
     },
     requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "working_hours_per_week",
-      "hourly_rate", "currency", "work_location", "email"
+      "first_party_id",
+      "second_party_id",
+      "promoter_id",
+      "contract_start_date",
+      "job_title",
+      "working_hours_per_week",
+      "hourly_rate",
+      "currency",
+      "work_location",
+      "email",
     ],
     optionalFields: [
-      "contract_end_date", "allowances", "overtime_rate",
-      "special_terms", "flexible_hours"
+      "contract_end_date",
+      "allowances",
+      "overtime_rate",
+      "special_terms",
+      "flexible_hours",
     ],
     businessRules: [
       "Maximum 25 hours per week",
       "Must specify exact working schedule",
       "Proportional benefits apply",
       "Subject to Ministry of Manpower regulations",
-      "Must comply with Oman Labor Law part-time provisions"
+      "Must comply with Oman Labor Law part-time provisions",
     ],
     omanCompliant: true,
     allowsSalary: true,
     allowsProbation: false,
     allowsRemoteWork: true,
     makecomModuleConfig: {
-      webhookTriggerFields: [
-        "contract_number", "promoter_id", "first_party_id", "second_party_id"
-      ],
+      webhookTriggerFields: ["contract_number", "promoter_id", "first_party_id", "second_party_id"],
       templateVariables: {
-        "working_hours_per_week": "{{1.working_hours_per_week}}",
-        "hourly_rate": "{{1.hourly_rate}}",
-        "monthly_salary": "{{1.working_hours_per_week * 4.33 * 1.hourly_rate}}"
+        working_hours_per_week: "{{1.working_hours_per_week}}",
+        hourly_rate: "{{1.hourly_rate}}",
+        monthly_salary: "{{1.working_hours_per_week * 4.33 * 1.hourly_rate}}",
       },
-      outputFormat: 'pdf'
-    }
-  }
+      outputFormat: "pdf",
+    },
+  },
 }
 
 // Utility functions for Make.com integration
@@ -237,7 +265,7 @@ export function getAllMakecomTemplateConfigs(): MakecomTemplateConfig[] {
 }
 
 export function getMakecomTemplatesByCategory(category: string): MakecomTemplateConfig[] {
-  return Object.values(MAKECOM_TEMPLATE_CONFIGS).filter(config => config.category === category)
+  return Object.values(MAKECOM_TEMPLATE_CONFIGS).filter((config) => config.category === category)
 }
 
 export function generateMakecomWebhookPayload(
@@ -250,7 +278,7 @@ export function generateMakecomWebhookPayload(
   const payload: Record<string, any> = {
     contract_type: contractTypeId,
     template_id: config.googleDocsTemplateId,
-    ...contractData
+    ...contractData,
   }
 
   // Add template-specific processing
@@ -277,7 +305,7 @@ export function validateMakecomTemplateData(
   const warnings: string[] = []
 
   // Check required fields
-  config.requiredFields.forEach(field => {
+  config.requiredFields.forEach((field) => {
     if (!data[field] || data[field] === "") {
       errors.push(`${field} is required for ${config.name}`)
     }
@@ -288,7 +316,7 @@ export function validateMakecomTemplateData(
     const startDate = new Date(data.contract_start_date)
     const endDate = new Date(data.contract_end_date)
     const durationMonths = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-    
+
     if (durationMonths > config.maxDuration) {
       errors.push(`Contract duration cannot exceed ${config.maxDuration} months for ${config.name}`)
     }
@@ -299,11 +327,11 @@ export function validateMakecomTemplateData(
     if (data.basic_salary && data.currency === "OMR" && data.basic_salary < 325) {
       warnings.push("Salary below Oman minimum wage (325 OMR)")
     }
-    
+
     if (data.working_hours_per_week && data.working_hours_per_week > 45) {
       errors.push("Working hours cannot exceed 45 hours per week (Oman Labor Law)")
     }
-    
+
     if (data.probation_period && data.probation_period > 3) {
       errors.push("Probation period cannot exceed 3 months (Oman Labor Law)")
     }
@@ -326,8 +354,8 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
         type: "webhook_receive",
         parameters: {
           hook: "contract_webhook",
-          trigger_fields: config.makecomModuleConfig.webhookTriggerFields
-        }
+          trigger_fields: config.makecomModuleConfig.webhookTriggerFields,
+        },
       },
       {
         id: 2,
@@ -335,8 +363,8 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
         type: "http_get",
         parameters: {
           url: "/api/contracts/{{1.contract_number}}",
-          method: "GET"
-        }
+          method: "GET",
+        },
       },
       {
         id: 3,
@@ -344,8 +372,8 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
         type: "create_document_from_template",
         parameters: {
           template_id: config.googleDocsTemplateId,
-          variables: config.makecomModuleConfig.templateVariables
-        }
+          variables: config.makecomModuleConfig.templateVariables,
+        },
       },
       {
         id: 4,
@@ -353,8 +381,8 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
         type: "export_document",
         parameters: {
           document_id: "{{3.document_id}}",
-          format: config.makecomModuleConfig.outputFormat
-        }
+          format: config.makecomModuleConfig.outputFormat,
+        },
       },
       {
         id: 5,
@@ -363,8 +391,8 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
         parameters: {
           bucket: "contracts",
           file_data: "{{4.data}}",
-          file_name: "{{1.contract_number}}.pdf"
-        }
+          file_name: "{{1.contract_number}}.pdf",
+        },
       },
       {
         id: 6,
@@ -375,10 +403,10 @@ export function generateMakecomBlueprint(contractTypeId: string): any {
           method: "PATCH",
           body: {
             pdf_url: "{{5.url}}",
-            status: "completed"
-          }
-        }
-      }
-    ]
+            status: "completed",
+          },
+        },
+      },
+    ],
   }
 }

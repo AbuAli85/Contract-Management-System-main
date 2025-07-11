@@ -2,9 +2,9 @@ import { supabase } from "./supabase"
 import { logError, logInfo } from "./dev-log"
 
 export interface NotificationData {
-  type: 'contract' | 'promoter' | 'party' | 'system' | 'payment' | 'deadline' | 'workflow'
-  category: 'info' | 'success' | 'warning' | 'error' | 'urgent'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
+  type: "contract" | "promoter" | "party" | "system" | "payment" | "deadline" | "workflow"
+  category: "info" | "success" | "warning" | "error" | "urgent"
+  priority: "low" | "medium" | "high" | "urgent"
   title: string
   message: string
   user_id?: string
@@ -73,21 +73,21 @@ export class EnhancedNotificationService {
         is_read: false,
         is_starred: false,
         is_archived: false,
-        created_at: data.schedule_at || new Date().toISOString()
+        created_at: data.schedule_at || new Date().toISOString(),
       }
 
       const { data: result, error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .insert(notification)
-        .select('id')
+        .select("id")
         .single()
 
       if (error) {
         throw new Error(`Failed to create notification: ${error.message}`)
       }
 
-      logInfo('Notification created successfully', { id: result.id, type: data.type })
-      
+      logInfo("Notification created successfully", { id: result.id, type: data.type })
+
       // If not scheduled, send immediately
       if (!data.schedule_at) {
         await this.sendNotification(result.id, data)
@@ -95,7 +95,7 @@ export class EnhancedNotificationService {
 
       return result.id
     } catch (error) {
-      logError('Error creating notification', error)
+      logError("Error creating notification", error)
       throw error
     }
   }
@@ -105,7 +105,7 @@ export class EnhancedNotificationService {
    */
   static async createBulkNotifications(data: BulkNotificationData): Promise<string[]> {
     try {
-      const notifications = data.notifications.map(notification => ({
+      const notifications = data.notifications.map((notification) => ({
         type: notification.type,
         category: notification.category,
         priority: notification.priority,
@@ -120,23 +120,23 @@ export class EnhancedNotificationService {
         is_read: false,
         is_starred: false,
         is_archived: false,
-        created_at: data.schedule_at || notification.schedule_at || new Date().toISOString()
+        created_at: data.schedule_at || notification.schedule_at || new Date().toISOString(),
       }))
 
       const { data: result, error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .insert(notifications)
-        .select('id')
+        .select("id")
 
       if (error) {
         throw new Error(`Failed to create bulk notifications: ${error.message}`)
       }
 
-      const notificationIds = result.map(r => r.id)
-      
-      logInfo('Bulk notifications created successfully', { 
+      const notificationIds = result.map((r) => r.id)
+
+      logInfo("Bulk notifications created successfully", {
         count: notificationIds.length,
-        types: [...new Set(data.notifications.map(n => n.type))]
+        types: [...new Set(data.notifications.map((n) => n.type))],
       })
 
       // Send immediately if requested
@@ -150,7 +150,7 @@ export class EnhancedNotificationService {
 
       return notificationIds
     } catch (error) {
-      logError('Error creating bulk notifications', error)
+      logError("Error creating bulk notifications", error)
       throw error
     }
   }
@@ -162,43 +162,43 @@ export class EnhancedNotificationService {
     filter: NotificationFilter = {},
     page: number = 1,
     limit: number = 20
-  ): Promise<{ notifications: any[], total: number }> {
+  ): Promise<{ notifications: any[]; total: number }> {
     try {
       let query = supabase
-        .from('notifications')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
+        .from("notifications")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
 
       // Apply filters
       if (filter.type) {
-        query = query.eq('type', filter.type)
+        query = query.eq("type", filter.type)
       }
       if (filter.category) {
-        query = query.eq('category', filter.category)
+        query = query.eq("category", filter.category)
       }
       if (filter.priority) {
-        query = query.eq('priority', filter.priority)
+        query = query.eq("priority", filter.priority)
       }
       if (filter.user_id) {
-        query = query.eq('user_id', filter.user_id)
+        query = query.eq("user_id", filter.user_id)
       }
       if (filter.user_email) {
-        query = query.eq('user_email', filter.user_email)
+        query = query.eq("user_email", filter.user_email)
       }
       if (filter.is_read !== undefined) {
-        query = query.eq('is_read', filter.is_read)
+        query = query.eq("is_read", filter.is_read)
       }
       if (filter.is_starred !== undefined) {
-        query = query.eq('is_starred', filter.is_starred)
+        query = query.eq("is_starred", filter.is_starred)
       }
       if (filter.is_archived !== undefined) {
-        query = query.eq('is_archived', filter.is_archived)
+        query = query.eq("is_archived", filter.is_archived)
       }
       if (filter.date_from) {
-        query = query.gte('created_at', filter.date_from)
+        query = query.gte("created_at", filter.date_from)
       }
       if (filter.date_to) {
-        query = query.lte('created_at', filter.date_to)
+        query = query.lte("created_at", filter.date_to)
       }
 
       // Apply pagination
@@ -213,10 +213,10 @@ export class EnhancedNotificationService {
 
       return {
         notifications: data || [],
-        total: count || 0
+        total: count || 0,
       }
     } catch (error) {
-      logError('Error fetching notifications', error)
+      logError("Error fetching notifications", error)
       throw error
     }
   }
@@ -227,21 +227,21 @@ export class EnhancedNotificationService {
   static async getNotificationStats(filter: NotificationFilter = {}): Promise<NotificationStats> {
     try {
       let query = supabase
-        .from('notifications')
-        .select('type, category, priority, is_read, is_starred, is_archived, created_at')
+        .from("notifications")
+        .select("type, category, priority, is_read, is_starred, is_archived, created_at")
 
       // Apply filters
       if (filter.user_id) {
-        query = query.eq('user_id', filter.user_id)
+        query = query.eq("user_id", filter.user_id)
       }
       if (filter.user_email) {
-        query = query.eq('user_email', filter.user_email)
+        query = query.eq("user_email", filter.user_email)
       }
       if (filter.date_from) {
-        query = query.gte('created_at', filter.date_from)
+        query = query.gte("created_at", filter.date_from)
       }
       if (filter.date_to) {
-        query = query.lte('created_at', filter.date_to)
+        query = query.lte("created_at", filter.date_to)
       }
 
       const { data, error } = await query
@@ -256,35 +256,33 @@ export class EnhancedNotificationService {
 
       const stats: NotificationStats = {
         total: notifications.length,
-        unread: notifications.filter(n => !n.is_read).length,
-        starred: notifications.filter(n => n.is_starred).length,
-        archived: notifications.filter(n => n.is_archived).length,
-        urgent: notifications.filter(n => n.priority === 'urgent').length,
+        unread: notifications.filter((n) => !n.is_read).length,
+        starred: notifications.filter((n) => n.is_starred).length,
+        archived: notifications.filter((n) => n.is_archived).length,
+        urgent: notifications.filter((n) => n.priority === "urgent").length,
         byType: {},
         byCategory: {},
         byPriority: {},
-        recentActivity: notifications.filter(n =>
-          new Date(n.created_at) > yesterday
-        ).length,
+        recentActivity: notifications.filter((n) => new Date(n.created_at) > yesterday).length,
         deliveryRate: 98, // This would come from actual delivery tracking
-        responseRate: 85  // This would come from actual response tracking
+        responseRate: 85, // This would come from actual response tracking
       }
 
       // Calculate distributions
-      notifications.forEach(n => {
+      notifications.forEach((n) => {
         // Type distribution
         stats.byType[n.type] = (stats.byType[n.type] || 0) + 1
-        
+
         // Category distribution
         stats.byCategory[n.category] = (stats.byCategory[n.category] || 0) + 1
-        
+
         // Priority distribution
         stats.byPriority[n.priority] = (stats.byPriority[n.priority] || 0) + 1
       })
 
       return stats
     } catch (error) {
-      logError('Error fetching notification stats', error)
+      logError("Error fetching notification stats", error)
       throw error
     }
   }
@@ -292,29 +290,26 @@ export class EnhancedNotificationService {
   /**
    * Mark notification as read/unread
    */
-  static async updateReadStatus(
-    notificationIds: string[],
-    isRead: boolean
-  ): Promise<void> {
+  static async updateReadStatus(notificationIds: string[], isRead: boolean): Promise<void> {
     try {
       const { error } = await supabase
-        .from('notifications')
-        .update({ 
+        .from("notifications")
+        .update({
           is_read: isRead,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .in('id', notificationIds)
+        .in("id", notificationIds)
 
       if (error) {
         throw new Error(`Failed to update read status: ${error.message}`)
       }
 
-      logInfo('Notification read status updated', { 
-        count: notificationIds.length, 
-        isRead 
+      logInfo("Notification read status updated", {
+        count: notificationIds.length,
+        isRead,
       })
     } catch (error) {
-      logError('Error updating notification read status', error)
+      logError("Error updating notification read status", error)
       throw error
     }
   }
@@ -322,26 +317,23 @@ export class EnhancedNotificationService {
   /**
    * Star/unstar notification
    */
-  static async updateStarStatus(
-    notificationId: string,
-    isStarred: boolean
-  ): Promise<void> {
+  static async updateStarStatus(notificationId: string, isStarred: boolean): Promise<void> {
     try {
       const { error } = await supabase
-        .from('notifications')
-        .update({ 
+        .from("notifications")
+        .update({
           is_starred: isStarred,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', notificationId)
+        .eq("id", notificationId)
 
       if (error) {
         throw new Error(`Failed to update star status: ${error.message}`)
       }
 
-      logInfo('Notification star status updated', { notificationId, isStarred })
+      logInfo("Notification star status updated", { notificationId, isStarred })
     } catch (error) {
-      logError('Error updating notification star status', error)
+      logError("Error updating notification star status", error)
       throw error
     }
   }
@@ -349,29 +341,26 @@ export class EnhancedNotificationService {
   /**
    * Archive/unarchive notifications
    */
-  static async updateArchiveStatus(
-    notificationIds: string[],
-    isArchived: boolean
-  ): Promise<void> {
+  static async updateArchiveStatus(notificationIds: string[], isArchived: boolean): Promise<void> {
     try {
       const { error } = await supabase
-        .from('notifications')
-        .update({ 
+        .from("notifications")
+        .update({
           is_archived: isArchived,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .in('id', notificationIds)
+        .in("id", notificationIds)
 
       if (error) {
         throw new Error(`Failed to update archive status: ${error.message}`)
       }
 
-      logInfo('Notification archive status updated', { 
-        count: notificationIds.length, 
-        isArchived 
+      logInfo("Notification archive status updated", {
+        count: notificationIds.length,
+        isArchived,
       })
     } catch (error) {
-      logError('Error updating notification archive status', error)
+      logError("Error updating notification archive status", error)
       throw error
     }
   }
@@ -381,18 +370,15 @@ export class EnhancedNotificationService {
    */
   static async deleteNotifications(notificationIds: string[]): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .in('id', notificationIds)
+      const { error } = await supabase.from("notifications").delete().in("id", notificationIds)
 
       if (error) {
         throw new Error(`Failed to delete notifications: ${error.message}`)
       }
 
-      logInfo('Notifications deleted', { count: notificationIds.length })
+      logInfo("Notifications deleted", { count: notificationIds.length })
     } catch (error) {
-      logError('Error deleting notifications', error)
+      logError("Error deleting notifications", error)
       throw error
     }
   }
@@ -402,19 +388,17 @@ export class EnhancedNotificationService {
    */
   static async markAllAsRead(userId?: string, userEmail?: string): Promise<void> {
     try {
-      let query = supabase
-        .from('notifications')
-        .update({ 
-          is_read: true,
-          updated_at: new Date().toISOString()
-        })
+      let query = supabase.from("notifications").update({
+        is_read: true,
+        updated_at: new Date().toISOString(),
+      })
 
       if (userId) {
-        query = query.eq('user_id', userId)
+        query = query.eq("user_id", userId)
       } else if (userEmail) {
-        query = query.eq('user_email', userEmail)
+        query = query.eq("user_email", userEmail)
       } else {
-        throw new Error('Either userId or userEmail must be provided')
+        throw new Error("Either userId or userEmail must be provided")
       }
 
       const { error } = await query
@@ -423,9 +407,9 @@ export class EnhancedNotificationService {
         throw new Error(`Failed to mark all notifications as read: ${error.message}`)
       }
 
-      logInfo('All notifications marked as read', { userId, userEmail })
+      logInfo("All notifications marked as read", { userId, userEmail })
     } catch (error) {
-      logError('Error marking all notifications as read', error)
+      logError("Error marking all notifications as read", error)
       throw error
     }
   }
@@ -436,16 +420,16 @@ export class EnhancedNotificationService {
   static async getUnreadCount(userId?: string, userEmail?: string): Promise<number> {
     try {
       let query = supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false)
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false)
 
       if (userId) {
-        query = query.eq('user_id', userId)
+        query = query.eq("user_id", userId)
       } else if (userEmail) {
-        query = query.eq('user_email', userEmail)
+        query = query.eq("user_email", userEmail)
       } else {
-        throw new Error('Either userId or userEmail must be provided')
+        throw new Error("Either userId or userEmail must be provided")
       }
 
       const { count, error } = await query
@@ -456,7 +440,7 @@ export class EnhancedNotificationService {
 
       return count || 0
     } catch (error) {
-      logError('Error getting unread notification count', error)
+      logError("Error getting unread notification count", error)
       throw error
     }
   }
@@ -464,17 +448,20 @@ export class EnhancedNotificationService {
   /**
    * Send notification via appropriate channel
    */
-  private static async sendNotification(notificationId: string, data: NotificationData): Promise<void> {
+  private static async sendNotification(
+    notificationId: string,
+    data: NotificationData
+  ): Promise<void> {
     try {
       // This would integrate with actual notification delivery services
       // For now, we'll just log the action
-      
-      logInfo('Notification sent', {
+
+      logInfo("Notification sent", {
         id: notificationId,
         type: data.type,
         category: data.category,
         priority: data.priority,
-        recipient: data.user_email || data.user_id
+        recipient: data.user_email || data.user_id,
       })
 
       // In a real implementation, you would:
@@ -482,9 +469,8 @@ export class EnhancedNotificationService {
       // 2. Send push notifications via push service (Firebase, OneSignal, etc.)
       // 3. Send SMS notifications via SMS service (Twilio, AWS SNS, etc.)
       // 4. Update delivery status in database
-      
     } catch (error) {
-      logError('Error sending notification', error)
+      logError("Error sending notification", error)
       // Don't throw here - notification creation should succeed even if delivery fails
     }
   }
@@ -497,15 +483,18 @@ export class EnhancedNotificationService {
     filter: NotificationFilter = {}
   ) {
     let channel = supabase
-      .channel('notifications_realtime')
+      .channel("notifications_realtime")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: filter.user_id ? `user_id=eq.${filter.user_id}` : 
-                  filter.user_email ? `user_email=eq.${filter.user_email}` : undefined
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: filter.user_id
+            ? `user_id=eq.${filter.user_id}`
+            : filter.user_email
+              ? `user_email=eq.${filter.user_email}`
+              : undefined,
         },
         callback
       )
@@ -524,33 +513,43 @@ export class EnhancedNotificationService {
       const { notifications } = await this.getNotifications(filter, 1, 10000) // Get all matching notifications
 
       const headers = [
-        'ID', 'Type', 'Category', 'Priority', 'Title', 'Message',
-        'User Email', 'Read', 'Starred', 'Archived', 'Created At', 'Updated At'
+        "ID",
+        "Type",
+        "Category",
+        "Priority",
+        "Title",
+        "Message",
+        "User Email",
+        "Read",
+        "Starred",
+        "Archived",
+        "Created At",
+        "Updated At",
       ]
 
-      const csvData = notifications.map(n => [
+      const csvData = notifications.map((n) => [
         n.id,
         n.type,
         n.category,
         n.priority,
         n.title,
         n.message,
-        n.user_email || '',
-        n.is_read ? 'Yes' : 'No',
-        n.is_starred ? 'Yes' : 'No',
-        n.is_archived ? 'Yes' : 'No',
+        n.user_email || "",
+        n.is_read ? "Yes" : "No",
+        n.is_starred ? "Yes" : "No",
+        n.is_archived ? "Yes" : "No",
         n.created_at,
-        n.updated_at || ''
+        n.updated_at || "",
       ])
 
       const csvContent = [
-        headers.join(','),
-        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n')
+        headers.join(","),
+        ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+      ].join("\n")
 
       return csvContent
     } catch (error) {
-      logError('Error exporting notifications to CSV', error)
+      logError("Error exporting notifications to CSV", error)
       throw error
     }
   }
@@ -561,26 +560,26 @@ export class EnhancedNotificationService {
   static async cleanupExpiredNotifications(): Promise<number> {
     try {
       const now = new Date().toISOString()
-      
+
       const { data, error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .delete()
-        .lt('expires_at', now)
-        .select('id')
+        .lt("expires_at", now)
+        .select("id")
 
       if (error) {
         throw new Error(`Failed to cleanup expired notifications: ${error.message}`)
       }
 
       const deletedCount = data?.length || 0
-      
+
       if (deletedCount > 0) {
-        logInfo('Expired notifications cleaned up', { count: deletedCount })
+        logInfo("Expired notifications cleaned up", { count: deletedCount })
       }
 
       return deletedCount
     } catch (error) {
-      logError('Error cleaning up expired notifications', error)
+      logError("Error cleaning up expired notifications", error)
       throw error
     }
   }
@@ -592,30 +591,30 @@ export class EnhancedNotificationService {
     try {
       const cutoffDate = new Date()
       cutoffDate.setDate(cutoffDate.getDate() - daysOld)
-      
+
       const { data, error } = await supabase
-        .from('notifications')
-        .update({ 
+        .from("notifications")
+        .update({
           is_archived: true,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .lt('created_at', cutoffDate.toISOString())
-        .eq('is_archived', false)
-        .select('id')
+        .lt("created_at", cutoffDate.toISOString())
+        .eq("is_archived", false)
+        .select("id")
 
       if (error) {
         throw new Error(`Failed to auto-archive old notifications: ${error.message}`)
       }
 
       const archivedCount = data?.length || 0
-      
+
       if (archivedCount > 0) {
-        logInfo('Old notifications auto-archived', { count: archivedCount, daysOld })
+        logInfo("Old notifications auto-archived", { count: archivedCount, daysOld })
       }
 
       return archivedCount
     } catch (error) {
-      logError('Error auto-archiving old notifications', error)
+      logError("Error auto-archiving old notifications", error)
       throw error
     }
   }
@@ -628,14 +627,14 @@ export const NotificationHelpers = {
    */
   async createContractNotification(
     contractId: string,
-    type: NotificationData['category'],
+    type: NotificationData["category"],
     title: string,
     message: string,
     userEmail?: string,
-    priority: NotificationData['priority'] = 'medium'
+    priority: NotificationData["priority"] = "medium"
   ): Promise<string> {
     return EnhancedNotificationService.createNotification({
-      type: 'contract',
+      type: "contract",
       category: type,
       priority,
       title,
@@ -643,7 +642,7 @@ export const NotificationHelpers = {
       user_email: userEmail,
       metadata: { contract_id: contractId },
       action_url: `/contracts/${contractId}`,
-      action_label: 'View Contract'
+      action_label: "View Contract",
     })
   },
 
@@ -652,14 +651,14 @@ export const NotificationHelpers = {
    */
   async createPromoterNotification(
     promoterId: string,
-    type: NotificationData['category'],
+    type: NotificationData["category"],
     title: string,
     message: string,
     userEmail?: string,
-    priority: NotificationData['priority'] = 'medium'
+    priority: NotificationData["priority"] = "medium"
   ): Promise<string> {
     return EnhancedNotificationService.createNotification({
-      type: 'promoter',
+      type: "promoter",
       category: type,
       priority,
       title,
@@ -667,7 +666,7 @@ export const NotificationHelpers = {
       user_email: userEmail,
       metadata: { promoter_id: promoterId },
       action_url: `/manage-promoters`,
-      action_label: 'View Promoter'
+      action_label: "View Promoter",
     })
   },
 
@@ -676,14 +675,14 @@ export const NotificationHelpers = {
    */
   async createPartyNotification(
     partyId: string,
-    type: NotificationData['category'],
+    type: NotificationData["category"],
     title: string,
     message: string,
     userEmail?: string,
-    priority: NotificationData['priority'] = 'medium'
+    priority: NotificationData["priority"] = "medium"
   ): Promise<string> {
     return EnhancedNotificationService.createNotification({
-      type: 'party',
+      type: "party",
       category: type,
       priority,
       title,
@@ -691,7 +690,7 @@ export const NotificationHelpers = {
       user_email: userEmail,
       metadata: { party_id: partyId },
       action_url: `/manage-parties`,
-      action_label: 'View Party'
+      action_label: "View Party",
     })
   },
 
@@ -699,19 +698,19 @@ export const NotificationHelpers = {
    * Create system notification
    */
   async createSystemNotification(
-    type: NotificationData['category'],
+    type: NotificationData["category"],
     title: string,
     message: string,
-    priority: NotificationData['priority'] = 'medium',
+    priority: NotificationData["priority"] = "medium",
     metadata?: Record<string, any>
   ): Promise<string> {
     return EnhancedNotificationService.createNotification({
-      type: 'system',
+      type: "system",
       category: type,
       priority,
       title,
       message,
-      metadata
+      metadata,
     })
   },
 
@@ -719,32 +718,36 @@ export const NotificationHelpers = {
    * Create deadline alert notification
    */
   async createDeadlineAlert(
-    entityType: 'contract' | 'promoter' | 'party',
+    entityType: "contract" | "promoter" | "party",
     entityId: string,
     title: string,
     message: string,
     daysUntilDeadline: number,
     userEmail?: string
   ): Promise<string> {
-    const priority: NotificationData['priority'] = 
-      daysUntilDeadline <= 1 ? 'urgent' :
-      daysUntilDeadline <= 7 ? 'high' :
-      daysUntilDeadline <= 30 ? 'medium' : 'low'
+    const priority: NotificationData["priority"] =
+      daysUntilDeadline <= 1
+        ? "urgent"
+        : daysUntilDeadline <= 7
+          ? "high"
+          : daysUntilDeadline <= 30
+            ? "medium"
+            : "low"
 
     return EnhancedNotificationService.createNotification({
-      type: 'deadline',
-      category: 'warning',
+      type: "deadline",
+      category: "warning",
       priority,
       title,
       message,
       user_email: userEmail,
-      metadata: { 
+      metadata: {
         entity_type: entityType,
         entity_id: entityId,
-        days_until_deadline: daysUntilDeadline
+        days_until_deadline: daysUntilDeadline,
       },
-      action_url: `/${entityType === 'contract' ? 'contracts' : entityType === 'promoter' ? 'manage-promoters' : 'manage-parties'}${entityType === 'contract' ? `/${entityId}` : ''}`,
-      action_label: `View ${entityType.charAt(0).toUpperCase() + entityType.slice(1)}`
+      action_url: `/${entityType === "contract" ? "contracts" : entityType === "promoter" ? "manage-promoters" : "manage-parties"}${entityType === "contract" ? `/${entityId}` : ""}`,
+      action_label: `View ${entityType.charAt(0).toUpperCase() + entityType.slice(1)}`,
     })
-  }
+  },
 }

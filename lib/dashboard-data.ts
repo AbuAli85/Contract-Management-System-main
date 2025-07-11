@@ -154,7 +154,8 @@ export const notificationItemsData: NotificationItem[] = [
   {
     id: "n2",
     type: "warning",
-    message: "Contract CON-006 for Epsilon Solutions (promoter: Maria Garcia) will expire in 28 days.",
+    message:
+      "Contract CON-006 for Epsilon Solutions (promoter: Maria Garcia) will expire in 28 days.",
     created_at: new Date().toISOString(),
     is_read: false,
     related_contract_id: "CON-006",

@@ -27,14 +27,14 @@ export const UserManagement = () => {
       setError(null)
       const response = await fetch("/api/admin/users")
       const data = await response.json()
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch users')
+        throw new Error(data.error || "Failed to fetch users")
       }
-      
+
       setUsers(data.users || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch users')
+      setError(err instanceof Error ? err.message : "Failed to fetch users")
     } finally {
       setLoading(false)
     }
@@ -42,63 +42,63 @@ export const UserManagement = () => {
 
   const updateRole = async (id: string) => {
     if (!currentUser?.id) {
-      setError('Authentication required')
+      setError("Authentication required")
       return
     }
 
     try {
       setError(null)
       const response = await fetch(`/api/admin/user-roles`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          user_id: id, 
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: id,
           role: newRole,
-          admin_id: currentUser.id
-        })
+          admin_id: currentUser.id,
+        }),
       })
 
       const data = await response.json()
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update role')
+        throw new Error(data.error || "Failed to update role")
       }
 
-      setUsers(users.map(u => u.id === id ? { ...u, roles: [newRole] } : u))
+      setUsers(users.map((u) => (u.id === id ? { ...u, roles: [newRole] } : u)))
       setEditing(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role')
+      setError(err instanceof Error ? err.message : "Failed to update role")
     }
   }
 
   const setActive = async (id: string, isActive: boolean) => {
     if (!currentUser?.id) {
-      setError('Authentication required')
+      setError("Authentication required")
       return
     }
 
-    setActionLoading(id + '-active')
+    setActionLoading(id + "-active")
     try {
       setError(null)
-      const response = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          user_id: id, 
-          is_active: isActive, 
-          admin_id: currentUser.id
-        })
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: id,
+          is_active: isActive,
+          admin_id: currentUser.id,
+        }),
       })
 
       const data = await response.json()
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update user status')
+        throw new Error(data.error || "Failed to update user status")
       }
 
-      setUsers(users.map(u => u.id === id ? { ...u, is_active: isActive } : u))
+      setUsers(users.map((u) => (u.id === id ? { ...u, is_active: isActive } : u)))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user status')
+      setError(err instanceof Error ? err.message : "Failed to update user status")
     } finally {
       setActionLoading(null)
     }
@@ -106,37 +106,37 @@ export const UserManagement = () => {
 
   const resetPassword = async (id: string) => {
     if (!currentUser?.id) {
-      setError('Authentication required')
+      setError("Authentication required")
       return
     }
 
-    setActionLoading(id + '-reset')
+    setActionLoading(id + "-reset")
     try {
-      const newPassword = prompt('Enter new password for user:')
+      const newPassword = prompt("Enter new password for user:")
       if (!newPassword) return setActionLoading(null)
 
       setError(null)
-      const response = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          user_id: id, 
-          reset_password: true, 
-          new_password: newPassword, 
-          admin_id: currentUser.id
-        })
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: id,
+          reset_password: true,
+          new_password: newPassword,
+          admin_id: currentUser.id,
+        }),
       })
 
       const data = await response.json()
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to reset password')
+        throw new Error(data.error || "Failed to reset password")
       }
 
       // Show success message
-      alert('Password reset successfully')
+      alert("Password reset successfully")
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reset password')
+      setError(err instanceof Error ? err.message : "Failed to reset password")
     } finally {
       setActionLoading(null)
     }
@@ -151,7 +151,7 @@ export const UserManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             <span className="ml-2">Checking authentication...</span>
           </div>
         </CardContent>
@@ -168,7 +168,7 @@ export const UserManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="h-5 w-5 mr-2" />
+            <AlertTriangle className="mr-2 h-5 w-5" />
             <span>Authentication required to access user management</span>
           </div>
         </CardContent>
@@ -181,12 +181,12 @@ export const UserManagement = () => {
       <CardHeader>
         <CardTitle>User Management</CardTitle>
         {error && (
-          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             <AlertTriangle className="h-4 w-4" />
             <span>{error}</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setError(null)}
               className="ml-auto h-auto p-1"
             >
@@ -198,11 +198,11 @@ export const UserManagement = () => {
       <CardContent>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
             <span className="ml-2">Loading users...</span>
           </div>
         ) : users.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             <span>No users found</span>
           </div>
         ) : (
@@ -210,20 +210,26 @@ export const UserManagement = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 font-medium">Email</th>
-                  <th className="text-left py-2 font-medium">Roles</th>
-                  <th className="text-left py-2 font-medium">Status</th>
-                  <th className="text-left py-2 font-medium">Actions</th>
+                  <th className="py-2 text-left font-medium">Email</th>
+                  <th className="py-2 text-left font-medium">Roles</th>
+                  <th className="py-2 text-left font-medium">Status</th>
+                  <th className="py-2 text-left font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {users.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-muted/50">
                     <td className="py-3">{u.email}</td>
                     <td className="py-3">
-                      {u.roles && u.roles.length > 0 ? u.roles.map((role: string) => (
-                        <Badge key={role} variant="secondary" className="mr-1">{role}</Badge>
-                      )) : <span className="text-muted-foreground">No roles</span>}
+                      {u.roles && u.roles.length > 0 ? (
+                        u.roles.map((role: string) => (
+                          <Badge key={role} variant="secondary" className="mr-1">
+                            {role}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground">No roles</span>
+                      )}
                     </td>
                     <td className="py-3">
                       {u.is_active ? (
@@ -234,44 +240,51 @@ export const UserManagement = () => {
                     </td>
                     <td className="py-3">
                       {editing === u.id ? (
-                        <div className="flex gap-2 items-center">
-                          <input 
-                            value={newRole} 
-                            onChange={e => setNewRole(e.target.value)} 
-                            className="w-24 border border-input px-2 py-1 rounded-md text-sm"
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={newRole}
+                            onChange={(e) => setNewRole(e.target.value)}
+                            className="w-24 rounded-md border border-input px-2 py-1 text-sm"
                             placeholder="Role"
                           />
-                          <Button onClick={() => updateRole(u.id)} size="sm">Save</Button>
-                          <Button onClick={() => setEditing(null)} size="sm" variant="outline">Cancel</Button>
+                          <Button onClick={() => updateRole(u.id)} size="sm">
+                            Save
+                          </Button>
+                          <Button onClick={() => setEditing(null)} size="sm" variant="outline">
+                            Cancel
+                          </Button>
                         </div>
                       ) : (
                         <div className="flex gap-2">
-                          <Button 
-                            onClick={() => { setEditing(u.id); setNewRole(u.roles?.[0] || "") }} 
+                          <Button
+                            onClick={() => {
+                              setEditing(u.id)
+                              setNewRole(u.roles?.[0] || "")
+                            }}
                             size="sm"
                             variant="outline"
                           >
                             Edit Role
                           </Button>
-                          <Button 
-                            onClick={() => setActive(u.id, !u.is_active)} 
-                            size="sm" 
-                            variant={u.is_active ? "destructive" : "default"} 
-                            disabled={actionLoading === u.id + '-active'}
+                          <Button
+                            onClick={() => setActive(u.id, !u.is_active)}
+                            size="sm"
+                            variant={u.is_active ? "destructive" : "default"}
+                            disabled={actionLoading === u.id + "-active"}
                           >
-                            {actionLoading === u.id + '-active' ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+                            {actionLoading === u.id + "-active" ? (
+                              <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-current"></div>
                             ) : null}
-                            {u.is_active ? 'Disable' : 'Enable'}
+                            {u.is_active ? "Disable" : "Enable"}
                           </Button>
-                          <Button 
-                            onClick={() => resetPassword(u.id)} 
-                            size="sm" 
-                            variant="outline" 
-                            disabled={actionLoading === u.id + '-reset'}
+                          <Button
+                            onClick={() => resetPassword(u.id)}
+                            size="sm"
+                            variant="outline"
+                            disabled={actionLoading === u.id + "-reset"}
                           >
-                            {actionLoading === u.id + '-reset' ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+                            {actionLoading === u.id + "-reset" ? (
+                              <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-current"></div>
                             ) : null}
                             Reset Password
                           </Button>

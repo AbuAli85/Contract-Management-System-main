@@ -45,7 +45,7 @@ function renderForm() {
   return render(
     <QueryClientProvider client={queryClient}>
       <GenerateContractForm />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -74,7 +74,7 @@ describe("GenerateContractForm", () => {
             message: "Contract generated",
             contract: { id: "new-contract-id", pdf_url: "http://mockurl.com/contract.pdf" },
           }),
-      }),
+      })
     ) as jest.Mock
   })
 
@@ -92,7 +92,7 @@ describe("GenerateContractForm", () => {
     expect(await screen.findByText("Contract start date is required.")).toBeInTheDocument()
     expect(await screen.findByText("Contract end date is required.")).toBeInTheDocument()
     expect(
-      await screen.findByText("Please enter a valid email address for notifications."),
+      await screen.findByText("Please enter a valid email address for notifications.")
     ).toBeInTheDocument()
     expect(global.fetch).not.toHaveBeenCalled()
   })
@@ -122,7 +122,7 @@ describe("GenerateContractForm", () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1))
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/contracts",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST" })
     )
     expect(toastMock).toHaveBeenCalled()
   })

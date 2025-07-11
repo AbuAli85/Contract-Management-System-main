@@ -32,13 +32,13 @@ export async function fetchPartiesWithContractCount(): Promise<Party[]> {
 
           return {
             ...party,
-            contract_count: contractCount || 0
+            contract_count: contractCount || 0,
           }
         } catch (error) {
           console.warn(`Error processing party ${party.id}:`, error)
           return {
             ...party,
-            contract_count: 0
+            contract_count: 0,
           }
         }
       })
@@ -55,10 +55,7 @@ export async function fetchPartiesWithContractCount(): Promise<Party[]> {
  * Delete multiple parties by IDs
  */
 export async function deleteParties(partyIds: string[]): Promise<void> {
-  const { error } = await supabase
-    .from("parties")
-    .delete()
-    .in("id", partyIds)
+  const { error } = await supabase.from("parties").delete().in("id", partyIds)
 
   if (error) {
     throw new Error(`Error deleting parties: ${error.message}`)
@@ -69,14 +66,11 @@ export async function deleteParties(partyIds: string[]): Promise<void> {
  * Update party status
  */
 export async function updatePartyStatus(
-  partyId: string, 
+  partyId: string,
   status: "Active" | "Inactive" | "Suspended"
 ): Promise<void> {
   try {
-    const { error } = await supabase
-      .from("parties")
-      .update({ status })
-      .eq("id", partyId)
+    const { error } = await supabase.from("parties").update({ status }).eq("id", partyId)
 
     if (error) {
       throw new Error(`Error updating party status: ${error.message}`)
@@ -91,14 +85,11 @@ export async function updatePartyStatus(
  * Bulk update party statuses
  */
 export async function bulkUpdatePartyStatus(
-  partyIds: string[], 
+  partyIds: string[],
   status: "Active" | "Inactive" | "Suspended"
 ): Promise<void> {
   try {
-    const { error } = await supabase
-      .from("parties")
-      .update({ status })
-      .in("id", partyIds)
+    const { error } = await supabase.from("parties").update({ status }).in("id", partyIds)
 
     if (error) {
       throw new Error(`Error bulk updating party status: ${error.message}`)
@@ -112,16 +103,16 @@ export async function bulkUpdatePartyStatus(
 /**
  * Get parties with expiring documents
  */
-export async function getPartiesWithExpiringDocuments(
-  daysAhead: number = 30
-): Promise<Party[]> {
+export async function getPartiesWithExpiringDocuments(daysAhead: number = 30): Promise<Party[]> {
   const futureDate = new Date()
   futureDate.setDate(futureDate.getDate() + daysAhead)
-  
+
   const { data, error } = await supabase
     .from("parties")
     .select("*")
-    .or(`cr_expiry_date.lte.${futureDate.toISOString()},license_expiry_date.lte.${futureDate.toISOString()}`)
+    .or(
+      `cr_expiry_date.lte.${futureDate.toISOString()},license_expiry_date.lte.${futureDate.toISOString()}`
+    )
     .order("cr_expiry_date", { ascending: true })
 
   if (error) {
@@ -138,7 +129,9 @@ export async function searchParties(searchTerm: string): Promise<Party[]> {
   const { data, error } = await supabase
     .from("parties")
     .select("*")
-    .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,crn.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`)
+    .or(
+      `name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,crn.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`
+    )
     .order("name_en")
 
   if (error) {
@@ -185,10 +178,13 @@ export async function getPartyActivitySummary(partyId: string) {
       console.warn("Error fetching contracts by status:", statusError)
     }
 
-    const statusCounts = (contractsByStatus || []).reduce((acc, contract) => {
-      acc[contract.status || 'unknown'] = (acc[contract.status || 'unknown'] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const statusCounts = (contractsByStatus || []).reduce(
+      (acc, contract) => {
+        acc[contract.status || "unknown"] = (acc[contract.status || "unknown"] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return {
       contracts_count: contractsCount || 0,
@@ -210,19 +206,20 @@ export async function getPartyActivitySummary(partyId: string) {
  */
 export async function getPartiesByType(): Promise<Record<string, number>> {
   try {
-    const { data, error } = await supabase
-      .from("parties")
-      .select("type")
+    const { data, error } = await supabase.from("parties").select("type")
 
     if (error) {
       throw new Error(`Error fetching parties by type: ${error.message}`)
     }
 
-    const typeCounts = (data || []).reduce((acc, party) => {
-      const type = party.type || 'unknown'
-      acc[type] = (acc[type] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const typeCounts = (data || []).reduce(
+      (acc, party) => {
+        const type = party.type || "unknown"
+        acc[type] = (acc[type] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return typeCounts
   } catch (error) {
@@ -238,7 +235,7 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
   try {
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + daysAhead)
-    
+
     const { data: crExpiring, error: crError } = await supabase
       .from("parties")
       .select("id, name_en, name_ar, crn, cr_expiry_date")
@@ -279,10 +276,7 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
  */
 export async function validateUniqueCRN(crn: string, excludeId?: string): Promise<boolean> {
   try {
-    let query = supabase
-      .from("parties")
-      .select("id")
-      .eq("crn", crn)
+    let query = supabase.from("parties").select("id").eq("crn", crn)
 
     if (excludeId) {
       query = query.neq("id", excludeId)
@@ -307,46 +301,47 @@ export async function validateUniqueCRN(crn: string, excludeId?: string): Promis
  */
 export async function getPartyStatusAnalytics() {
   try {
-    const { data, error } = await supabase
-      .from("parties")
-      .select("status, type, created_at")
+    const { data, error } = await supabase.from("parties").select("status, type, created_at")
 
     if (error) {
       throw new Error(`Error fetching party status analytics: ${error.message}`)
     }
 
-    const analytics = (data || []).reduce((acc, party) => {
-      const status = party.status || 'Unknown'
-      const type = party.type || 'Unknown'
-      
-      // Status counts
-      acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1
-      
-      // Type breakdown by status
-      if (!acc.typeBreakdown[type]) {
-        acc.typeBreakdown[type] = {}
-      }
-      acc.typeBreakdown[type][status] = (acc.typeBreakdown[type][status] || 0) + 1
-      
-      // Monthly trends (last 6 months)
-      if (party.created_at) {
-        const month = new Date(party.created_at).toISOString().slice(0, 7) // YYYY-MM
-        if (!acc.monthlyTrends[month]) {
-          acc.monthlyTrends[month] = {}
+    const analytics = (data || []).reduce(
+      (acc, party) => {
+        const status = party.status || "Unknown"
+        const type = party.type || "Unknown"
+
+        // Status counts
+        acc.statusCounts[status] = (acc.statusCounts[status] || 0) + 1
+
+        // Type breakdown by status
+        if (!acc.typeBreakdown[type]) {
+          acc.typeBreakdown[type] = {}
         }
-        acc.monthlyTrends[month][status] = (acc.monthlyTrends[month][status] || 0) + 1
+        acc.typeBreakdown[type][status] = (acc.typeBreakdown[type][status] || 0) + 1
+
+        // Monthly trends (last 6 months)
+        if (party.created_at) {
+          const month = new Date(party.created_at).toISOString().slice(0, 7) // YYYY-MM
+          if (!acc.monthlyTrends[month]) {
+            acc.monthlyTrends[month] = {}
+          }
+          acc.monthlyTrends[month][status] = (acc.monthlyTrends[month][status] || 0) + 1
+        }
+
+        return acc
+      },
+      {
+        statusCounts: {} as Record<string, number>,
+        typeBreakdown: {} as Record<string, Record<string, number>>,
+        monthlyTrends: {} as Record<string, Record<string, number>>,
       }
-      
-      return acc
-    }, {
-      statusCounts: {} as Record<string, number>,
-      typeBreakdown: {} as Record<string, Record<string, number>>,
-      monthlyTrends: {} as Record<string, Record<string, number>>
-    })
+    )
 
     return {
       total: data?.length || 0,
-      ...analytics
+      ...analytics,
     }
   } catch (error) {
     console.error("Error getting party status analytics:", error)
@@ -354,7 +349,7 @@ export async function getPartyStatusAnalytics() {
       total: 0,
       statusCounts: {},
       typeBreakdown: {},
-      monthlyTrends: {}
+      monthlyTrends: {},
     }
   }
 }
@@ -370,30 +365,30 @@ export async function getPartiesRequiringAttention(): Promise<{
   try {
     // Get all parties with their contract counts
     const parties = await fetchPartiesWithContractCount()
-    
+
     const inactiveWithContracts = parties.filter(
-      party => party.status === 'Inactive' && (party.contract_count || 0) > 0
+      (party) => party.status === "Inactive" && (party.contract_count || 0) > 0
     )
-    
+
     const suspendedWithContracts = parties.filter(
-      party => party.status === 'Suspended' && (party.contract_count || 0) > 0
+      (party) => party.status === "Suspended" && (party.contract_count || 0) > 0
     )
-    
+
     const activeWithoutContracts = parties.filter(
-      party => party.status === 'Active' && (party.contract_count || 0) === 0
+      (party) => party.status === "Active" && (party.contract_count || 0) === 0
     )
 
     return {
       inactiveWithContracts,
       suspendedWithContracts,
-      activeWithoutContracts
+      activeWithoutContracts,
     }
   } catch (error) {
     console.error("Error getting parties requiring attention:", error)
     return {
       inactiveWithContracts: [],
       suspendedWithContracts: [],
-      activeWithoutContracts: []
+      activeWithoutContracts: [],
     }
   }
 }
@@ -405,32 +400,41 @@ export async function exportPartyStatusReport(): Promise<string> {
   try {
     const parties = await fetchPartiesWithContractCount()
     const analytics = await getPartyStatusAnalytics()
-    
+
     // Create CSV content
     const headers = [
-      'ID', 'Name (EN)', 'Name (AR)', 'CRN', 'Type', 'Status', 
-      'Contact Person', 'Email', 'Phone', 'Active Contracts', 'Created At'
+      "ID",
+      "Name (EN)",
+      "Name (AR)",
+      "CRN",
+      "Type",
+      "Status",
+      "Contact Person",
+      "Email",
+      "Phone",
+      "Active Contracts",
+      "Created At",
     ]
-    
-    const rows = parties.map(party => [
+
+    const rows = parties.map((party) => [
       party.id,
-      party.name_en || '',
-      party.name_ar || '',
-      party.crn || '',
-      party.type || '',
-      party.status || '',
-      party.contact_person || '',
-      party.contact_email || '',
-      party.contact_phone || '',
+      party.name_en || "",
+      party.name_ar || "",
+      party.crn || "",
+      party.type || "",
+      party.status || "",
+      party.contact_person || "",
+      party.contact_email || "",
+      party.contact_phone || "",
       party.contract_count || 0,
-      party.created_at || ''
+      party.created_at || "",
     ])
-    
+
     const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-    
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n")
+
     return csvContent
   } catch (error) {
     console.error("Error exporting party status report:", error)

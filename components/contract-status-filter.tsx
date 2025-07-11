@@ -24,10 +24,7 @@ interface ContractStatusFilterProps {
   selectedStatus?: string
 }
 
-function ContractStatusFilter({
-  onSelectStatus,
-  selectedStatus,
-}: ContractStatusFilterProps = {}) {
+function ContractStatusFilter({ onSelectStatus, selectedStatus }: ContractStatusFilterProps = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentStatus = selectedStatus || searchParams?.get("status") || "all"

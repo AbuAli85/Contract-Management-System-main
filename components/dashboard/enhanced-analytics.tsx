@@ -4,17 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Clock, 
-  Users, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Clock,
+  Users,
   FileText,
   Target,
   Activity,
   Calendar,
-  BarChart3
+  BarChart3,
 } from "lucide-react"
 
 interface AnalyticsData {
@@ -47,12 +47,12 @@ interface EnhancedAnalyticsProps {
 export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
   // const t = useTranslations("EnhancedAnalytics")
 
-  const MetricCard = ({ 
-    title, 
-    value, 
-    change, 
-    icon: Icon, 
-    format = "number" 
+  const MetricCard = ({
+    title,
+    value,
+    change,
+    icon: Icon,
+    format = "number",
   }: {
     title: string
     value: number
@@ -173,14 +173,16 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Target</span>
-                  <span className="text-sm text-muted-foreground">{data.monthlyTargets.target}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {data.monthlyTargets.target}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Achieved</span>
                   <span className="text-sm font-semibold">{data.monthlyTargets.achieved}</span>
                 </div>
                 <Progress value={data.monthlyTargets.percentage} className="h-2" />
-                <div className="text-xs text-muted-foreground text-center">
+                <div className="text-center text-xs text-muted-foreground">
                   {data.monthlyTargets.percentage}% of monthly target
                 </div>
               </CardContent>
@@ -196,7 +198,7 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-600">{data.successRate}%</div>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Avg Processing Time: {data.averageProcessingTime} days
                 </p>
               </CardContent>
@@ -210,9 +212,7 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                 <div className="text-3xl font-bold text-blue-600">
                   ${data.averageContractValue.toLocaleString()}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Average Contract Value
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">Average Contract Value</p>
               </CardContent>
             </Card>
 
@@ -221,12 +221,13 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                 <CardTitle className="text-lg">Monthly Growth</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-3xl font-bold ${data.monthlyGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {data.monthlyGrowth > 0 ? '+' : ''}{data.monthlyGrowth}%
+                <div
+                  className={`text-3xl font-bold ${data.monthlyGrowth > 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  {data.monthlyGrowth > 0 ? "+" : ""}
+                  {data.monthlyGrowth}%
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Compared to last month
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">Compared to last month</p>
               </CardContent>
             </Card>
           </div>
@@ -245,13 +246,18 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Average Contract Value</span>
-                  <span className="text-lg font-semibold">${data.averageContractValue.toLocaleString()}</span>
+                  <span className="text-lg font-semibold">
+                    ${data.averageContractValue.toLocaleString()}
+                  </span>
                 </div>
-                <div className="pt-4 border-t">
+                <div className="border-t pt-4">
                   <div className="text-sm text-muted-foreground">
-                    Revenue Growth: 
-                    <span className={`ml-2 font-semibold ${data.recentTrends.revenue > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {data.recentTrends.revenue > 0 ? '+' : ''}{data.recentTrends.revenue}%
+                    Revenue Growth:
+                    <span
+                      className={`ml-2 font-semibold ${data.recentTrends.revenue > 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {data.recentTrends.revenue > 0 ? "+" : ""}
+                      {data.recentTrends.revenue}%
                     </span>
                   </div>
                 </div>
@@ -275,8 +281,13 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
-                    <span className={data.recentTrends.contracts > 0 ? "text-green-500" : "text-red-500"}>
-                      {data.recentTrends.contracts > 0 ? '+' : ''}{data.recentTrends.contracts}%
+                    <span
+                      className={
+                        data.recentTrends.contracts > 0 ? "text-green-500" : "text-red-500"
+                      }
+                    >
+                      {data.recentTrends.contracts > 0 ? "+" : ""}
+                      {data.recentTrends.contracts}%
                     </span>
                   </div>
                 </div>
@@ -288,8 +299,11 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
-                    <span className={data.recentTrends.revenue > 0 ? "text-green-500" : "text-red-500"}>
-                      {data.recentTrends.revenue > 0 ? '+' : ''}{data.recentTrends.revenue}%
+                    <span
+                      className={data.recentTrends.revenue > 0 ? "text-green-500" : "text-red-500"}
+                    >
+                      {data.recentTrends.revenue > 0 ? "+" : ""}
+                      {data.recentTrends.revenue}%
                     </span>
                   </div>
                 </div>
@@ -301,8 +315,13 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-500" />
                     )}
-                    <span className={data.recentTrends.efficiency > 0 ? "text-green-500" : "text-red-500"}>
-                      {data.recentTrends.efficiency > 0 ? '+' : ''}{data.recentTrends.efficiency}%
+                    <span
+                      className={
+                        data.recentTrends.efficiency > 0 ? "text-green-500" : "text-red-500"
+                      }
+                    >
+                      {data.recentTrends.efficiency > 0 ? "+" : ""}
+                      {data.recentTrends.efficiency}%
                     </span>
                   </div>
                 </div>
@@ -316,7 +335,7 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-start space-x-2">
-                    <Activity className="h-4 w-4 text-blue-500 mt-0.5" />
+                    <Activity className="mt-0.5 h-4 w-4 text-blue-500" />
                     <div className="text-sm">
                       <div className="font-medium">High Performance</div>
                       <div className="text-muted-foreground">
@@ -325,16 +344,16 @@ export function EnhancedAnalytics({ data }: EnhancedAnalyticsProps) {
                     </div>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <BarChart3 className="h-4 w-4 text-green-500 mt-0.5" />
+                    <BarChart3 className="mt-0.5 h-4 w-4 text-green-500" />
                     <div className="text-sm">
                       <div className="font-medium">Growth Trajectory</div>
                       <div className="text-muted-foreground">
-                        {data.monthlyGrowth > 0 ? 'Positive' : 'Negative'} growth trend
+                        {data.monthlyGrowth > 0 ? "Positive" : "Negative"} growth trend
                       </div>
                     </div>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <Target className="h-4 w-4 text-orange-500 mt-0.5" />
+                    <Target className="mt-0.5 h-4 w-4 text-orange-500" />
                     <div className="text-sm">
                       <div className="font-medium">Target Achievement</div>
                       <div className="text-muted-foreground">

@@ -26,7 +26,7 @@ export default function ReviewPanel() {
     try {
       // Temporarily disable database query and use mock data to fix UI
       console.log("Using mock data for review panel")
-      
+
       // Create mock data to keep the UI working
       const mockItems: ReviewItem[] = [
         {
@@ -40,7 +40,7 @@ export default function ReviewPanel() {
           avatar: placeholderAvatar,
         },
         {
-          id: "demo-2", 
+          id: "demo-2",
           title: "Service Agreement #002",
           promoter: "Sarah Wilson",
           parties: "Global Services / Bob Chen",
@@ -51,19 +51,18 @@ export default function ReviewPanel() {
         },
         {
           id: "demo-3",
-          title: "Consulting Contract #003", 
+          title: "Consulting Contract #003",
           promoter: "Mike Davis",
           parties: "Consulting Inc / Emma Brown",
           period: "Created 3 days ago",
           contractLink: "/contracts/demo-3",
           submitter: "Project Manager",
           avatar: placeholderAvatar,
-        }
+        },
       ]
-      
+
       setReviewItems(mockItems)
       devLog("Review items loaded successfully (mock data):", mockItems.length)
-      
     } catch (error: any) {
       console.error("Error in review panel:", error)
       setReviewItems([])
@@ -74,7 +73,7 @@ export default function ReviewPanel() {
 
   useEffect(() => {
     fetchReviewItems()
-    
+
     // Temporarily disable real-time subscription to prevent errors
     // const channel = supabase
     //   .channel("public:contracts:review")

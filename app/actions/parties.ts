@@ -7,7 +7,10 @@ import type { Party } from "@/lib/types"
 export async function getParties(): Promise<Party[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("parties").select("*").order("created_at", { ascending: false })
+  const { data, error } = await supabase
+    .from("parties")
+    .select("*")
+    .order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching parties:", error)
@@ -47,7 +50,12 @@ export async function createParty(partyData: Omit<Party, "id" | "created_at">) {
 export async function updateParty(id: string, partyData: Partial<Party>) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("parties").update(partyData).eq("id", id).select().single()
+  const { data, error } = await supabase
+    .from("parties")
+    .update(partyData)
+    .eq("id", id)
+    .select()
+    .single()
 
   if (error) {
     console.error("Error updating party:", error)

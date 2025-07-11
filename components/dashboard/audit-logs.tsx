@@ -39,8 +39,8 @@ export default function AuditLogs() {
     setLoading(true)
     try {
       // Fetch from API (or directly from Supabase if available client-side)
-      const res = await fetch('/api/audit-logs')
-      if (!res.ok) throw new Error('Failed to fetch audit logs')
+      const res = await fetch("/api/audit-logs")
+      if (!res.ok) throw new Error("Failed to fetch audit logs")
       const { logs } = await res.json()
       setLogs(logs)
     } catch (error: any) {
@@ -72,7 +72,7 @@ export default function AuditLogs() {
           log.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (log.details &&
           typeof log.details === "object" &&
-          JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())), // Search in stringified JSON
+          JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())) // Search in stringified JSON
     )
   }, [logs, searchTerm])
 

@@ -1,10 +1,10 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { useRouter } from 'next/navigation'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
+import { createContext, useContext, useEffect, useState } from "react"
+import { createBrowserClient } from "@supabase/ssr"
+import { useRouter } from "next/navigation"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/supabase"
 
 type SupabaseContext = {
   supabase: SupabaseClient<Database>
@@ -12,11 +12,7 @@ type SupabaseContext = {
 
 const Context = createContext<SupabaseContext | undefined>(undefined)
 
-export default function SupabaseProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() =>
     createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,9 +25,9 @@ export default function SupabaseProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
+      if (event === "SIGNED_IN") {
         router.refresh()
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === "SIGNED_OUT") {
         router.refresh()
       }
     })
@@ -41,18 +37,14 @@ export default function SupabaseProvider({
     }
   }, [router, supabase])
 
-  return (
-    <Context.Provider value={{ supabase }}>
-      {children}
-    </Context.Provider>
-  )
+  return <Context.Provider value={{ supabase }}>{children}</Context.Provider>
 }
 
 export const useSupabase = () => {
   const context = useContext(Context)
 
   if (context === undefined) {
-    throw new Error('useSupabase must be used inside SupabaseProvider')
+    throw new Error("useSupabase must be used inside SupabaseProvider")
   }
 
   return context

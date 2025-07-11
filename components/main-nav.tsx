@@ -24,7 +24,8 @@ const components: { title: string; href: string; description: string }[] = [
   {
     title: "Alert Dialog",
     href: "/docs/primitives/alert-dialog",
-    description: "A modal dialog that interrupts the user with important content and expects a response.",
+    description:
+      "A modal dialog that interrupts the user with important content and expects a response.",
   },
   {
     title: "Hover Card",
@@ -45,7 +46,8 @@ const components: { title: string; href: string; description: string }[] = [
   {
     title: "Tabs",
     href: "/docs/primitives/tabs",
-    description: "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
+    description:
+      "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
   },
   {
     title: "Tooltip",
@@ -79,7 +81,9 @@ export function MainNav() {
                     >
                       <Icons.logo className="h-6 w-6" />
                       <div className="mb-2 mt-4 text-lg font-medium">Bilingual Contracts</div>
-                      <p className="text-sm leading-tight text-muted-foreground">{t("mainNavDescription")}</p>
+                      <p className="text-sm leading-tight text-muted-foreground">
+                        {t("mainNavDescription")}
+                      </p>
                     </a>
                   </NavigationMenuLink>
                 </li>
@@ -98,7 +102,7 @@ export function MainNav() {
           <NavigationMenuItem>
             <NavigationMenuTrigger>{t("components")}</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                 {components.map((component) => (
                   <ListItem key={component.title} title={component.title} href={component.href}>
                     {component.description}
@@ -109,19 +113,25 @@ export function MainNav() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href="/manage-parties" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>{t("manageParties")}</NavigationMenuLink>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {t("manageParties")}
+              </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link href="/manage-promoters" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>{t("managePromoters")}</NavigationMenuLink>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {t("managePromoters")}
+              </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
       <div className="flex flex-1 items-center justify-end space-x-4">
         <nav className="flex items-center space-x-2">
-          <Link href="/profile" className="text-sm font-medium hover:underline">Profile</Link>
+          <Link href="/profile" className="text-sm font-medium hover:underline">
+            Profile
+          </Link>
           <LanguageSwitcher />
           <ThemeToggle />
           <AuthStatus />
@@ -140,7 +150,7 @@ const ListItem = React.forwardRef<React.ElementRef<"a">, React.ComponentPropsWit
             ref={ref}
             className={cn(
               "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-              className,
+              className
             )}
             {...props}
           >
@@ -150,6 +160,6 @@ const ListItem = React.forwardRef<React.ElementRef<"a">, React.ComponentPropsWit
         </NavigationMenuLink>
       </li>
     )
-  },
+  }
 )
 ListItem.displayName = "ListItem"

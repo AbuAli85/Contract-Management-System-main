@@ -16,10 +16,7 @@ export default function TestPromotersPage() {
       setError(null)
 
       try {
-        const { data, error } = await supabase
-          .from("promoters")
-          .select("*")
-          .order("name_en")
+        const { data, error } = await supabase.from("promoters").select("*").order("name_en")
 
         console.log("Supabase response:", { data, error })
 
@@ -44,7 +41,7 @@ export default function TestPromotersPage() {
   if (isLoading) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Test Promoters Page</h1>
+        <h1 className="mb-4 text-2xl font-bold">Test Promoters Page</h1>
         <p>Loading promoters...</p>
       </div>
     )
@@ -53,8 +50,8 @@ export default function TestPromotersPage() {
   if (error) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Test Promoters Page</h1>
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <h1 className="mb-4 text-2xl font-bold">Test Promoters Page</h1>
+        <div className="rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
           <strong>Error:</strong> {error}
         </div>
       </div>
@@ -63,25 +60,27 @@ export default function TestPromotersPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Test Promoters Page</h1>
-      
+      <h1 className="mb-4 text-2xl font-bold">Test Promoters Page</h1>
+
       <div className="mb-4">
-        <p className="text-green-600 font-semibold">
+        <p className="font-semibold text-green-600">
           ✅ Successfully fetched {promoters.length} promoters
         </p>
       </div>
 
       {promoters.length === 0 ? (
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+        <div className="rounded border border-yellow-400 bg-yellow-100 px-4 py-3 text-yellow-700">
           <strong>No promoters found</strong> - The database query returned an empty array.
         </div>
       ) : (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Promoters in Database:</h2>
           {promoters.map((promoter) => (
-            <div key={promoter.id} className="border border-gray-200 p-4 rounded">
+            <div key={promoter.id} className="rounded border border-gray-200 p-4">
               <h3 className="font-semibold">{promoter.name_en}</h3>
-              <p className="text-gray-600" dir="rtl">{promoter.name_ar}</p>
+              <p className="text-gray-600" dir="rtl">
+                {promoter.name_ar}
+              </p>
               <p className="text-sm text-gray-500">ID: {promoter.id_card_number}</p>
               <p className="text-sm text-gray-500">Status: {promoter.status}</p>
               <p className="text-sm text-gray-500">Database ID: {promoter.id}</p>
@@ -90,11 +89,18 @@ export default function TestPromotersPage() {
         </div>
       )}
 
-      <div className="mt-8 p-4 bg-gray-100 rounded">
-        <h3 className="font-semibold mb-2">Debug Information:</h3>
-        <p><strong>Environment:</strong> {process.env.NODE_ENV}</p>
-        <p><strong>Supabase URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing'}</p>
-        <p><strong>Supabase Key:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing'}</p>
+      <div className="mt-8 rounded bg-gray-100 p-4">
+        <h3 className="mb-2 font-semibold">Debug Information:</h3>
+        <p>
+          <strong>Environment:</strong> {process.env.NODE_ENV}
+        </p>
+        <p>
+          <strong>Supabase URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Missing"}
+        </p>
+        <p>
+          <strong>Supabase Key:</strong>{" "}
+          {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Missing"}
+        </p>
       </div>
     </div>
   )

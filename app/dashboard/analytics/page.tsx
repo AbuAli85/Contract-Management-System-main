@@ -3,7 +3,18 @@ import { useEffect, useState } from "react"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts"
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Legend,
+} from "recharts"
 import { Loader2 } from "lucide-react"
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#FFBB28"]
@@ -30,7 +41,9 @@ export default function AnalyticsPage() {
         .from("contracts")
         .select("id, contract_end_date, created_at, status, promoter_id")
       const now = new Date()
-      let active = 0, expired = 0, expSoon = 0
+      let active = 0,
+        expired = 0,
+        expSoon = 0
       const statusCount: Record<string, number> = {}
       const monthCount: Record<string, number> = {}
       const promoterCount: Record<string, number> = {}
@@ -107,7 +120,7 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Total Contracts" value={stats.totalContracts} />
         <StatCard label="Active Contracts" value={stats.activeContracts} />
         <StatCard label="Expired Contracts" value={stats.expiredContracts} />
@@ -123,7 +136,15 @@ export default function AnalyticsPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                <Pie
+                  data={statusData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -178,7 +199,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-6">
         <span className="text-3xl font-bold">{value}</span>
-        <span className="text-muted-foreground mt-2 text-sm">{label}</span>
+        <span className="mt-2 text-sm text-muted-foreground">{label}</span>
       </CardContent>
     </Card>
   )

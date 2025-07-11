@@ -15,9 +15,12 @@ export const Director: React.FC<DirectorProps> = (props) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Workflow Director</h2>
-      <div className="bg-muted p-4 rounded-lg border mb-6">
-        <p className="text-muted-foreground">All workflow management is now unified here. Implement your workflow logic and UI in this component.</p>
+      <h2 className="mb-4 text-2xl font-bold">Workflow Director</h2>
+      <div className="mb-6 rounded-lg border bg-muted p-4">
+        <p className="text-muted-foreground">
+          All workflow management is now unified here. Implement your workflow logic and UI in this
+          component.
+        </p>
       </div>
       <UserManagement />
       <PermissionManagement />

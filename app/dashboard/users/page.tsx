@@ -1,13 +1,7 @@
-"use client";
-import DashboardLayout from "@/components/dashboard/dashboard-layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+"use client"
+import DashboardLayout from "@/components/dashboard/dashboard-layout"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   UserPlus,
   Edit,
@@ -21,9 +15,9 @@ import {
   ChevronUp,
   CheckCircle2,
   XCircle,
-} from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+} from "lucide-react"
+import { useEffect, useState, useMemo } from "react"
+import { supabase } from "@/lib/supabase"
 import {
   Dialog,
   DialogContent,
@@ -31,162 +25,158 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import clsx from "clsx";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import clsx from "clsx"
 
-const ROLES = ["admin", "manager", "viewer"];
-const STATUS = ["active", "disabled"];
-const PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
+const ROLES = ["admin", "manager", "viewer"]
+const STATUS = ["active", "disabled"]
+const PAGE_SIZE_OPTIONS = [5, 10, 25, 50]
 
 function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function getInitials(email: string) {
-  if (!email) return "?";
-  const [name] = email.split("@");
-  return name.slice(0, 2).toUpperCase();
+  if (!email) return "?"
+  const [name] = email.split("@")
+  return name.slice(0, 2).toUpperCase()
 }
 
 function relativeTime(date: string | null) {
-  if (!date) return "-";
-  const d = new Date(date);
-  const now = new Date();
-  const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return d.toLocaleDateString();
+  if (!date) return "-"
+  const d = new Date(date)
+  const now = new Date()
+  const diff = Math.floor((now.getTime() - d.getTime()) / 1000)
+  if (diff < 60) return `${diff}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return d.toLocaleDateString()
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState(ROLES[0]);
-  const [newStatus, setNewStatus] = useState(STATUS[0]);
-  const [newAvatarUrl, setNewAvatarUrl] = useState("");
-  const [addLoading, setAddLoading] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [undoUser, setUndoUser] = useState<any | null>(null);
-  const [undoTimeout, setUndoTimeout] = useState<any>(null);
-  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [newEmail, setNewEmail] = useState("")
+  const [newRole, setNewRole] = useState(ROLES[0])
+  const [newStatus, setNewStatus] = useState(STATUS[0])
+  const [newAvatarUrl, setNewAvatarUrl] = useState("")
+  const [addLoading, setAddLoading] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [search, setSearch] = useState("")
+  const [roleFilter, setRoleFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1])
+  const [sortBy, setSortBy] = useState("created_at")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [undoUser, setUndoUser] = useState<any | null>(null)
+  const [undoTimeout, setUndoTimeout] = useState<any>(null)
+  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   // Simulate current user role (replace with real auth/role check)
-  const currentUserRole = "admin"; // Change to "viewer" to test read-only
+  const currentUserRole = "admin" // Change to "viewer" to test read-only
 
   // Fetch users from Supabase
   const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     const { data, error } = await supabase
       .from("app_users")
-      .select(
-        "id, email, role, avatar_url, status, created_at, last_login"
-      );
-    if (error) setError(error.message);
-    else setUsers(data || []);
-    setLoading(false);
-  };
+      .select("id, email, role, avatar_url, status, created_at, last_login")
+    if (error) setError(error.message)
+    else setUsers(data || [])
+    setLoading(false)
+  }
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers()
     // Cleanup undo timeout on unmount
     return () => {
-      if (undoTimeout) clearTimeout(undoTimeout);
-    };
+      if (undoTimeout) clearTimeout(undoTimeout)
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [])
 
   // Filtering, searching, sorting, and pagination
   const filteredUsers = useMemo(() => {
-    let filtered = users;
+    let filtered = users
     if (search) {
       filtered = filtered.filter(
         (u) =>
           u.email.toLowerCase().includes(search.toLowerCase()) ||
           u.role.toLowerCase().includes(search.toLowerCase())
-      );
+      )
     }
     if (roleFilter) {
-      filtered = filtered.filter((u) => u.role === roleFilter);
+      filtered = filtered.filter((u) => u.role === roleFilter)
     }
     if (statusFilter) {
-      filtered = filtered.filter((u) => u.status === statusFilter);
+      filtered = filtered.filter((u) => u.status === statusFilter)
     }
     // Sorting
     filtered = [...filtered].sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-      if (valA === null || valA === undefined) valA = "";
-      if (valB === null || valB === undefined) valB = "";
+      let valA = a[sortBy]
+      let valB = b[sortBy]
+      if (valA === null || valA === undefined) valA = ""
+      if (valB === null || valB === undefined) valB = ""
       if (sortBy === "created_at" || sortBy === "last_login") {
-        valA = valA ? new Date(valA).getTime() : 0;
-        valB = valB ? new Date(valB).getTime() : 0;
+        valA = valA ? new Date(valA).getTime() : 0
+        valB = valB ? new Date(valB).getTime() : 0
       }
       if (typeof valA === "string" && typeof valB === "string") {
-        return sortDir === "asc"
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
+        return sortDir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA)
       }
-      return sortDir === "asc" ? valA - valB : valB - valA;
-    });
-    return filtered;
-  }, [users, search, roleFilter, statusFilter, sortBy, sortDir]);
+      return sortDir === "asc" ? valA - valB : valB - valA
+    })
+    return filtered
+  }, [users, search, roleFilter, statusFilter, sortBy, sortDir])
 
   const paginatedUsers = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, page, pageSize]);
+    const start = (page - 1) * pageSize
+    return filteredUsers.slice(start, start + pageSize)
+  }, [filteredUsers, page, pageSize])
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize))
 
   // Add user logic
   const addUser = async () => {
-    setFormError(null);
+    setFormError(null)
     if (!newEmail) {
-      setFormError("Email is required.");
-      return;
+      setFormError("Email is required.")
+      return
     }
     if (!isValidEmail(newEmail)) {
-      setFormError("Please enter a valid email address.");
-      return;
+      setFormError("Please enter a valid email address.")
+      return
     }
-    setAddLoading(true);
-    setError(null);
+    setAddLoading(true)
+    setError(null)
     // Check for duplicate email
     const { data: existing, error: checkError } = await supabase
       .from("app_users")
       .select("id")
-      .eq("email", newEmail);
+      .eq("email", newEmail)
     if (checkError) {
-      setFormError(checkError.message);
-      setAddLoading(false);
-      return;
+      setFormError(checkError.message)
+      setAddLoading(false)
+      return
     }
     if (existing && existing.length > 0) {
-      setFormError("A user with this email already exists.");
-      setAddLoading(false);
-      return;
+      setFormError("A user with this email already exists.")
+      setAddLoading(false)
+      return
     }
     // Insert new user
     const { error: insertError } = await supabase.from("app_users").insert([
@@ -196,60 +186,60 @@ export default function UsersPage() {
         status: newStatus,
         avatar_url: newAvatarUrl || null,
       },
-    ]);
+    ])
     if (insertError) {
-      setFormError(insertError.message);
-      setAddLoading(false);
-      return;
+      setFormError(insertError.message)
+      setAddLoading(false)
+      return
     }
-    await fetchUsers();
-    setShowAddModal(false);
-    setNewEmail("");
-    setNewRole(ROLES[0]);
-    setNewStatus(STATUS[0]);
-    setNewAvatarUrl("");
-    setBanner({ type: "success", message: `User ${newEmail} added successfully.` });
-    setAddLoading(false);
-  };
+    await fetchUsers()
+    setShowAddModal(false)
+    setNewEmail("")
+    setNewRole(ROLES[0])
+    setNewStatus(STATUS[0])
+    setNewAvatarUrl("")
+    setBanner({ type: "success", message: `User ${newEmail} added successfully.` })
+    setAddLoading(false)
+  }
 
   // Edit user logic
   const openEditModal = (user: any) => {
-    setSelectedUser(user);
-    setNewEmail(user.email);
-    setNewRole(user.role);
-    setNewStatus(user.status || STATUS[0]);
-    setNewAvatarUrl(user.avatar_url || "");
-    setShowEditModal(true);
-    setFormError(null);
-  };
+    setSelectedUser(user)
+    setNewEmail(user.email)
+    setNewRole(user.role)
+    setNewStatus(user.status || STATUS[0])
+    setNewAvatarUrl(user.avatar_url || "")
+    setShowEditModal(true)
+    setFormError(null)
+  }
   const editUser = async () => {
-    setFormError(null);
-    if (!selectedUser) return;
+    setFormError(null)
+    if (!selectedUser) return
     if (!newEmail) {
-      setFormError("Email is required.");
-      return;
+      setFormError("Email is required.")
+      return
     }
     if (!isValidEmail(newEmail)) {
-      setFormError("Please enter a valid email address.");
-      return;
+      setFormError("Please enter a valid email address.")
+      return
     }
-    setEditLoading(true);
-    setError(null);
+    setEditLoading(true)
+    setError(null)
     // Check for duplicate email (if changed)
     if (newEmail !== selectedUser.email) {
       const { data: existing, error: checkError } = await supabase
         .from("app_users")
         .select("id")
-        .eq("email", newEmail);
+        .eq("email", newEmail)
       if (checkError) {
-        setFormError(checkError.message);
-        setEditLoading(false);
-        return;
+        setFormError(checkError.message)
+        setEditLoading(false)
+        return
       }
       if (existing && existing.length > 0) {
-        setFormError("A user with this email already exists.");
-        setEditLoading(false);
-        return;
+        setFormError("A user with this email already exists.")
+        setEditLoading(false)
+        return
       }
     }
     // Update user
@@ -261,43 +251,43 @@ export default function UsersPage() {
         status: newStatus,
         avatar_url: newAvatarUrl || null,
       })
-      .eq("id", selectedUser.id);
+      .eq("id", selectedUser.id)
     if (updateError) {
-      setFormError(updateError.message);
-      setEditLoading(false);
-      return;
+      setFormError(updateError.message)
+      setEditLoading(false)
+      return
     }
-    await fetchUsers();
-    setShowEditModal(false);
-    setSelectedUser(null);
-    setNewEmail("");
-    setNewRole(ROLES[0]);
-    setNewStatus(STATUS[0]);
-    setNewAvatarUrl("");
-    setBanner({ type: "success", message: `User ${newEmail} updated successfully.` });
-    setEditLoading(false);
-  };
+    await fetchUsers()
+    setShowEditModal(false)
+    setSelectedUser(null)
+    setNewEmail("")
+    setNewRole(ROLES[0])
+    setNewStatus(STATUS[0])
+    setNewAvatarUrl("")
+    setBanner({ type: "success", message: `User ${newEmail} updated successfully.` })
+    setEditLoading(false)
+  }
 
   // Delete user logic (with undo)
   const openDeleteModal = (user: any) => {
-    setSelectedUser(user);
-    setShowDeleteModal(true);
-  };
+    setSelectedUser(user)
+    setShowDeleteModal(true)
+  }
   const deleteUser = async () => {
-    if (!selectedUser) return;
-    setDeleteLoading(true);
-    setError(null);
+    if (!selectedUser) return
+    setDeleteLoading(true)
+    setError(null)
     // Remove from UI immediately (soft delete)
-    setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
-    setShowDeleteModal(false);
-    setUndoUser(selectedUser);
+    setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id))
+    setShowDeleteModal(false)
+    setUndoUser(selectedUser)
     // Set undo timeout (5 seconds)
     const timeout = setTimeout(async () => {
       // Real delete in DB
-      await supabase.from("app_users").delete().eq("id", selectedUser.id);
-      setUndoUser(null);
-    }, 5000);
-    setUndoTimeout(timeout);
+      await supabase.from("app_users").delete().eq("id", selectedUser.id)
+      setUndoUser(null)
+    }, 5000)
+    setUndoTimeout(timeout)
     setBanner({
       type: "success",
       message: (
@@ -310,44 +300,44 @@ export default function UsersPage() {
             className="inline px-1"
             aria-label="Undo delete"
           >
-            <Undo2 className="inline h-4 w-4 mr-1" />
+            <Undo2 className="mr-1 inline h-4 w-4" />
             Undo
           </Button>
         </span>
       ) as any,
-    });
-    setDeleteLoading(false);
-  };
+    })
+    setDeleteLoading(false)
+  }
   const undoDelete = async () => {
-    if (!undoUser) return;
+    if (!undoUser) return
     // Re-insert user in DB
-    await supabase.from("app_users").insert([undoUser]);
-    await fetchUsers();
-    setUndoUser(null);
-    if (undoTimeout) clearTimeout(undoTimeout);
-    setBanner({ type: "success", message: "User restored." });
-  };
+    await supabase.from("app_users").insert([undoUser])
+    await fetchUsers()
+    setUndoUser(null)
+    if (undoTimeout) clearTimeout(undoTimeout)
+    setBanner({ type: "success", message: "User restored." })
+  }
 
   // Pagination controls
   const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    setPage(newPage);
-  };
+    if (newPage < 1 || newPage > totalPages) return
+    setPage(newPage)
+  }
 
   // Sorting controls
   const handleSort = (column: string) => {
     if (sortBy === column) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
+      setSortDir(sortDir === "asc" ? "desc" : "asc")
     } else {
-      setSortBy(column);
-      setSortDir("asc");
+      setSortBy(column)
+      setSortDir("asc")
     }
-  };
+  }
 
   // Reset page on filter/search/page size change
   useEffect(() => {
-    setPage(1);
-  }, [search, roleFilter, statusFilter, pageSize]);
+    setPage(1)
+  }, [search, roleFilter, statusFilter, pageSize])
 
   return (
     <DashboardLayout>
@@ -355,10 +345,8 @@ export default function UsersPage() {
         {banner && (
           <div
             className={clsx(
-              "flex items-center gap-2 px-4 py-2 rounded mb-4",
-              banner.type === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+              "mb-4 flex items-center gap-2 rounded px-4 py-2",
+              banner.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             )}
             role="alert"
           >
@@ -377,7 +365,7 @@ export default function UsersPage() {
             </button>
           </div>
         )}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <CardHeader className="p-0">
               <CardTitle>User Management / إدارة المستخدمين</CardTitle>
@@ -386,7 +374,7 @@ export default function UsersPage() {
               </CardDescription>
             </CardHeader>
           </div>
-          <div className="flex flex-col md:flex-row gap-2 items-center">
+          <div className="flex flex-col items-center gap-2 md:flex-row">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -394,14 +382,14 @@ export default function UsersPage() {
                 placeholder="Search by email or role..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 w-48"
+                className="w-48 pl-8"
                 aria-label="Search users"
               />
             </div>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border rounded px-2 py-1 w-32"
+              className="w-32 rounded border px-2 py-1"
               aria-label="Filter by role"
             >
               <option value="">All Roles</option>
@@ -414,7 +402,7 @@ export default function UsersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded px-2 py-1 w-32"
+              className="w-32 rounded border px-2 py-1"
               aria-label="Filter by status"
             >
               <option value="">All Statuses</option>
@@ -427,7 +415,7 @@ export default function UsersPage() {
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className="border rounded px-2 py-1 w-32"
+              className="w-32 rounded border px-2 py-1"
               aria-label="Page size"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
@@ -446,20 +434,17 @@ export default function UsersPage() {
         <Card>
           <CardContent className="pt-6">
             {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="animate-spin mr-2" /> Loading users...
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="mr-2 animate-spin" /> Loading users...
               </div>
             ) : error ? (
               <p className="text-red-500">Error: {error}</p>
             ) : filteredUsers.length === 0 ? (
               <div className="flex flex-col items-center py-12">
-                <span className="text-6xl mb-2">👤</span>
+                <span className="mb-2 text-6xl">👤</span>
                 <p className="text-gray-500">No users found.</p>
                 {currentUserRole === "admin" && (
-                  <Button
-                    className="mt-4"
-                    onClick={() => setShowAddModal(true)}
-                  >
+                  <Button className="mt-4" onClick={() => setShowAddModal(true)}>
                     <UserPlus className="mr-2 h-4 w-4" /> Add your first user
                   </Button>
                 )}
@@ -467,13 +452,19 @@ export default function UsersPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="sticky top-0 bg-white z-10">
+                  <thead className="sticky top-0 z-10 bg-white">
                     <tr>
                       <th className="px-4 py-2 text-left">Avatar</th>
                       <th
-                        className="px-4 py-2 text-left cursor-pointer select-none"
+                        className="cursor-pointer select-none px-4 py-2 text-left"
                         onClick={() => handleSort("email")}
-                        aria-sort={sortBy === "email" ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-sort={
+                          sortBy === "email"
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : undefined
+                        }
                         tabIndex={0}
                       >
                         Email{" "}
@@ -485,9 +476,15 @@ export default function UsersPage() {
                           ))}
                       </th>
                       <th
-                        className="px-4 py-2 text-left cursor-pointer select-none"
+                        className="cursor-pointer select-none px-4 py-2 text-left"
                         onClick={() => handleSort("role")}
-                        aria-sort={sortBy === "role" ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-sort={
+                          sortBy === "role"
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : undefined
+                        }
                         tabIndex={0}
                       >
                         Role{" "}
@@ -499,9 +496,15 @@ export default function UsersPage() {
                           ))}
                       </th>
                       <th
-                        className="px-4 py-2 text-left cursor-pointer select-none"
+                        className="cursor-pointer select-none px-4 py-2 text-left"
                         onClick={() => handleSort("status")}
-                        aria-sort={sortBy === "status" ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-sort={
+                          sortBy === "status"
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : undefined
+                        }
                         tabIndex={0}
                       >
                         Status{" "}
@@ -513,9 +516,15 @@ export default function UsersPage() {
                           ))}
                       </th>
                       <th
-                        className="px-4 py-2 text-left cursor-pointer select-none"
+                        className="cursor-pointer select-none px-4 py-2 text-left"
                         onClick={() => handleSort("created_at")}
-                        aria-sort={sortBy === "created_at" ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-sort={
+                          sortBy === "created_at"
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : undefined
+                        }
                         tabIndex={0}
                       >
                         Created At{" "}
@@ -527,9 +536,15 @@ export default function UsersPage() {
                           ))}
                       </th>
                       <th
-                        className="px-4 py-2 text-left cursor-pointer select-none"
+                        className="cursor-pointer select-none px-4 py-2 text-left"
                         onClick={() => handleSort("last_login")}
-                        aria-sort={sortBy === "last_login" ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-sort={
+                          sortBy === "last_login"
+                            ? sortDir === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : undefined
+                        }
                         tabIndex={0}
                       >
                         Last Login{" "}
@@ -548,10 +563,8 @@ export default function UsersPage() {
                       <tr
                         key={user.id}
                         className={clsx(
-                          idx % 2 === 0
-                            ? "bg-white"
-                            : "bg-gray-50 dark:bg-gray-900/10",
-                          "hover:bg-blue-50 transition"
+                          idx % 2 === 0 ? "bg-white" : "bg-gray-50 dark:bg-gray-900/10",
+                          "transition hover:bg-blue-50"
                         )}
                       >
                         <td className="px-4 py-2">
@@ -568,7 +581,7 @@ export default function UsersPage() {
                         <td className="px-4 py-2">
                           <span
                             className={clsx(
-                              "inline-block px-2 py-1 rounded text-xs font-semibold",
+                              "inline-block rounded px-2 py-1 text-xs font-semibold",
                               user.status === "active"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-200 text-gray-600"
@@ -578,14 +591,10 @@ export default function UsersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-2">
-                          {user.created_at
-                            ? new Date(user.created_at).toLocaleString()
-                            : "-"}
+                          {user.created_at ? new Date(user.created_at).toLocaleString() : "-"}
                         </td>
                         <td className="px-4 py-2">
-                          {user.last_login
-                            ? relativeTime(user.last_login)
-                            : "-"}
+                          {user.last_login ? relativeTime(user.last_login) : "-"}
                         </td>
                         <td className="px-4 py-2">
                           {currentUserRole === "admin" ? (
@@ -610,9 +619,7 @@ export default function UsersPage() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">
-                              Read-only
-                            </span>
+                            <span className="text-muted-foreground">Read-only</span>
                           )}
                         </td>
                       </tr>
@@ -621,7 +628,7 @@ export default function UsersPage() {
                 </table>
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex justify-between items-center gap-2 mt-4">
+                  <div className="mt-4 flex items-center justify-between gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -645,7 +652,7 @@ export default function UsersPage() {
                     </Button>
                   </div>
                 )}
-                <div className="text-sm text-muted-foreground mt-2">
+                <div className="mt-2 text-sm text-muted-foreground">
                   Showing {paginatedUsers.length} of {filteredUsers.length} users
                 </div>
               </div>
@@ -674,7 +681,7 @@ export default function UsersPage() {
               <select
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value)}
-                className="border rounded px-2 py-1 w-full"
+                className="w-full rounded border px-2 py-1"
                 disabled={addLoading}
                 aria-label="User role"
               >
@@ -687,7 +694,7 @@ export default function UsersPage() {
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="border rounded px-2 py-1 w-full"
+                className="w-full rounded border px-2 py-1"
                 disabled={addLoading}
                 aria-label="User status"
               >
@@ -705,15 +712,11 @@ export default function UsersPage() {
                 disabled={addLoading}
                 aria-label="Avatar URL"
               />
-              {formError && (
-                <div className="text-red-600 text-sm">{formError}</div>
-              )}
+              {formError && <div className="text-sm text-red-600">{formError}</div>}
             </div>
             <DialogFooter>
               <Button onClick={addUser} disabled={addLoading}>
-                {addLoading ? (
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                ) : null}
+                {addLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {addLoading ? "Adding..." : "Add User"}
               </Button>
             </DialogFooter>
@@ -741,7 +744,7 @@ export default function UsersPage() {
               <select
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value)}
-                className="border rounded px-2 py-1 w-full"
+                className="w-full rounded border px-2 py-1"
                 disabled={editLoading}
                 aria-label="User role"
               >
@@ -754,7 +757,7 @@ export default function UsersPage() {
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="border rounded px-2 py-1 w-full"
+                className="w-full rounded border px-2 py-1"
                 disabled={editLoading}
                 aria-label="User status"
               >
@@ -772,15 +775,11 @@ export default function UsersPage() {
                 disabled={editLoading}
                 aria-label="Avatar URL"
               />
-              {formError && (
-                <div className="text-red-600 text-sm">{formError}</div>
-              )}
+              {formError && <div className="text-sm text-red-600">{formError}</div>}
             </div>
             <DialogFooter>
               <Button onClick={editUser} disabled={editLoading}>
-                {editLoading ? (
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                ) : null}
+                {editLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {editLoading ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
@@ -806,14 +805,8 @@ export default function UsersPage() {
               >
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                onClick={deleteUser}
-                disabled={deleteLoading}
-              >
-                {deleteLoading ? (
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                ) : null}
+              <Button variant="destructive" onClick={deleteUser} disabled={deleteLoading}>
+                {deleteLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             </DialogFooter>
@@ -821,5 +814,5 @@ export default function UsersPage() {
         </Dialog>
       </div>
     </DashboardLayout>
-  );
+  )
 }

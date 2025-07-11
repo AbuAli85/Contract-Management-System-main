@@ -2,7 +2,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
-import 'server-only' // Mark this module as server-only
+import "server-only" // Mark this module as server-only
 import type {
   AdminAction,
   AuditLog,
@@ -16,7 +16,9 @@ import type {
 const createSupabaseClient = () => createServerComponentClient<Database>({ cookies })
 
 // Server-only implementations
-export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<DashboardAnalytics>> {
+export async function getDashboardAnalyticsSrv(): Promise<
+  ServerActionResponse<DashboardAnalytics>
+> {
   const supabase = createSupabaseClient()
 
   const { data, error } = await supabase.rpc("get_dashboard_analytics")
@@ -25,7 +27,7 @@ export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<D
     console.error("Error fetching dashboard analytics:", error)
     return {
       success: false,
-      message: `Failed to fetch dashboard analytics: ${error?.message || 'No data returned'}`,
+      message: `Failed to fetch dashboard analytics: ${error?.message || "No data returned"}`,
     }
   }
 
@@ -60,10 +62,10 @@ export async function getPendingReviewsSrv(): Promise<ServerActionResponse<Pendi
 
     const reviews: PendingReview[] = (data || []).map((contract) => ({
       id: contract.id,
-      title: contract.contract_name || 'Untitled Contract',
-      type: 'contract',
+      title: contract.contract_name || "Untitled Contract",
+      type: "contract",
       description: `Contract pending since ${new Date(contract.created_at || Date.now()).toLocaleDateString()}`,
-      priority: 'medium',
+      priority: "medium",
       created_at: contract.created_at || new Date().toISOString(),
       updated_at: contract.updated_at || null,
     }))
@@ -87,10 +89,12 @@ export async function getAdminActionsSrv(): Promise<ServerActionResponse<AdminAc
   try {
     const { data, error } = await supabase
       .from("audit_logs")
-      .select(`
+      .select(
+        `
         id, action, created_at, user_id, details, table_name, record_id,
         users ( id, email, role, created_at )
-      `)
+      `
+      )
       .order("created_at", { ascending: false })
       .limit(10)
 
@@ -104,12 +108,12 @@ export async function getAdminActionsSrv(): Promise<ServerActionResponse<AdminAc
 
     const adminActions: AdminAction[] = (data || []).map((log) => ({
       id: log.id,
-      action: log.action || 'unknown',
+      action: log.action || "unknown",
       created_at: log.created_at,
-      user_id: log.user_id || '',
-      details: log.details ? JSON.stringify(log.details) : '',
-      resource_type: log.table_name || 'unknown',
-      resource_id: log.record_id || 'unknown',
+      user_id: log.user_id || "",
+      details: log.details ? JSON.stringify(log.details) : "",
+      resource_type: log.table_name || "unknown",
+      resource_id: log.record_id || "unknown",
       user: Array.isArray(log.users) ? log.users[0] : log.users,
     }))
 
@@ -131,12 +135,14 @@ export async function getAuditLogsSrv(): Promise<ServerActionResponse<AuditLog[]
   const supabase = createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('audit_logs')
-      .select(`
+      .from("audit_logs")
+      .select(
+        `
         id, action, created_at, user_id, details, table_name, record_id,
         users ( id, email, role, created_at )
-      `)
-      .order('created_at', { ascending: false })
+      `
+      )
+      .order("created_at", { ascending: false })
       .limit(50)
 
     if (error) {
@@ -144,19 +150,18 @@ export async function getAuditLogsSrv(): Promise<ServerActionResponse<AuditLog[]
       return { success: false, message: `Failed to fetch audit logs: ${error.message}` }
     }
 
-    const auditLogs: AuditLog[] = (data || []).map(log => ({
+    const auditLogs: AuditLog[] = (data || []).map((log) => ({
       id: log.id,
-      action: log.action || 'unknown',
+      action: log.action || "unknown",
       created_at: log.created_at,
       user_id: log.user_id,
-      details: log.details ? JSON.stringify(log.details) : '',
-      entity_type: log.table_name || 'unknown',
-      entity_id: log.record_id || 'unknown',
-      user: Array.isArray(log.users) ? log.users[0] : log.users
+      details: log.details ? JSON.stringify(log.details) : "",
+      entity_type: log.table_name || "unknown",
+      entity_id: log.record_id || "unknown",
+      user: Array.isArray(log.users) ? log.users[0] : log.users,
     }))
 
     return { success: true, data: auditLogs, message: "Audit logs fetched successfully." }
-
   } catch (error) {
     console.error("Error in getAuditLogs:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }
@@ -167,9 +172,9 @@ export async function getNotificationsSrv(): Promise<ServerActionResponse<Notifi
   const supabase = createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false })
       .limit(20)
 
     if (error) {
@@ -177,18 +182,17 @@ export async function getNotificationsSrv(): Promise<ServerActionResponse<Notifi
       return { success: false, message: `Failed to fetch notifications: ${error.message}` }
     }
 
-    const notifications: Notification[] = (data || []).map(n => ({
+    const notifications: Notification[] = (data || []).map((n) => ({
       id: n.id,
-      message: n.message || '',
+      message: n.message || "",
       created_at: n.created_at,
       isRead: n.is_read || false,
-      type: n.type as any || 'info',
-      user_id: n.user_id || '',
+      type: (n.type as any) || "info",
+      user_id: n.user_id || "",
       timestamp: n.created_at,
     }))
 
     return { success: true, data: notifications, message: "Notifications fetched successfully." }
-
   } catch (error) {
     console.error("Error fetching notifications:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }
@@ -199,8 +203,8 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
   const supabase = createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('users')
-      .select('id, email, role, created_at')
+      .from("users")
+      .select("id, email, role, created_at")
       .limit(20)
 
     if (error) {
@@ -208,15 +212,14 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
       return { success: false, message: `Failed to fetch users: ${error.message}` }
     }
 
-    const users: User[] = (data || []).map(u => ({
+    const users: User[] = (data || []).map((u) => ({
       id: u.id,
-      email: u.email || '',
-      role: u.role || 'User',
+      email: u.email || "",
+      role: u.role || "User",
       created_at: u.created_at,
     }))
 
     return { success: true, data: users, message: "Users fetched successfully." }
-
   } catch (error) {
     console.error("Error fetching users:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }

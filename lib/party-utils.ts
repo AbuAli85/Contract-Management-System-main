@@ -31,7 +31,7 @@ export interface PartyStats {
  * Get document status type based on expiry date
  */
 export const getDocumentStatusType = (
-  daysUntilExpiry: number | null, 
+  daysUntilExpiry: number | null,
   dateString: string | null
 ): "valid" | "expiring" | "expired" | "missing" => {
   if (!dateString) return "missing"
@@ -45,23 +45,24 @@ export const getDocumentStatusType = (
  * Get overall status based on party status and document status
  */
 export const getOverallStatus = (party: Party): "active" | "warning" | "critical" | "inactive" => {
-  if (!party.status || party.status === "Inactive" || party.status === "Suspended") return "inactive"
-  
-  const crExpiry = party.cr_expiry_date 
-    ? differenceInDays(parseISO(party.cr_expiry_date), new Date()) 
+  if (!party.status || party.status === "Inactive" || party.status === "Suspended")
+    return "inactive"
+
+  const crExpiry = party.cr_expiry_date
+    ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
     : null
-  const licenseExpiry = party.license_expiry_date 
-    ? differenceInDays(parseISO(party.license_expiry_date), new Date()) 
+  const licenseExpiry = party.license_expiry_date
+    ? differenceInDays(parseISO(party.license_expiry_date), new Date())
     : null
-  
+
   if ((crExpiry !== null && crExpiry < 0) || (licenseExpiry !== null && licenseExpiry < 0)) {
     return "critical"
   }
-  
+
   if ((crExpiry !== null && crExpiry <= 30) || (licenseExpiry !== null && licenseExpiry <= 30)) {
     return "warning"
   }
-  
+
   return "active"
 }
 
@@ -69,7 +70,7 @@ export const getOverallStatus = (party: Party): "active" | "warning" | "critical
  * Enhance party data with calculated fields
  */
 export const enhanceParty = (party: Party): EnhancedParty => {
-  const crExpiryDays = party.cr_expiry_date 
+  const crExpiryDays = party.cr_expiry_date
     ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
     : null
 
@@ -92,16 +93,16 @@ export const enhanceParty = (party: Party): EnhancedParty => {
  */
 export const calculatePartyStats = (parties: EnhancedParty[]): PartyStats => {
   const total = parties.length
-  const active = parties.filter(p => p.status === "Active").length
-  const inactive = parties.filter(p => p.status === "Inactive").length
-  const suspended = parties.filter(p => p.status === "Suspended").length
-  const expiring = parties.filter(p => p.overall_status === "warning").length
-  const expired = parties.filter(p => p.overall_status === "critical").length
-  const employers = parties.filter(p => p.type === "Employer").length
-  const clients = parties.filter(p => p.type === "Client").length
-  const generic = parties.filter(p => p.type === "Generic").length
+  const active = parties.filter((p) => p.status === "Active").length
+  const inactive = parties.filter((p) => p.status === "Inactive").length
+  const suspended = parties.filter((p) => p.status === "Suspended").length
+  const expiring = parties.filter((p) => p.overall_status === "warning").length
+  const expired = parties.filter((p) => p.overall_status === "critical").length
+  const employers = parties.filter((p) => p.type === "Employer").length
+  const clients = parties.filter((p) => p.type === "Client").length
+  const generic = parties.filter((p) => p.type === "Generic").length
   const totalContracts = parties.reduce((sum, p) => sum + (p.contract_count || 0), 0)
-  const withContracts = parties.filter(p => (p.contract_count || 0) > 0).length
+  const withContracts = parties.filter((p) => (p.contract_count || 0) > 0).length
   const withoutContracts = total - withContracts
 
   return {
@@ -127,57 +128,57 @@ export const calculatePartyStats = (parties: EnhancedParty[]): PartyStats => {
  */
 export const exportPartiesToCSV = (parties: EnhancedParty[]): string => {
   const headers = [
-    'Name (EN)',
-    'Name (AR)', 
-    'CRN',
-    'Type',
-    'Role',
-    'Status',
-    'CR Status',
-    'CR Expiry',
-    'License Status',
-    'License Expiry',
-    'Contact Person',
-    'Contact Email',
-    'Contact Phone',
-    'Address (EN)',
-    'Address (AR)',
-    'Tax Number',
-    'License Number',
-    'Active Contracts',
-    'Overall Status',
-    'Created Date',
-    'Notes'
+    "Name (EN)",
+    "Name (AR)",
+    "CRN",
+    "Type",
+    "Role",
+    "Status",
+    "CR Status",
+    "CR Expiry",
+    "License Status",
+    "License Expiry",
+    "Contact Person",
+    "Contact Email",
+    "Contact Phone",
+    "Address (EN)",
+    "Address (AR)",
+    "Tax Number",
+    "License Number",
+    "Active Contracts",
+    "Overall Status",
+    "Created Date",
+    "Notes",
   ]
 
-  const rows = parties.map(party => [
+  const rows = parties.map((party) => [
     party.name_en,
     party.name_ar,
     party.crn,
-    party.type || 'N/A',
-    party.role || 'N/A',
-    party.status || 'N/A',
+    party.type || "N/A",
+    party.role || "N/A",
+    party.status || "N/A",
     party.cr_status,
-    party.cr_expiry_date || 'N/A',
+    party.cr_expiry_date || "N/A",
     party.license_status,
-    party.license_expiry_date || 'N/A',
-    party.contact_person || 'N/A',
-    party.contact_email || 'N/A',
-    party.contact_phone || 'N/A',
-    party.address_en || 'N/A',
-    party.address_ar || 'N/A',
-    party.tax_number || 'N/A',
-    party.license_number || 'N/A',
+    party.license_expiry_date || "N/A",
+    party.contact_person || "N/A",
+    party.contact_email || "N/A",
+    party.contact_phone || "N/A",
+    party.address_en || "N/A",
+    party.address_ar || "N/A",
+    party.tax_number || "N/A",
+    party.license_number || "N/A",
     (party.contract_count || 0).toString(),
     party.overall_status,
-    party.created_at || 'N/A',
-    party.notes || ''
+    party.created_at || "N/A",
+    party.notes || "",
   ])
 
   const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n')
+    headers.join(","),
+    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+  ].join("\n")
 
   return csvContent
 }
@@ -191,15 +192,18 @@ export const filterParties = (
   statusFilter: string,
   typeFilter: string
 ): Party[] => {
-  return parties.filter(party => {
+  return parties.filter((party) => {
     // Search filter
-    const searchMatch = !searchTerm || 
+    const searchMatch =
+      !searchTerm ||
       party.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
       party.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
       party.crn.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (party.role && party.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (party.contact_person && party.contact_person.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (party.contact_email && party.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (party.contact_person &&
+        party.contact_person.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (party.contact_email &&
+        party.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (party.notes && party.notes.toLowerCase().includes(searchTerm.toLowerCase()))
 
     // Status filter
@@ -222,7 +226,7 @@ export const sortParties = (
 ): EnhancedParty[] => {
   return [...parties].sort((a, b) => {
     let aValue: any, bValue: any
-    
+
     switch (sortBy) {
       case "name":
         aValue = a.name_en.toLowerCase()
@@ -258,9 +262,9 @@ export const sortParties = (
  */
 export const getPartiesByType = (parties: EnhancedParty[]) => {
   return {
-    employers: parties.filter(p => p.type === "Employer"),
-    clients: parties.filter(p => p.type === "Client"), 
-    generic: parties.filter(p => p.type === "Generic"),
+    employers: parties.filter((p) => p.type === "Employer"),
+    clients: parties.filter((p) => p.type === "Client"),
+    generic: parties.filter((p) => p.type === "Generic"),
   }
 }
 
@@ -271,9 +275,11 @@ export const getPartiesWithExpiringDocuments = (
   parties: EnhancedParty[],
   daysAhead: number = 30
 ) => {
-  return parties.filter(party => 
-    (party.days_until_cr_expiry !== undefined && party.days_until_cr_expiry <= daysAhead) ||
-    (party.days_until_license_expiry !== undefined && party.days_until_license_expiry <= daysAhead)
+  return parties.filter(
+    (party) =>
+      (party.days_until_cr_expiry !== undefined && party.days_until_cr_expiry <= daysAhead) ||
+      (party.days_until_license_expiry !== undefined &&
+        party.days_until_license_expiry <= daysAhead)
   )
 }
 
@@ -282,22 +288,22 @@ export const getPartiesWithExpiringDocuments = (
  */
 export const validatePartyData = (party: Partial<Party>): string[] => {
   const errors: string[] = []
-  
+
   if (!party.name_en?.trim()) {
     errors.push("English name is required")
   }
-  
+
   if (!party.name_ar?.trim()) {
     errors.push("Arabic name is required")
   }
-  
+
   if (!party.crn?.trim()) {
     errors.push("CRN is required")
   }
-  
+
   if (party.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(party.contact_email)) {
     errors.push("Invalid email format")
   }
-  
+
   return errors
 }

@@ -12,7 +12,10 @@ export default function DebugAuthPage() {
   useEffect(() => {
     // Check Supabase session directly
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
       setSupabaseSession({ session, error })
     }
     checkSession()
@@ -23,38 +26,40 @@ export default function DebugAuthPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Authentication Debug</h1>
-      
+      <h1 className="mb-6 text-2xl font-bold">Authentication Debug</h1>
+
       <div className="space-y-6">
-        <div className="border p-4 rounded">
-          <h2 className="text-lg font-semibold mb-2">useAuth Hook State:</h2>
-          <pre className="bg-gray-100 p-2 rounded text-sm overflow-auto">
-            {JSON.stringify({
-              user: auth.user,
-              isAuthenticated: auth.isAuthenticated,
-              loading: auth.loading,
-              initialized: auth.initialized
-            }, null, 2)}
+        <div className="rounded border p-4">
+          <h2 className="mb-2 text-lg font-semibold">useAuth Hook State:</h2>
+          <pre className="overflow-auto rounded bg-gray-100 p-2 text-sm">
+            {JSON.stringify(
+              {
+                user: auth.user,
+                isAuthenticated: auth.isAuthenticated,
+                loading: auth.loading,
+                initialized: auth.initialized,
+              },
+              null,
+              2
+            )}
           </pre>
         </div>
 
-        <div className="border p-4 rounded">
-          <h2 className="text-lg font-semibold mb-2">Direct Supabase Session:</h2>
-          <pre className="bg-gray-100 p-2 rounded text-sm overflow-auto">
+        <div className="rounded border p-4">
+          <h2 className="mb-2 text-lg font-semibold">Direct Supabase Session:</h2>
+          <pre className="overflow-auto rounded bg-gray-100 p-2 text-sm">
             {JSON.stringify(supabaseSession, null, 2)}
           </pre>
         </div>
 
-        <div className="border p-4 rounded">
-          <h2 className="text-lg font-semibold mb-2">Browser Cookies:</h2>
-          <pre className="bg-gray-100 p-2 rounded text-sm overflow-auto">
-            {cookies}
-          </pre>
+        <div className="rounded border p-4">
+          <h2 className="mb-2 text-lg font-semibold">Browser Cookies:</h2>
+          <pre className="overflow-auto rounded bg-gray-100 p-2 text-sm">{cookies}</pre>
         </div>
 
-        <div className="border p-4 rounded">
-          <h2 className="text-lg font-semibold mb-2">Current URL:</h2>
-          <p className="text-sm">{typeof window !== 'undefined' ? window.location.href : 'SSR'}</p>
+        <div className="rounded border p-4">
+          <h2 className="mb-2 text-lg font-semibold">Current URL:</h2>
+          <p className="text-sm">{typeof window !== "undefined" ? window.location.href : "SSR"}</p>
         </div>
       </div>
     </div>

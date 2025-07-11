@@ -49,7 +49,7 @@ import {
   Settings,
   Trash2,
   Download,
-  Upload
+  Upload,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { LoadingSpinner } from "@/components/ui/skeletons"
@@ -79,29 +79,37 @@ interface SecuritySettings {
 }
 
 export function UserProfileManager() {
-  const { user, profile, updateProfile, updatePassword, signOut, refreshProfile, loading: authLoading } = useEnhancedAuth()
+  const {
+    user,
+    profile,
+    updateProfile,
+    updatePassword,
+    signOut,
+    refreshProfile,
+    loading: authLoading,
+  } = useEnhancedAuth()
   const { toast } = useToast()
-  
+
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("profile")
-  
+
   // Profile form state
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
-    full_name: '',
-    phone: '',
-    department: '',
-    timezone: '',
-    language: '',
-    bio: ''
+    full_name: "",
+    phone: "",
+    department: "",
+    timezone: "",
+    language: "",
+    bio: "",
   })
-  
+
   // Password form state
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   })
-  
+
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     email_notifications: true,
@@ -109,41 +117,41 @@ export function UserProfileManager() {
     contract_updates: true,
     payment_reminders: true,
     deadline_alerts: true,
-    system_updates: false
+    system_updates: false,
   })
-  
+
   // Security settings state
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
     two_factor_enabled: false,
     session_timeout: 30,
-    login_alerts: true
+    login_alerts: true,
   })
 
   // Initialize form data from profile
   useEffect(() => {
     if (profile) {
       setProfileForm({
-        full_name: profile.full_name || '',
-        phone: profile.phone || '',
-        department: profile.department || '',
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        department: profile.department || "",
         timezone: profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: profile.language || 'en',
-        bio: (profile as any).bio || ''
+        language: profile.language || "en",
+        bio: (profile as any).bio || "",
       })
-      
+
       setNotificationSettings({
         email_notifications: profile.email_notifications ?? true,
         push_notifications: profile.push_notifications ?? true,
         contract_updates: (profile as any).contract_updates ?? true,
         payment_reminders: (profile as any).payment_reminders ?? true,
         deadline_alerts: (profile as any).deadline_alerts ?? true,
-        system_updates: (profile as any).system_updates ?? false
+        system_updates: (profile as any).system_updates ?? false,
       })
-      
+
       setSecuritySettings({
         two_factor_enabled: profile.two_factor_enabled ?? false,
         session_timeout: (profile as any).session_timeout ?? 30,
-        login_alerts: (profile as any).login_alerts ?? true
+        login_alerts: (profile as any).login_alerts ?? true,
       })
     }
   }, [profile])
@@ -154,14 +162,14 @@ export function UserProfileManager() {
     try {
       const { error } = await updateProfile({
         ...profileForm,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
 
       if (error) {
         toast({
           title: "Error",
           description: error,
-          variant: "destructive"
+          variant: "destructive",
         })
       } else {
         toast({
@@ -173,7 +181,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Failed to update profile",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -186,7 +194,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Passwords do not match",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
@@ -195,7 +203,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Password must be at least 8 characters long",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
@@ -208,13 +216,13 @@ export function UserProfileManager() {
         toast({
           title: "Error",
           description: error,
-          variant: "destructive"
+          variant: "destructive",
         })
       } else {
         setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
         })
         toast({
           title: "Success",
@@ -225,7 +233,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Failed to update password",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -238,14 +246,14 @@ export function UserProfileManager() {
     try {
       const { error } = await updateProfile({
         ...notificationSettings,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
 
       if (error) {
         toast({
           title: "Error",
           description: error,
-          variant: "destructive"
+          variant: "destructive",
         })
       } else {
         toast({
@@ -257,7 +265,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Failed to update notification settings",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -270,14 +278,14 @@ export function UserProfileManager() {
     try {
       const { error } = await updateProfile({
         ...securitySettings,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
 
       if (error) {
         toast({
           title: "Error",
           description: error,
-          variant: "destructive"
+          variant: "destructive",
         })
       } else {
         toast({
@@ -289,7 +297,7 @@ export function UserProfileManager() {
       toast({
         title: "Error",
         description: "Failed to update security settings",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -302,7 +310,7 @@ export function UserProfileManager() {
     toast({
       title: "Account Deletion",
       description: "Account deletion is not implemented in this demo",
-      variant: "destructive"
+      variant: "destructive",
     })
   }
 
@@ -319,9 +327,9 @@ export function UserProfileManager() {
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Profile Not Found</h3>
-          <p className="text-gray-600 mb-6">Unable to load your profile information.</p>
+          <AlertTriangle className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900">Profile Not Found</h3>
+          <p className="mb-6 text-gray-600">Unable to load your profile information.</p>
           <Button onClick={refreshProfile}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Retry
@@ -337,9 +345,7 @@ export function UserProfileManager() {
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences
-          </p>
+          <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={refreshProfile}>
@@ -359,17 +365,16 @@ export function UserProfileManager() {
           <div className="flex items-center space-x-4">
             <UserAvatar user={profile} size="lg" />
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">{profile.full_name || 'No name set'}</h2>
+              <h2 className="text-2xl font-bold">{profile.full_name || "No name set"}</h2>
               <p className="text-muted-foreground">{profile.email}</p>
-              <div className="flex items-center space-x-2 mt-2">
+              <div className="mt-2 flex items-center space-x-2">
                 <UserRoleBadge role={profile.role} />
-                {profile.department && (
-                  <Badge variant="outline">{profile.department}</Badge>
-                )}
+                {profile.department && <Badge variant="outline">{profile.department}</Badge>}
                 {profile.last_login && (
                   <Badge variant="secondary">
                     <Clock className="mr-1 h-3 w-3" />
-                    Last login {formatDistanceToNow(new Date(profile.last_login), { addSuffix: true })}
+                    Last login{" "}
+                    {formatDistanceToNow(new Date(profile.last_login), { addSuffix: true })}
                   </Badge>
                 )}
               </div>
@@ -377,7 +382,9 @@ export function UserProfileManager() {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Member since</p>
               <p className="font-medium">
-                {profile.created_at ? format(new Date(profile.created_at), 'MMM dd, yyyy') : 'Unknown'}
+                {profile.created_at
+                  ? format(new Date(profile.created_at), "MMM dd, yyyy")
+                  : "Unknown"}
               </p>
             </div>
           </div>
@@ -386,7 +393,7 @@ export function UserProfileManager() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+        <div className="rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
@@ -412,39 +419,38 @@ export function UserProfileManager() {
                   <Input
                     id="full_name"
                     value={profileForm.full_name}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, full_name: e.target.value }))}
+                    onChange={(e) =>
+                      setProfileForm((prev) => ({ ...prev, full_name: e.target.value }))
+                    }
                     placeholder="Enter your full name"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    value={profile.email}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <Input id="email" value={profile.email} disabled className="bg-gray-50" />
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Email cannot be changed. Contact support if needed.
                   </p>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     value={profileForm.phone}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))}
                     placeholder="Enter your phone number"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="department">Department</Label>
                   <Select
                     value={profileForm.department}
-                    onValueChange={(value) => setProfileForm(prev => ({ ...prev, department: value }))}
+                    onValueChange={(value) =>
+                      setProfileForm((prev) => ({ ...prev, department: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select department" />
@@ -475,7 +481,9 @@ export function UserProfileManager() {
                   <Label htmlFor="timezone">Timezone</Label>
                   <Select
                     value={profileForm.timezone}
-                    onValueChange={(value) => setProfileForm(prev => ({ ...prev, timezone: value }))}
+                    onValueChange={(value) =>
+                      setProfileForm((prev) => ({ ...prev, timezone: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select timezone" />
@@ -494,12 +502,14 @@ export function UserProfileManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="language">Language</Label>
                   <Select
                     value={profileForm.language}
-                    onValueChange={(value) => setProfileForm(prev => ({ ...prev, language: value }))}
+                    onValueChange={(value) =>
+                      setProfileForm((prev) => ({ ...prev, language: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select language" />
@@ -513,13 +523,13 @@ export function UserProfileManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
                     id="bio"
                     value={profileForm.bio}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                    onChange={(e) => setProfileForm((prev) => ({ ...prev, bio: e.target.value }))}
                     placeholder="Tell us about yourself..."
                     rows={4}
                   />
@@ -527,7 +537,7 @@ export function UserProfileManager() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="flex justify-end">
             <Button onClick={handleProfileUpdate} disabled={loading}>
               {loading ? (
@@ -562,22 +572,26 @@ export function UserProfileManager() {
                     id="newPassword"
                     type="password"
                     value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))
+                    }
                     placeholder="Enter new password"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                    }
                     placeholder="Confirm new password"
                   />
                 </div>
-                
+
                 <Button onClick={handlePasswordUpdate} disabled={loading} className="w-full">
                   {loading ? (
                     <>
@@ -606,39 +620,35 @@ export function UserProfileManager() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Two-Factor Authentication</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security
-                    </p>
+                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                   </div>
                   <Switch
                     checked={securitySettings.two_factor_enabled}
-                    onCheckedChange={(checked) => 
-                      setSecuritySettings(prev => ({ ...prev, two_factor_enabled: checked }))
+                    onCheckedChange={(checked) =>
+                      setSecuritySettings((prev) => ({ ...prev, two_factor_enabled: checked }))
                     }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Login Alerts</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified of new logins
-                    </p>
+                    <p className="text-sm text-muted-foreground">Get notified of new logins</p>
                   </div>
                   <Switch
                     checked={securitySettings.login_alerts}
-                    onCheckedChange={(checked) => 
-                      setSecuritySettings(prev => ({ ...prev, login_alerts: checked }))
+                    onCheckedChange={(checked) =>
+                      setSecuritySettings((prev) => ({ ...prev, login_alerts: checked }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
                   <Select
                     value={securitySettings.session_timeout.toString()}
-                    onValueChange={(value) => 
-                      setSecuritySettings(prev => ({ ...prev, session_timeout: parseInt(value) }))
+                    onValueChange={(value) =>
+                      setSecuritySettings((prev) => ({ ...prev, session_timeout: parseInt(value) }))
                     }
                   >
                     <SelectTrigger>
@@ -653,7 +663,7 @@ export function UserProfileManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <Button onClick={handleSecurityUpdate} disabled={loading} className="w-full">
                   {loading ? (
                     <>
@@ -685,18 +695,16 @@ export function UserProfileManager() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications via email
-                    </p>
+                    <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                   </div>
                   <Switch
                     checked={notificationSettings.email_notifications}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, email_notifications: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, email_notifications: checked }))
                     }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Push Notifications</Label>
@@ -706,14 +714,14 @@ export function UserProfileManager() {
                   </div>
                   <Switch
                     checked={notificationSettings.push_notifications}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, push_notifications: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, push_notifications: checked }))
                     }
                   />
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Contract Updates</Label>
@@ -723,27 +731,25 @@ export function UserProfileManager() {
                   </div>
                   <Switch
                     checked={notificationSettings.contract_updates}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, contract_updates: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, contract_updates: checked }))
                     }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Payment Reminders</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Reminders for upcoming payments
-                    </p>
+                    <p className="text-sm text-muted-foreground">Reminders for upcoming payments</p>
                   </div>
                   <Switch
                     checked={notificationSettings.payment_reminders}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, payment_reminders: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, payment_reminders: checked }))
                     }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Deadline Alerts</Label>
@@ -753,12 +759,12 @@ export function UserProfileManager() {
                   </div>
                   <Switch
                     checked={notificationSettings.deadline_alerts}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, deadline_alerts: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, deadline_alerts: checked }))
                     }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>System Updates</Label>
@@ -768,13 +774,13 @@ export function UserProfileManager() {
                   </div>
                   <Switch
                     checked={notificationSettings.system_updates}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, system_updates: checked }))
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings((prev) => ({ ...prev, system_updates: checked }))
                     }
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end">
                 <Button onClick={handleNotificationUpdate} disabled={loading}>
                   {loading ? (
@@ -804,43 +810,49 @@ export function UserProfileManager() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                       <CheckCircle2 className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
                       <p className="font-medium">Profile Updated</p>
                       <p className="text-sm text-muted-foreground">
-                        {profile.updated_at ? formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true }) : 'Never'}
+                        {profile.updated_at
+                          ? formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })
+                          : "Never"}
                       </p>
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
                       <User className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
                       <p className="font-medium">Last Login</p>
                       <p className="text-sm text-muted-foreground">
-                        {profile.last_login ? formatDistanceToNow(new Date(profile.last_login), { addSuffix: true }) : 'Never'}
+                        {profile.last_login
+                          ? formatDistanceToNow(new Date(profile.last_login), { addSuffix: true })
+                          : "Never"}
                       </p>
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
                       <Calendar className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
                       <p className="font-medium">Account Created</p>
                       <p className="text-sm text-muted-foreground">
-                        {profile.created_at ? format(new Date(profile.created_at), 'PPP') : 'Unknown'}
+                        {profile.created_at
+                          ? format(new Date(profile.created_at), "PPP")
+                          : "Unknown"}
                       </p>
                     </div>
                   </div>
@@ -859,12 +871,12 @@ export function UserProfileManager() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <h3 className="font-medium text-red-800 mb-2">Delete Account</h3>
-                <p className="text-sm text-red-700 mb-4">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <h3 className="mb-2 font-medium text-red-800">Delete Account</h3>
+                <p className="mb-4 text-sm text-red-700">
                   Once you delete your account, there is no going back. Please be certain.
                 </p>
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive">
@@ -876,23 +888,26 @@ export function UserProfileManager() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account
-                        and remove your data from our servers.
+                        This action cannot be undone. This will permanently delete your account and
+                        remove your data from our servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleAccountDeletion} className="bg-red-600 hover:bg-red-700">
+                      <AlertDialogAction
+                        onClick={handleAccountDeletion}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
                         Delete Account
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-              
-              <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <h3 className="font-medium text-orange-800 mb-2">Sign Out All Devices</h3>
-                <p className="text-sm text-orange-700 mb-4">
+
+              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                <h3 className="mb-2 font-medium text-orange-800">Sign Out All Devices</h3>
+                <p className="mb-4 text-sm text-orange-700">
                   This will sign you out of all devices and sessions.
                 </p>
                 <Button variant="outline" onClick={signOut}>

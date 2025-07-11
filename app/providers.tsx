@@ -19,7 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: refetchOnFocus, // Only in prod
           },
         },
-      }),
+      })
   )
 
   return (

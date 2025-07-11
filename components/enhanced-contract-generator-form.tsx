@@ -26,28 +26,22 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { 
-  Loader2, 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
+import {
+  Loader2,
+  AlertTriangle,
+  CheckCircle,
+  Info,
   Calculator,
   Calendar,
   Users,
   Briefcase,
   MapPin,
-  DollarSign
+  DollarSign,
 } from "lucide-react"
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
@@ -57,18 +51,18 @@ import {
   contractGeneratorSchema,
   type ContractGeneratorFormData,
   CONTRACT_FORM_SECTIONS,
-  getRequiredFields
+  getRequiredFields,
 } from "@/lib/schema-generator"
 import { useParties, type Party as PartyType } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import type { Promoter } from "@/types/custom"
-import { 
-  JOB_TITLES, 
-  DEPARTMENTS, 
-  CONTRACT_TYPES, 
-  CURRENCIES, 
+import {
+  JOB_TITLES,
+  DEPARTMENTS,
+  CONTRACT_TYPES,
+  CURRENCIES,
   WORK_LOCATIONS,
-  getOptionLabel 
+  getOptionLabel,
 } from "@/constants/contract-options"
 
 interface EnhancedContractGeneratorFormProps {
@@ -83,12 +77,12 @@ interface EnhancedContractGeneratorFormProps {
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 }
 
 const fieldVariants = {
   hidden: { opacity: 0, x: -10 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
 }
 
 export default function EnhancedContractGeneratorForm({
@@ -113,18 +107,14 @@ export default function EnhancedContractGeneratorForm({
     isLoading: isLoadingClientParties,
     error: clientPartiesError,
   } = useParties("Client")
-  
+
   const {
     data: employerParties,
     isLoading: isLoadingEmployerParties,
     error: employerPartiesError,
   } = useParties("Employer")
-  
-  const {
-    data: promoters,
-    isLoading: isLoadingPromoters,
-    error: promotersError,
-  } = usePromoters()
+
+  const { data: promoters, isLoading: isLoadingPromoters, error: promotersError } = usePromoters()
 
   // Form setup with enhanced defaults
   const form = useForm<ContractGeneratorFormData>({
@@ -171,7 +161,7 @@ export default function EnhancedContractGeneratorForm({
   // Calculate form completion progress
   const formProgress = useMemo(() => {
     const requiredFields = getRequiredFields()
-    const completedFields = requiredFields.filter(field => {
+    const completedFields = requiredFields.filter((field) => {
       const value = form.getValues(field as keyof ContractGeneratorFormData)
       return value !== undefined && value !== null && value !== ""
     }).length
@@ -181,17 +171,17 @@ export default function EnhancedContractGeneratorForm({
   // Calculate contract duration and insights
   const contractInsights = useMemo(() => {
     if (!watchedStartDate || !watchedEndDate) return null
-    
+
     const duration = differenceInDays(watchedEndDate, watchedStartDate)
     const totalCompensation = (watchedSalary || 0) + (watchedAllowances || 0)
-    
+
     return {
       duration,
       durationText: duration === 1 ? "1 day" : `${duration} days`,
       isShortTerm: duration <= 90,
       isLongTerm: duration >= 365,
       totalCompensation,
-      monthlyRate: totalCompensation > 0 ? totalCompensation : null
+      monthlyRate: totalCompensation > 0 ? totalCompensation : null,
     }
   }, [watchedStartDate, watchedEndDate, watchedSalary, watchedAllowances])
 
@@ -200,43 +190,43 @@ export default function EnhancedContractGeneratorForm({
     if (watchedPromoterId && promoters) {
       const promoter = promoters.find((p) => p.id === watchedPromoterId)
       setSelectedPromoter(promoter || null)
-      
+
       if (promoter) {
-        form.setValue('promoter_name_en', promoter.name_en)
-        form.setValue('promoter_name_ar', promoter.name_ar)
-        form.setValue('id_card_number', promoter.id_card_number)
-        form.setValue('promoter_id_card_url', promoter.id_card_url || '')
-        form.setValue('promoter_passport_url', promoter.passport_url || '')
+        form.setValue("promoter_name_en", promoter.name_en)
+        form.setValue("promoter_name_ar", promoter.name_ar)
+        form.setValue("id_card_number", promoter.id_card_number)
+        form.setValue("promoter_id_card_url", promoter.id_card_url || "")
+        form.setValue("promoter_passport_url", promoter.passport_url || "")
       }
     }
   }, [watchedPromoterId, promoters, form])
 
   // Auto-fill party data when selected
   useEffect(() => {
-    const clientId = form.watch('first_party_id')
+    const clientId = form.watch("first_party_id")
     if (clientId && clientParties) {
-      const party = clientParties.find(p => p.id === clientId)
+      const party = clientParties.find((p) => p.id === clientId)
       setSelectedClient(party || null)
       if (party) {
-        form.setValue('first_party_name_en', party.name_en)
-        form.setValue('first_party_name_ar', party.name_ar)
-        form.setValue('first_party_crn', party.crn)
+        form.setValue("first_party_name_en", party.name_en)
+        form.setValue("first_party_name_ar", party.name_ar)
+        form.setValue("first_party_crn", party.crn)
       }
     }
-  }, [form.watch('first_party_id'), clientParties, form])
+  }, [form.watch("first_party_id"), clientParties, form])
 
   useEffect(() => {
-    const employerId = form.watch('second_party_id')
+    const employerId = form.watch("second_party_id")
     if (employerId && employerParties) {
-      const party = employerParties.find(p => p.id === employerId)
+      const party = employerParties.find((p) => p.id === employerId)
       setSelectedEmployer(party || null)
       if (party) {
-        form.setValue('second_party_name_en', party.name_en)
-        form.setValue('second_party_name_ar', party.name_ar)
-        form.setValue('second_party_crn', party.crn)
+        form.setValue("second_party_name_en", party.name_en)
+        form.setValue("second_party_name_ar", party.name_ar)
+        form.setValue("second_party_crn", party.crn)
       }
     }
-  }, [form.watch('second_party_id'), employerParties, form])
+  }, [form.watch("second_party_id"), employerParties, form])
 
   // Prefill when editing
   useEffect(() => {
@@ -267,9 +257,9 @@ export default function EnhancedContractGeneratorForm({
     if (employerPartiesError) errors.push(`Employer parties: ${employerPartiesError.message}`)
     if (clientPartiesError) errors.push(`Client parties: ${clientPartiesError.message}`)
     if (promotersError) errors.push(`Promoters: ${promotersError.message}`)
-    
+
     setValidationErrors(errors)
-    
+
     if (errors.length > 0) {
       toast({
         title: "Data Loading Issues",
@@ -284,7 +274,7 @@ export default function EnhancedContractGeneratorForm({
     if (watchedStartDate && !watchedEndDate) {
       // Default to 1 year contract
       const suggestedEndDate = addMonths(watchedStartDate, 12)
-      form.setValue('contract_end_date', suggestedEndDate)
+      form.setValue("contract_end_date", suggestedEndDate)
     }
   }, [watchedStartDate, watchedEndDate, form])
 
@@ -317,10 +307,10 @@ export default function EnhancedContractGeneratorForm({
     },
     onSuccess: async (data) => {
       const isUpdate = !!contract?.id
-      
+
       toast({
         title: isUpdate ? "Contract Updated!" : "Contract Created!",
-        description: contractInsights 
+        description: contractInsights
           ? `Duration: ${contractInsights.durationText}${data.pdf_url ? ` • PDF: ${data.pdf_url}` : " • PDF generation pending"}`
           : "Contract saved successfully",
       })
@@ -329,22 +319,22 @@ export default function EnhancedContractGeneratorForm({
         form.reset()
         setCurrentSection(0)
       }
-      
+
       queryClient.invalidateQueries({ queryKey: ["contracts"] })
       onFormSubmit?.()
 
       // Trigger webhook processing
       try {
-        const { WebhookService } = await import('@/lib/webhook-service')
+        const { WebhookService } = await import("@/lib/webhook-service")
         await WebhookService.processContract({
           contract_id: data.id,
           contract_number: data.contract_number,
-          client_name: data.client_name || 'N/A',
-          employer_name: data.employer_name || 'N/A',
-          status: 'processing'
+          client_name: data.client_name || "N/A",
+          employer_name: data.employer_name || "N/A",
+          status: "processing",
         })
       } catch (err) {
-        console.error('❌ Webhook processing error:', err)
+        console.error("❌ Webhook processing error:", err)
       }
     },
     onError: (error: any) => {
@@ -355,11 +345,14 @@ export default function EnhancedContractGeneratorForm({
       })
     },
   })
-  const isSubmitting = status === 'pending'
+  const isSubmitting = status === "pending"
 
-  const onSubmit = useCallback((values: ContractGeneratorFormData) => {
-    saveContract(values)
-  }, [saveContract])
+  const onSubmit = useCallback(
+    (values: ContractGeneratorFormData) => {
+      saveContract(values)
+    },
+    [saveContract]
+  )
 
   // Navigation helpers
   const goToNextSection = () => {
@@ -383,19 +376,24 @@ export default function EnhancedContractGeneratorForm({
     return ""
   }
 
-  const isLoadingInitialData = isLoadingEmployerParties || isLoadingClientParties || isLoadingPromoters
+  const isLoadingInitialData =
+    isLoadingEmployerParties || isLoadingClientParties || isLoadingPromoters
 
   // Loading state
-  if (isLoadingInitialData && !form.formState.isDirty && !employerParties && !clientParties && !promoters) {
+  if (
+    isLoadingInitialData &&
+    !form.formState.isDirty &&
+    !employerParties &&
+    !clientParties &&
+    !promoters
+  ) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+        <div className="space-y-4 text-center">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
           <div>
             <p className="text-lg font-medium">Loading Contract Form</p>
-            <p className="text-sm text-muted-foreground">
-              Fetching parties and promoters data...
-            </p>
+            <p className="text-sm text-muted-foreground">Fetching parties and promoters data...</p>
           </div>
         </div>
       </div>
@@ -413,10 +411,9 @@ export default function EnhancedContractGeneratorForm({
                 {contract?.id ? "Edit Contract" : "Generate New Contract"}
               </CardTitle>
               <CardDescription>
-                {contract?.id 
+                {contract?.id
                   ? "Update contract details and regenerate documents"
-                  : "Complete all required sections to generate your contract"
-                }
+                  : "Complete all required sections to generate your contract"}
               </CardDescription>
             </div>
             <Badge variant={formProgress === 100 ? "default" : "secondary"} className="ml-4">
@@ -432,7 +429,7 @@ export default function EnhancedContractGeneratorForm({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <ul className="list-disc list-inside space-y-1">
+            <ul className="list-inside list-disc space-y-1">
               {validationErrors.map((error, idx) => (
                 <li key={idx}>{error}</li>
               ))}
@@ -447,15 +444,18 @@ export default function EnhancedContractGeneratorForm({
           <Info className="h-4 w-4" />
           <AlertDescription>
             <div className="flex items-center gap-4 text-sm">
-              <span>Duration: <strong>{contractInsights.durationText}</strong></span>
-              {contractInsights.isShortTerm && (
-                <Badge variant="outline">Short-term</Badge>
-              )}
-              {contractInsights.isLongTerm && (
-                <Badge variant="outline">Long-term</Badge>
-              )}
+              <span>
+                Duration: <strong>{contractInsights.durationText}</strong>
+              </span>
+              {contractInsights.isShortTerm && <Badge variant="outline">Short-term</Badge>}
+              {contractInsights.isLongTerm && <Badge variant="outline">Long-term</Badge>}
               {contractInsights.totalCompensation > 0 && (
-                <span>Monthly: <strong>{form.watch('currency')} {contractInsights.totalCompensation.toLocaleString()}</strong></span>
+                <span>
+                  Monthly:{" "}
+                  <strong>
+                    {form.watch("currency")} {contractInsights.totalCompensation.toLocaleString()}
+                  </strong>
+                </span>
               )}
             </div>
           </AlertDescription>
@@ -464,9 +464,8 @@ export default function EnhancedContractGeneratorForm({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          
           {/* Section Navigation */}
-          <div className="flex flex-wrap gap-2 p-4 bg-muted/50 rounded-lg">
+          <div className="flex flex-wrap gap-2 rounded-lg bg-muted/50 p-4">
             {CONTRACT_FORM_SECTIONS.map((section, index) => (
               <Button
                 key={section.id}
@@ -582,7 +581,9 @@ export default function EnhancedContractGeneratorForm({
                                 disabled={isSubmitting || isLoadingEmployerParties}
                               >
                                 <FormControl>
-                                  <SelectTrigger className={getInputStateClasses("second_party_id")}>
+                                  <SelectTrigger
+                                    className={getInputStateClasses("second_party_id")}
+                                  >
                                     <SelectValue
                                       placeholder={
                                         isLoadingEmployerParties
@@ -630,23 +631,31 @@ export default function EnhancedContractGeneratorForm({
 
                     {/* Selected Parties Summary */}
                     {(selectedClient || selectedEmployer) && (
-                      <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+                      <div className="space-y-3 rounded-lg bg-muted/50 p-4">
                         <h4 className="font-medium">Selected Organizations:</h4>
                         {selectedClient && (
                           <div className="flex items-center gap-2 text-sm">
                             <Badge variant="outline">Client</Badge>
-                            <span>{selectedClient.name_en} / {selectedClient.name_ar}</span>
+                            <span>
+                              {selectedClient.name_en} / {selectedClient.name_ar}
+                            </span>
                             {selectedClient.crn && (
-                              <span className="text-muted-foreground">CRN: {selectedClient.crn}</span>
+                              <span className="text-muted-foreground">
+                                CRN: {selectedClient.crn}
+                              </span>
                             )}
                           </div>
                         )}
                         {selectedEmployer && (
                           <div className="flex items-center gap-2 text-sm">
                             <Badge variant="outline">Employer</Badge>
-                            <span>{selectedEmployer.name_en} / {selectedEmployer.name_ar}</span>
+                            <span>
+                              {selectedEmployer.name_en} / {selectedEmployer.name_ar}
+                            </span>
                             {selectedEmployer.crn && (
-                              <span className="text-muted-foreground">CRN: {selectedEmployer.crn}</span>
+                              <span className="text-muted-foreground">
+                                CRN: {selectedEmployer.crn}
+                              </span>
                             )}
                           </div>
                         )}
@@ -659,12 +668,11 @@ export default function EnhancedContractGeneratorForm({
               {/* Continue with other sections... */}
               {/* This is a partial implementation showing the enhanced structure */}
               {/* The remaining sections would follow similar patterns with improved UX */}
-              
             </motion.div>
           </AnimatePresence>
 
           {/* Navigation and Submit */}
-          <div className="flex items-center justify-between pt-6 border-t">
+          <div className="flex items-center justify-between border-t pt-6">
             <Button
               type="button"
               variant="outline"
@@ -676,10 +684,7 @@ export default function EnhancedContractGeneratorForm({
 
             <div className="flex items-center gap-4">
               {currentSection < CONTRACT_FORM_SECTIONS.length - 1 ? (
-                <Button
-                  type="button"
-                  onClick={goToNextSection}
-                >
+                <Button type="button" onClick={goToNextSection}>
                   Next Section
                 </Button>
               ) : (
@@ -708,17 +713,17 @@ export default function EnhancedContractGeneratorForm({
 
           {/* Hidden fields for auto-filled data */}
           <div className="hidden">
-            <input {...form.register('first_party_name_en')} />
-            <input {...form.register('first_party_name_ar')} />
-            <input {...form.register('first_party_crn')} />
-            <input {...form.register('second_party_name_en')} />
-            <input {...form.register('second_party_name_ar')} />
-            <input {...form.register('second_party_crn')} />
-            <input {...form.register('promoter_name_en')} />
-            <input {...form.register('promoter_name_ar')} />
-            <input {...form.register('id_card_number')} />
-            <input {...form.register('promoter_id_card_url')} />
-            <input {...form.register('promoter_passport_url')} />
+            <input {...form.register("first_party_name_en")} />
+            <input {...form.register("first_party_name_ar")} />
+            <input {...form.register("first_party_crn")} />
+            <input {...form.register("second_party_name_en")} />
+            <input {...form.register("second_party_name_ar")} />
+            <input {...form.register("second_party_crn")} />
+            <input {...form.register("promoter_name_en")} />
+            <input {...form.register("promoter_name_ar")} />
+            <input {...form.register("id_card_number")} />
+            <input {...form.register("promoter_id_card_url")} />
+            <input {...form.register("promoter_passport_url")} />
           </div>
         </form>
       </Form>

@@ -13,7 +13,11 @@ export const partyFormSchema = z.object({
   license_expiry_date: z.date().optional(),
   contact_person: z.string().optional(),
   contact_phone: z.string().optional(),
-  contact_email: z.string().email({ message: "Invalid email address." }).optional().or(z.literal('')),
+  contact_email: z
+    .string()
+    .email({ message: "Invalid email address." })
+    .optional()
+    .or(z.literal("")),
   address_en: z.string().optional(),
   address_ar: z.string().optional(),
   notes: z.string().optional(),

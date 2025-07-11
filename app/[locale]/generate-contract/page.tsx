@@ -13,15 +13,19 @@ import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "
 import GenerateContractForm from "@/components/generate-contract-form"
 
 // Enhanced utilities for contract insights
-import { 
-  analyzeContractDuration, 
+import {
+  analyzeContractDuration,
   validateContractData,
   formatDuration,
-  getContractTypeRecommendations 
+  getContractTypeRecommendations,
 } from "@/lib/contract-utils"
 import { CONTRACT_FORM_SECTIONS, getRequiredFields } from "@/lib/schema-generator"
 import { CONTRACT_TYPES } from "@/constants/contract-options"
-import { getContractTypesByCategory, getContractTypeConfig, CONTRACT_TYPE_CONFIGS } from "@/lib/contract-type-config"
+import {
+  getContractTypesByCategory,
+  getContractTypeConfig,
+  CONTRACT_TYPE_CONFIGS,
+} from "@/lib/contract-type-config"
 
 // Contract insights component
 function ContractInsights() {
@@ -29,36 +33,34 @@ function ContractInsights() {
     totalRequiredFields: 0,
     completedFields: 0,
     completionPercentage: 0,
-    recommendations: [] as string[]
+    recommendations: [] as string[],
   })
 
   useEffect(() => {
     const requiredFields = getRequiredFields()
     const recommendations = [
       "Ensure all party information is accurate and up-to-date",
-      "Verify contract dates align with business requirements", 
+      "Verify contract dates align with business requirements",
       "Review job title and department classifications",
-      "Confirm work location and arrangement details"
+      "Confirm work location and arrangement details",
     ]
 
     setInsights({
       totalRequiredFields: requiredFields.length,
       completedFields: 0,
       completionPercentage: 0,
-      recommendations
+      recommendations,
     })
   }, [])
 
   return (
-    <Card className="bg-blue-50/50 border-blue-200">
+    <Card className="border-blue-200 bg-blue-50/50">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Info className="h-5 w-5 text-blue-600" />
           Contract Generation Insights
         </CardTitle>
-        <CardDescription>
-          Smart recommendations and validation insights
-        </CardDescription>
+        <CardDescription>Smart recommendations and validation insights</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -73,14 +75,14 @@ function ContractInsights() {
         </div>
 
         <div className="space-y-2">
-          <h4 className="font-medium text-sm flex items-center gap-2">
+          <h4 className="flex items-center gap-2 text-sm font-medium">
             <CheckCircle className="h-4 w-4 text-green-600" />
             Best Practices
           </h4>
           <ul className="space-y-1 text-xs text-muted-foreground">
             {insights.recommendations.map((rec, idx) => (
               <li key={idx} className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">•</span>
+                <span className="font-bold text-green-600">•</span>
                 <span>{rec}</span>
               </li>
             ))}
@@ -107,37 +109,37 @@ function FormSectionsOverview() {
           <FileText className="h-5 w-5 text-primary" />
           Form Sections
         </CardTitle>
-        <CardDescription>
-          Overview of contract generation sections
-        </CardDescription>
+        <CardDescription>Overview of contract generation sections</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {CONTRACT_FORM_SECTIONS.map((section, index) => (
             <div
               key={section.id}
-              className={`p-3 rounded-lg border transition-all ${
-                section.required 
-                  ? 'bg-primary/5 border-primary/20' 
-                  : 'bg-muted/30 border-muted'
+              className={`rounded-lg border p-3 transition-all ${
+                section.required ? "border-primary/20 bg-primary/5" : "border-muted bg-muted/30"
               }`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  section.required 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted-foreground text-muted'
-                }`}>
+              <div className="mb-2 flex items-center gap-2">
+                <div
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${
+                    section.required
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted-foreground text-muted"
+                  }`}
+                >
                   {index + 1}
                 </div>
-                <h4 className="font-medium text-sm">{section.title}</h4>
+                <h4 className="text-sm font-medium">{section.title}</h4>
                 {section.required && (
-                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    Required
+                  </Badge>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">{section.description}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {section.fields.length} field{section.fields.length !== 1 ? "s" : ""}
               </p>
             </div>
           ))}
@@ -154,7 +156,7 @@ function ContractTypesOverview() {
 
   const categorizedTypes = getContractTypesByCategory()
   const categories = Object.keys(categorizedTypes)
-  
+
   const getDisplayedTypes = () => {
     if (selectedCategory === "all") {
       return Object.values(CONTRACT_TYPE_CONFIGS)
@@ -201,25 +203,27 @@ function ContractTypesOverview() {
         </div>
 
         {/* Contract Types Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+        <div className="grid max-h-80 grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2">
           {displayedTypes.map((config) => (
             <div
               key={config.id}
-              className={`p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50 ${
-                selectedType === config.id ? 'ring-2 ring-primary' : 'bg-muted/20'
+              className={`cursor-pointer rounded-lg border p-3 transition-all hover:bg-muted/50 ${
+                selectedType === config.id ? "ring-2 ring-primary" : "bg-muted/20"
               }`}
               onClick={() => setSelectedType(selectedType === config.id ? null : config.id)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-sm">{config.name}</h4>
+                  <div className="mb-1 flex items-center gap-2">
+                    <h4 className="text-sm font-medium">{config.name}</h4>
                     {config.omanCompliant && (
-                      <Badge variant="outline" className="text-xs">Oman Compliant</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Oman Compliant
+                      </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{config.description}</p>
-                  
+                  <p className="mb-2 text-xs text-muted-foreground">{config.description}</p>
+
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-medium">Required Fields:</span>
@@ -239,10 +243,10 @@ function ContractTypesOverview() {
 
               {/* Expanded Details */}
               {selectedType === config.id && (
-                <div className="mt-3 pt-3 border-t space-y-2">
+                <div className="mt-3 space-y-2 border-t pt-3">
                   <div>
-                    <h5 className="text-xs font-medium mb-1">Business Rules:</h5>
-                    <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <h5 className="mb-1 text-xs font-medium">Business Rules:</h5>
+                    <ul className="space-y-0.5 text-xs text-muted-foreground">
                       {config.businessRules.slice(0, 3).map((rule, idx) => (
                         <li key={idx} className="flex items-start gap-1">
                           <span className="text-primary">•</span>
@@ -250,13 +254,15 @@ function ContractTypesOverview() {
                         </li>
                       ))}
                       {config.businessRules.length > 3 && (
-                        <li className="text-primary">+ {config.businessRules.length - 3} more rules</li>
+                        <li className="text-primary">
+                          + {config.businessRules.length - 3} more rules
+                        </li>
                       )}
                     </ul>
                   </div>
-                  
+
                   <div>
-                    <h5 className="text-xs font-medium mb-1">Template Placeholders:</h5>
+                    <h5 className="mb-1 text-xs font-medium">Template Placeholders:</h5>
                     <div className="flex flex-wrap gap-1">
                       {config.templatePlaceholders.slice(0, 4).map((placeholder, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs">
@@ -270,11 +276,23 @@ function ContractTypesOverview() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-1">
-                    {config.allowsSalary && <Badge variant="outline" className="text-xs">Salary</Badge>}
-                    {config.allowsProbation && <Badge variant="outline" className="text-xs">Probation</Badge>}
-                    {config.allowsRemoteWork && <Badge variant="outline" className="text-xs">Remote</Badge>}
+                    {config.allowsSalary && (
+                      <Badge variant="outline" className="text-xs">
+                        Salary
+                      </Badge>
+                    )}
+                    {config.allowsProbation && (
+                      <Badge variant="outline" className="text-xs">
+                        Probation
+                      </Badge>
+                    )}
+                    {config.allowsRemoteWork && (
+                      <Badge variant="outline" className="text-xs">
+                        Remote
+                      </Badge>
+                    )}
                     {config.maxDuration && (
                       <Badge variant="outline" className="text-xs">
                         Max {config.maxDuration}mo
@@ -307,16 +325,14 @@ export default function GenerateContractPage() {
       className="mx-auto max-w-6xl space-y-6"
     >
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-heading text-3xl font-bold md:text-4xl">
-            Create New Contract
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
+          <h1 className="font-heading text-3xl font-bold md:text-4xl">Create New Contract</h1>
+          <p className="mt-2 text-lg text-muted-foreground">
             Generate professional bilingual contracts with enhanced validation and insights
           </p>
         </motion.div>
@@ -330,16 +346,16 @@ export default function GenerateContractPage() {
         >
           <Tabs value={useEnhancedForm ? "enhanced" : "standard"} className="w-full max-w-md">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="standard" 
+              <TabsTrigger
+                value="standard"
                 onClick={() => setUseEnhancedForm(false)}
                 className="flex items-center gap-2"
               >
                 <FileText className="h-4 w-4" />
                 Standard
               </TabsTrigger>
-              <TabsTrigger 
-                value="enhanced" 
+              <TabsTrigger
+                value="enhanced"
                 onClick={() => setUseEnhancedForm(true)}
                 className="flex items-center gap-2"
               >
@@ -355,9 +371,11 @@ export default function GenerateContractPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto"
+          className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2"
         >
-          <Card className={`relative transition-all ${!useEnhancedForm ? 'ring-2 ring-primary' : ''}`}>
+          <Card
+            className={`relative transition-all ${!useEnhancedForm ? "ring-2 ring-primary" : ""}`}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5 text-primary" />
@@ -368,7 +386,7 @@ export default function GenerateContractPage() {
                 Enhanced with advanced validation and business rules
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm space-y-2">
+            <CardContent className="space-y-2 text-sm">
               <ul className="space-y-1 text-muted-foreground">
                 <li>✓ Enhanced schema validation</li>
                 <li>✓ Business rule enforcement</li>
@@ -380,7 +398,9 @@ export default function GenerateContractPage() {
             </CardContent>
           </Card>
 
-          <Card className={`relative transition-all ${useEnhancedForm ? 'ring-2 ring-primary' : ''}`}>
+          <Card
+            className={`relative transition-all ${useEnhancedForm ? "ring-2 ring-primary" : ""}`}
+          >
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="h-5 w-5 text-muted-foreground" />
@@ -391,7 +411,7 @@ export default function GenerateContractPage() {
                 Advanced interface with sectioned workflow (In Development)
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm space-y-2">
+            <CardContent className="space-y-2 text-sm">
               <ul className="space-y-1 text-muted-foreground">
                 <li>• Sectioned form with progress tracking</li>
                 <li>• Real-time contract insights</li>
@@ -411,7 +431,7 @@ export default function GenerateContractPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-6 lg:grid-cols-3"
         >
           <ContractInsights />
           <FormSectionsOverview />
@@ -431,9 +451,9 @@ export default function GenerateContractPage() {
             <Alert className="mb-6">
               <Sparkles className="h-4 w-4" />
               <AlertDescription>
-                <strong>Enhanced Form Coming Soon!</strong> This advanced interface with sectioned workflow, 
-                real-time insights, and smart validations is currently in development. 
-                Use the standard form below for contract generation.
+                <strong>Enhanced Form Coming Soon!</strong> This advanced interface with sectioned
+                workflow, real-time insights, and smart validations is currently in development. Use
+                the standard form below for contract generation.
               </AlertDescription>
             </Alert>
             <GenerateContractForm />
@@ -450,35 +470,35 @@ export default function GenerateContractPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="text-center space-y-4"
+        className="space-y-4 text-center"
       >
         <Card className="bg-muted/50">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="mb-3 flex items-center justify-center gap-2">
               <Settings className="h-5 w-5 text-muted-foreground" />
               <h3 className="font-semibold">Enhanced Validation & Insights</h3>
             </div>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Our contract generation system now includes enhanced schema validation with comprehensive 
-              business rules, improved error handling, and smart field requirements. Choose from {Object.keys(CONTRACT_TYPE_CONFIGS).length} different 
-              contract types, each with unique templates, placeholders, and validation rules. The form automatically 
-              validates dates, party relationships, and ensures all critical information is captured correctly.
+            <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+              Our contract generation system now includes enhanced schema validation with
+              comprehensive business rules, improved error handling, and smart field requirements.
+              Choose from {Object.keys(CONTRACT_TYPE_CONFIGS).length} different contract types, each
+              with unique templates, placeholders, and validation rules. The form automatically
+              validates dates, party relationships, and ensures all critical information is captured
+              correctly.
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <Badge variant="outline">Enhanced Schema</Badge>
               <Badge variant="outline">Business Rules</Badge>
-              <Badge variant="outline">{Object.keys(CONTRACT_TYPE_CONFIGS).length} Contract Types</Badge>
+              <Badge variant="outline">
+                {Object.keys(CONTRACT_TYPE_CONFIGS).length} Contract Types
+              </Badge>
               <Badge variant="outline">Smart Validation</Badge>
               <Badge variant="outline">Error Prevention</Badge>
               <Badge variant="outline">Oman Compliance</Badge>
             </div>
             <div className="mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowInsights(!showInsights)}
-              >
-                {showInsights ? 'Hide' : 'Show'} Contract Insights
+              <Button variant="outline" size="sm" onClick={() => setShowInsights(!showInsights)}>
+                {showInsights ? "Hide" : "Show"} Contract Insights
               </Button>
             </div>
           </CardContent>

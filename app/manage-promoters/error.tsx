@@ -33,11 +33,9 @@ export default function Error({
           <p className="text-sm text-muted-foreground">
             {error.message || "An unexpected error occurred. Please try again."}
           </p>
-          <div className="flex gap-2 justify-center">
-            <Button onClick={() => reset()}>
-              Try again
-            </Button>
-            <Button variant="outline" onClick={() => window.location.href = "/"}>
+          <div className="flex justify-center gap-2">
+            <Button onClick={() => reset()}>Try again</Button>
+            <Button variant="outline" onClick={() => (window.location.href = "/")}>
               Go to Home
             </Button>
           </div>

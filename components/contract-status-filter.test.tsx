@@ -28,7 +28,7 @@ describe("ContractStatusFilter", () => {
     render(
       <NextIntlClientProvider messages={messages}>
         <ContractStatusFilter onSelectStatus={mockOnSelectStatus} />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
     )
 
     expect(screen.getByRole("button", { name: /Filter by Status/i })).toBeInTheDocument()
@@ -39,7 +39,7 @@ describe("ContractStatusFilter", () => {
     render(
       <NextIntlClientProvider messages={messages}>
         <ContractStatusFilter onSelectStatus={mockOnSelectStatus} />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
     )
 
     fireEvent.click(screen.getByRole("button", { name: /Filter by Status/i }))
@@ -57,7 +57,7 @@ describe("ContractStatusFilter", () => {
     render(
       <NextIntlClientProvider messages={messages}>
         <ContractStatusFilter onSelectStatus={mockOnSelectStatus} />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
     )
 
     fireEvent.click(screen.getByRole("button", { name: /Filter by Status/i }))
@@ -71,7 +71,7 @@ describe("ContractStatusFilter", () => {
     const { rerender } = render(
       <NextIntlClientProvider messages={messages}>
         <ContractStatusFilter onSelectStatus={mockOnSelectStatus} />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
     )
 
     fireEvent.click(screen.getByRole("button", { name: /Filter by Status/i }))
@@ -80,7 +80,7 @@ describe("ContractStatusFilter", () => {
     rerender(
       <NextIntlClientProvider messages={messages}>
         <ContractStatusFilter onSelectStatus={mockOnSelectStatus} selectedStatus="Active" />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
     )
 
     expect(screen.getByRole("button", { name: /Active/i })).toBeInTheDocument()

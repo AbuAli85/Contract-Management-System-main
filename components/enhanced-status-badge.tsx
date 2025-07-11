@@ -1,6 +1,15 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { CheckCircle2, Clock, XCircle, AlertTriangle, FileText, Archive, Send, Eye } from "lucide-react"
+import {
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertTriangle,
+  FileText,
+  Archive,
+  Send,
+  Eye,
+} from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export interface ContractStatus {
@@ -19,7 +28,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract is being prepared",
     color: "bg-gray-100 text-gray-800 border-gray-200",
     icon: FileText,
-    priority: 1
+    priority: 1,
   },
   {
     value: "pending_review",
@@ -27,7 +36,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Awaiting review and approval",
     color: "bg-yellow-100 text-yellow-800 border-yellow-200",
     icon: Clock,
-    priority: 2
+    priority: 2,
   },
   {
     value: "active",
@@ -35,7 +44,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract is currently active",
     color: "bg-green-100 text-green-800 border-green-200",
     icon: CheckCircle2,
-    priority: 3
+    priority: 3,
   },
   {
     value: "expired",
@@ -43,7 +52,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract has expired",
     color: "bg-red-100 text-red-800 border-red-200",
     icon: XCircle,
-    priority: 4
+    priority: 4,
   },
   {
     value: "terminated",
@@ -51,7 +60,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract was terminated early",
     color: "bg-red-100 text-red-800 border-red-200",
     icon: XCircle,
-    priority: 5
+    priority: 5,
   },
   {
     value: "suspended",
@@ -59,7 +68,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract is temporarily suspended",
     color: "bg-orange-100 text-orange-800 border-orange-200",
     icon: AlertTriangle,
-    priority: 6
+    priority: 6,
   },
   {
     value: "archived",
@@ -67,7 +76,7 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Contract has been archived",
     color: "bg-gray-100 text-gray-600 border-gray-200",
     icon: Archive,
-    priority: 7
+    priority: 7,
   },
   {
     value: "unknown",
@@ -75,20 +84,23 @@ export const CONTRACT_STATUSES: ContractStatus[] = [
     description: "Status is not determined",
     color: "bg-gray-100 text-gray-500 border-gray-200",
     icon: AlertTriangle,
-    priority: 8
-  }
+    priority: 8,
+  },
 ]
 
 export function getContractStatus(status: string): ContractStatus {
-  return CONTRACT_STATUSES.find(s => s.value === status) || CONTRACT_STATUSES.find(s => s.value === "unknown")!
+  return (
+    CONTRACT_STATUSES.find((s) => s.value === status) ||
+    CONTRACT_STATUSES.find((s) => s.value === "unknown")!
+  )
 }
 
-export function EnhancedStatusBadge({ 
-  status, 
-  showIcon = true, 
+export function EnhancedStatusBadge({
+  status,
+  showIcon = true,
   showTooltip = true,
-  size = "default"
-}: { 
+  size = "default",
+}: {
   status: string
   showIcon?: boolean
   showTooltip?: boolean
@@ -100,16 +112,16 @@ export function EnhancedStatusBadge({
   const sizeClasses = {
     sm: "text-xs px-2 py-1",
     default: "text-sm px-2.5 py-1.5",
-    lg: "text-base px-3 py-2"
+    lg: "text-base px-3 py-2",
   }
 
   const badge = (
-    <Badge 
-      variant="outline" 
+    <Badge
+      variant="outline"
       className={cn(
         statusConfig.color,
         sizeClasses[size],
-        "font-medium inline-flex items-center gap-1.5"
+        "inline-flex items-center gap-1.5 font-medium"
       )}
     >
       {showIcon && <Icon className="h-3 w-3" />}
@@ -121,9 +133,7 @@ export function EnhancedStatusBadge({
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger asChild>
-            {badge}
-          </TooltipTrigger>
+          <TooltipTrigger asChild>{badge}</TooltipTrigger>
           <TooltipContent>
             <p>{statusConfig.description}</p>
           </TooltipContent>
@@ -135,18 +145,18 @@ export function EnhancedStatusBadge({
   return badge
 }
 
-export function StatusFilter({ 
-  currentStatus, 
-  onStatusChange 
-}: { 
+export function StatusFilter({
+  currentStatus,
+  onStatusChange,
+}: {
   currentStatus: string
-  onStatusChange: (status: string) => void 
+  onStatusChange: (status: string) => void
 }) {
   return (
     <select
       value={currentStatus}
       onChange={(e) => onStatusChange(e.target.value)}
-      className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+      className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     >
       <option value="">All Statuses</option>
       {CONTRACT_STATUSES.map((status) => (

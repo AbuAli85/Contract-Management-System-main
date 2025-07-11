@@ -8,19 +8,15 @@ import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 
-export default function LocaleSettingsPage({ 
-  params 
-}: { 
-  params: Promise<{ locale: string }> 
-}) {
-  const [locale, setLocale] = useState('en')
-  const [supabaseStatus, setSupabaseStatus] = useState('Checking...')
+export default function LocaleSettingsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const [locale, setLocale] = useState("en")
+  const [supabaseStatus, setSupabaseStatus] = useState("Checking...")
   const [testing, setTesting] = useState(false)
   const { toast } = useToast()
-  
+
   useEffect(() => {
-    params.then(p => setLocale(p.locale))
-    
+    params.then((p) => setLocale(p.locale))
+
     // Check Supabase connection status
     const checkSupabase = () => {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -33,12 +29,12 @@ export default function LocaleSettingsPage({
     setTesting(true)
     try {
       // Call the API endpoint instead of using the service directly
-      const response = await fetch('/api/test-webhooks', {
-        method: 'GET',
+      const response = await fetch("/api/test-webhooks", {
+        method: "GET",
       })
-      
+
       const result = await response.json()
-      
+
       if (result.success) {
         toast({
           title: "Webhooks Test Successful ✅",
@@ -47,12 +43,12 @@ export default function LocaleSettingsPage({
       } else {
         toast({
           title: "Webhook Test Failed ❌",
-          description: result.error || 'Unknown error',
+          description: result.error || "Unknown error",
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error('Test error:', error)
+      console.error("Test error:", error)
       toast({
         title: "Test Error ❌",
         description: "Failed to test webhooks. Check console for details.",
@@ -62,7 +58,7 @@ export default function LocaleSettingsPage({
       setTesting(false)
     }
   }
-  
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -123,20 +119,20 @@ export default function LocaleSettingsPage({
                 <CardDescription>Manage third-party integrations and API keys.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                
                 {/* Make.com Integration */}
-                <div className="space-y-4 p-4 border rounded-lg">
-                  <h4 className="font-semibold text-lg">Make.com Integration</h4>
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h4 className="text-lg font-semibold">Make.com Integration</h4>
                   <p className="text-sm text-muted-foreground">
-                    Configure webhooks for automated PDF contract generation and Slack notifications.
+                    Configure webhooks for automated PDF contract generation and Slack
+                    notifications.
                   </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {/* Main Webhook */}
                     <div className="space-y-2">
                       <Label htmlFor="mainWebhookUrl">Main Processing Webhook</Label>
-                      <Input 
-                        id="mainWebhookUrl" 
+                      <Input
+                        id="mainWebhookUrl"
                         placeholder="https://hook.eu2.make.com/..."
                         defaultValue="https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4"
                       />
@@ -148,8 +144,8 @@ export default function LocaleSettingsPage({
                     {/* Slack Webhook */}
                     <div className="space-y-2">
                       <Label htmlFor="slackWebhookUrl">Slack Notification Webhook</Label>
-                      <Input 
-                        id="slackWebhookUrl" 
+                      <Input
+                        id="slackWebhookUrl"
                         placeholder="https://hook.eu2.make.com/..."
                         defaultValue="https://hook.eu2.make.com/fwu4cspy92s2m4aw1vni46cu0m89xvp8"
                       />
@@ -158,11 +154,11 @@ export default function LocaleSettingsPage({
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="webhookEndpoint">Your App Webhook Endpoint</Label>
-                    <Input 
-                      id="webhookEndpoint" 
+                    <Input
+                      id="webhookEndpoint"
                       defaultValue="/api/webhook/makecom"
                       readOnly
                       className="bg-muted"
@@ -171,47 +167,52 @@ export default function LocaleSettingsPage({
                       Make.com sends results BACK to this endpoint in your app.
                     </p>
                   </div>
-                  
-                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-md">
-                    <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Webhook Flow:</h5>
-                    <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+
+                  <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-950">
+                    <h5 className="mb-2 font-medium text-blue-800 dark:text-blue-200">
+                      Webhook Flow:
+                    </h5>
+                    <ol className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
                       <li>1. 🔄 Contract data → Main webhook (generates PDF)</li>
                       <li>2. 📱 PDF ready → Slack webhook (notifies team)</li>
                       <li>3. ↩️ Results back → /api/webhook/makecom (updates database)</li>
                     </ol>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button onClick={testWebhooks} disabled={testing}>
-                      {testing ? 'Testing...' : 'Test Webhooks'}
+                      {testing ? "Testing..." : "Test Webhooks"}
                     </Button>
-                    <Button variant="outline" onClick={() => window.open('/api/webhook/makecom', '_blank')}>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open("/api/webhook/makecom", "_blank")}
+                    >
                       View API Docs
                     </Button>
                   </div>
                 </div>
 
                 {/* Supabase Integration */}
-                <div className="space-y-4 p-4 border rounded-lg">
-                  <h4 className="font-semibold text-lg">Supabase Integration</h4>
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h4 className="text-lg font-semibold">Supabase Integration</h4>
                   <p className="text-sm text-muted-foreground">
                     Database connection settings for contract and party data storage.
                   </p>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="supabaseUrl">Supabase URL</Label>
-                    <Input 
-                      id="supabaseUrl" 
+                    <Input
+                      id="supabaseUrl"
                       defaultValue={supabaseStatus}
                       readOnly
                       className="bg-muted"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="supabaseKey">Service Role Key Status</Label>
-                    <Input 
-                      id="supabaseKey" 
+                    <Input
+                      id="supabaseKey"
                       defaultValue="Configured in environment"
                       readOnly
                       className="bg-muted"
@@ -220,16 +221,16 @@ export default function LocaleSettingsPage({
                 </div>
 
                 {/* Google Drive Integration */}
-                <div className="space-y-4 p-4 border rounded-lg">
-                  <h4 className="font-semibold text-lg">Google Drive Integration</h4>
+                <div className="space-y-4 rounded-lg border p-4">
+                  <h4 className="text-lg font-semibold">Google Drive Integration</h4>
                   <p className="text-sm text-muted-foreground">
                     For storing contract PDFs and document templates via Make.com workflows.
                   </p>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="googleDriveStatus">Status</Label>
-                    <Input 
-                      id="googleDriveStatus" 
+                    <Input
+                      id="googleDriveStatus"
                       defaultValue="Configured in Make.com"
                       readOnly
                       className="bg-muted"
@@ -248,4 +249,4 @@ export default function LocaleSettingsPage({
       </div>
     </DashboardLayout>
   )
-} 
+}

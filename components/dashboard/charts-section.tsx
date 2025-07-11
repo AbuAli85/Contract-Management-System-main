@@ -4,16 +4,7 @@
 // will query the base `contracts` table, which is what we want for aggregated chart data.
 // The real-time subscription on `contracts` table will trigger refetch of these RPCs.
 import { useEffect, useState } from "react"
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Cell,
-} from "recharts"
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -78,55 +69,57 @@ export default function ChartsSection() {
     try {
       // Query contracts directly for status counts
       const { data: contractsData, error: contractsError } = await supabase
-        .from('contracts')
-        .select('status')
-      
+        .from("contracts")
+        .select("status")
+
       if (contractsError) throw contractsError
-      
+
       // Count statuses
-      const statusCounts = contractsData?.reduce((acc: any, contract: any) => {
-        const status = contract.status || 'Unknown'
-        acc[status] = (acc[status] || 0) + 1
-        return acc
-      }, {}) || {}
-      
+      const statusCounts =
+        contractsData?.reduce((acc: any, contract: any) => {
+          const status = contract.status || "Unknown"
+          acc[status] = (acc[status] || 0) + 1
+          return acc
+        }, {}) || {}
+
       const statusData = Object.entries(statusCounts).map(([name, count]) => ({
         name: name as string,
         count: count as number,
         nameAr: chartConfig[name as keyof typeof chartConfig]?.labelAr || name,
       }))
-      
+
       setStatusData(statusData)
 
       // Query contracts for monthly data
       const { data: monthlyContractsData, error: monthlyError } = await supabase
-        .from('contracts')
-        .select('contract_start_date, contract_value')
-        .gte('contract_start_date', new Date(new Date().getFullYear(), 0, 1).toISOString())
-      
+        .from("contracts")
+        .select("contract_start_date, contract_value")
+        .gte("contract_start_date", new Date(new Date().getFullYear(), 0, 1).toISOString())
+
       if (monthlyError) throw monthlyError
-      
+
       // Group by month
-      const monthlyGroups = monthlyContractsData?.reduce((acc: any, contract: any) => {
-        if (contract.contract_start_date) {
-          const date = new Date(contract.contract_start_date)
-          const month = date.toLocaleDateString('en-US', { month: 'short' })
-          if (!acc[month]) {
-            acc[month] = { count: 0, revenue: 0 }
+      const monthlyGroups =
+        monthlyContractsData?.reduce((acc: any, contract: any) => {
+          if (contract.contract_start_date) {
+            const date = new Date(contract.contract_start_date)
+            const month = date.toLocaleDateString("en-US", { month: "short" })
+            if (!acc[month]) {
+              acc[month] = { count: 0, revenue: 0 }
+            }
+            acc[month].count += 1
+            acc[month].revenue += contract.contract_value || 0
           }
-          acc[month].count += 1
-          acc[month].revenue += contract.contract_value || 0
-        }
-        return acc
-      }, {}) || {}
-      
+          return acc
+        }, {}) || {}
+
       const monthlyData = Object.entries(monthlyGroups).map(([month, data]: [string, any]) => ({
         month,
         contracts: data.count,
         revenue: data.revenue,
         monthAr: MONTH_MAP[month as keyof typeof MONTH_MAP] || month,
       }))
-      
+
       setMonthlyData(monthlyData)
     } catch (error: any) {
       console.error("Error fetching chart data:", error)
@@ -247,9 +240,7 @@ export default function ChartsSection() {
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(label) =>
-                      MONTH_MAP[label as keyof typeof MONTH_MAP] || label
-                    }
+                    labelFormatter={(label) => MONTH_MAP[label as keyof typeof MONTH_MAP] || label}
                   />
                 }
               />

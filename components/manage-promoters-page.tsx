@@ -36,7 +36,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 // Helper function to determine document status
 const getDocumentStatus = (
-  expiryDate: string | null | undefined,
+  expiryDate: string | null | undefined
 ): {
   text: string
   Icon: React.ElementType
@@ -136,7 +136,7 @@ export default function ManagePromotersPage() {
               (c) =>
                 c.promoter_id === promoter.id &&
                 c.contract_end_date &&
-                c.contract_end_date >= todayStr,
+                c.contract_end_date >= todayStr
             ).length
           : 0
         return { ...promoter, active_contracts_count: activeContracts }
@@ -157,14 +157,14 @@ export default function ManagePromotersPage() {
     const promotersChannel = supabase
       .channel("public:promoters:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () =>
-        fetchPromotersWithContractCount(),
+        fetchPromotersWithContractCount()
       )
       .subscribe()
 
     const contractsChannel = supabase
       .channel("public:contracts:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () =>
-        fetchPromotersWithContractCount(),
+        fetchPromotersWithContractCount()
       )
       .subscribe()
 
@@ -379,9 +379,9 @@ export default function ManagePromotersPage() {
                                 passHref
                                 legacyBehavior
                               >
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="text-xs"
                                   disabled={!promoter.id}
                                 >

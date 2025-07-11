@@ -139,11 +139,11 @@ export default function PromoterProfileForm({
       const id_card_url =
         id_card_image instanceof File
           ? "new_file_placeholder_url_id_card.jpg" // Placeholder for new upload
-          : existing_id_card_url ?? null
+          : (existing_id_card_url ?? null)
       const passport_url =
         passport_image instanceof File
           ? "new_file_placeholder_url_passport.jpg" // Placeholder for new upload
-          : existing_passport_url ?? null
+          : (existing_passport_url ?? null)
 
       const submissionData = {
         ...rest,

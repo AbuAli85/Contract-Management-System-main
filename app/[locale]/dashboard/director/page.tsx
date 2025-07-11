@@ -6,8 +6,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 export default function DirectorPage() {
   return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-3xl font-bold mb-4">Director: Admin & Workflow Center</h1>
+    <div className="space-y-6 p-8">
+      <h1 className="mb-4 text-3xl font-bold">Director: Admin & Workflow Center</h1>
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="users">Users</TabsTrigger>

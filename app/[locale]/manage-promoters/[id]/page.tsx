@@ -167,7 +167,7 @@ export default function PromoterDetailPage() {
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/40 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center">
+        <CardHeader className="flex flex-col items-start gap-4 bg-muted/40 p-6 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
             {promoterDetails.profile_picture_url ? (
               <img
@@ -238,20 +238,22 @@ export default function PromoterDetailPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {promoterDetails.contracts.map(contract => {
+                    {promoterDetails.contracts.map((contract) => {
                       const statusInfo = getDocumentStatus(contract.end_date)
-                      const party = (contract as any).second_party as Party | undefined;
+                      const party = (contract as any).second_party as Party | undefined
                       return (
                         <TableRow key={contract.id}>
                           <TableCell className="font-medium">{contract.contract_name}</TableCell>
                           <TableCell>{party?.name_en ?? "N/A"}</TableCell>
                           <TableCell>
-                            <DocumentStatusBadge status={statusInfo.status} label={statusInfo.text} expiryDate={contract.end_date} />
+                            <DocumentStatusBadge
+                              status={statusInfo.status}
+                              label={statusInfo.text}
+                              expiryDate={contract.end_date}
+                            />
                           </TableCell>
                           <TableCell>
-                            {contract.end_date
-                              ? format(parseISO(contract.end_date), "PPP")
-                              : "N/A"}
+                            {contract.end_date ? format(parseISO(contract.end_date), "PPP") : "N/A"}
                           </TableCell>
                           <TableCell className="text-right">
                             <Link href={`/contracts/${contract.id}`} passHref>

@@ -19,7 +19,13 @@ import {
   PaginationPrevious,
   usePagination,
 } from "@/components/ui/pagination"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface PaginatedTableProps<T> {
@@ -50,12 +56,7 @@ export function PaginatedTable<T>({
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage)
 
-  const pagination = usePagination(
-    data.length,
-    itemsPerPage,
-    currentPage,
-    setCurrentPage
-  )
+  const pagination = usePagination(data.length, itemsPerPage, currentPage, setCurrentPage)
 
   // Reset to first page when items per page changes
   const handleItemsPerPageChange = (value: string) => {
@@ -112,16 +113,16 @@ export function PaginatedTable<T>({
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
+                    <TableCell colSpan={columns.length} className="py-8 text-center">
                       <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
                         <span className="ml-2">Loading...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : currentData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
+                    <TableCell colSpan={columns.length} className="py-8 text-center">
                       {emptyMessage}
                     </TableCell>
                   </TableRow>
@@ -151,10 +152,12 @@ export function PaginatedTable<T>({
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={pagination.goToPreviousPage}
-                      className={!pagination.hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        !pagination.hasPreviousPage ? "pointer-events-none opacity-50" : ""
+                      }
                     />
                   </PaginationItem>
-                  
+
                   {pagination.getVisiblePages().map((page, index) => (
                     <PaginationItem key={index}>
                       {page === "..." ? (
@@ -169,7 +172,7 @@ export function PaginatedTable<T>({
                       )}
                     </PaginationItem>
                   ))}
-                  
+
                   <PaginationItem>
                     <PaginationNext
                       onClick={pagination.goToNextPage}
@@ -184,4 +187,4 @@ export function PaginatedTable<T>({
       </CardContent>
     </Card>
   )
-} 
+}

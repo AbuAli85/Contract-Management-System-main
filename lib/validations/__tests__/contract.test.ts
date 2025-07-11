@@ -34,7 +34,7 @@ describe("ContractFormSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.flatten().fieldErrors.contractStartDate?.[0]).toMatch(
-        /Invalid date format/,
+        /Invalid date format/
       )
     }
   })
@@ -52,7 +52,7 @@ describe("ContractFormSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.flatten().fieldErrors.promoterIdCardCopy?.[0]).toMatch(
-        /files are accepted/,
+        /files are accepted/
       )
     }
   })

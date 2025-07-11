@@ -44,12 +44,7 @@ export default function EditPromoterPage() {
             <div>{englishText}</div>
             <div dir="rtl">{arabicText}</div>
           </div>
-          <Button 
-            asChild 
-            variant="outline" 
-            className="mr-2"
-            disabled={!promoterId}
-          >
+          <Button asChild variant="outline" className="mr-2" disabled={!promoterId}>
             <Link href={promoterId ? `/manage-promoters/${promoterId}` : "#"}>
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Back to Promoter Details

@@ -7,7 +7,7 @@ import { ArrowLeftIcon, Construction } from "lucide-react"
 
 export default async function EditContractPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  
+
   return (
     <ManualErrorBoundary>
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 dark:bg-slate-900">

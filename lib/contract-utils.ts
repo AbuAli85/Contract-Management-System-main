@@ -15,13 +15,13 @@ export type ContractRow = Database["public"]["Tables"]["contracts"]["Row"]
 export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
 
 // Contract status types
-export type ContractStatus = 
-  | "draft" 
-  | "pending_approval" 
-  | "approved" 
-  | "active" 
-  | "expired" 
-  | "terminated" 
+export type ContractStatus =
+  | "draft"
+  | "pending_approval"
+  | "approved"
+  | "active"
+  | "expired"
+  | "terminated"
   | "cancelled"
 
 // Contract duration analysis
@@ -57,38 +57,39 @@ export interface ContractValidationResult {
 /**
  * Analyze contract duration and provide insights
  */
-export function analyzeContractDuration(
-  startDate: Date,
-  endDate: Date
-): ContractDurationAnalysis {
+export function analyzeContractDuration(startDate: Date, endDate: Date): ContractDurationAnalysis {
   const duration = differenceInDays(endDate, startDate)
   const months = differenceInMonths(endDate, startDate)
-  
+
   const analysis: ContractDurationAnalysis = {
     duration,
     durationText: formatDuration(duration),
     category: duration <= 90 ? "short-term" : duration <= 365 ? "medium-term" : "long-term",
-    isValid: duration >= 1 && duration <= (5 * 365), // 1 day to 5 years
+    isValid: duration >= 1 && duration <= 5 * 365, // 1 day to 5 years
     warnings: [],
-    recommendations: []
+    recommendations: [],
   }
 
   // Add warnings based on duration
   if (duration < 7) {
     analysis.warnings.push("Very short contract duration (less than a week)")
-  } else if (duration > (2 * 365)) {
+  } else if (duration > 2 * 365) {
     analysis.warnings.push("Long-term contract (over 2 years)")
   }
 
   // Add recommendations
   if (duration <= 90) {
-    analysis.recommendations.push("Consider probation period of 1-2 months for short-term contracts")
+    analysis.recommendations.push(
+      "Consider probation period of 1-2 months for short-term contracts"
+    )
   } else if (duration >= 365) {
     analysis.recommendations.push("Consider annual performance reviews for long-term contracts")
   }
 
   if (months >= 12) {
-    analysis.recommendations.push("Consider including salary review clauses for contracts over 1 year")
+    analysis.recommendations.push(
+      "Consider including salary review clauses for contracts over 1 year"
+    )
   }
 
   return analysis
@@ -103,22 +104,30 @@ export function formatDuration(days: number): string {
   if (days < 30) {
     const weeks = Math.floor(days / 7)
     const remainingDays = days % 7
-    return weeks === 1 
-      ? remainingDays > 0 ? `1 week, ${remainingDays} days` : "1 week"
-      : remainingDays > 0 ? `${weeks} weeks, ${remainingDays} days` : `${weeks} weeks`
+    return weeks === 1
+      ? remainingDays > 0
+        ? `1 week, ${remainingDays} days`
+        : "1 week"
+      : remainingDays > 0
+        ? `${weeks} weeks, ${remainingDays} days`
+        : `${weeks} weeks`
   }
   if (days < 365) {
     const months = Math.floor(days / 30)
     const remainingDays = days % 30
     return months === 1
-      ? remainingDays > 0 ? `1 month, ${remainingDays} days` : "1 month"
-      : remainingDays > 0 ? `${months} months, ${remainingDays} days` : `${months} months`
+      ? remainingDays > 0
+        ? `1 month, ${remainingDays} days`
+        : "1 month"
+      : remainingDays > 0
+        ? `${months} months, ${remainingDays} days`
+        : `${months} months`
   }
-  
+
   const years = Math.floor(days / 365)
   const remainingDays = days % 365
   const months = Math.floor(remainingDays / 30)
-  
+
   if (years === 1) {
     return months > 0 ? `1 year, ${months} months` : "1 year"
   }
@@ -139,8 +148,10 @@ export function analyzeContractCompensation(
   // Market comparison logic (simplified)
   let marketComparison: "below" | "average" | "above" | undefined
   if (currency === "OMR" && totalMonthly > 0) {
-    if (totalMonthly < 1300) marketComparison = "below"     // ~325 OMR minimum wage
-    else if (totalMonthly < 3900) marketComparison = "average" // Mid-level Oman salaries
+    if (totalMonthly < 1300)
+      marketComparison = "below" // ~325 OMR minimum wage
+    else if (totalMonthly < 3900)
+      marketComparison = "average" // Mid-level Oman salaries
     else marketComparison = "above"
   }
 
@@ -151,35 +162,37 @@ export function analyzeContractCompensation(
     totalAnnual,
     currency,
     isCompetitive: marketComparison === "average" || marketComparison === "above",
-    marketComparison
+    marketComparison,
   }
 }
 
 /**
  * Validate contract form data
  */
-export function validateContractData(data: Partial<ContractGeneratorFormData>): ContractValidationResult {
+export function validateContractData(
+  data: Partial<ContractGeneratorFormData>
+): ContractValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
   const missingFields: string[] = []
 
   // Required fields check
   const requiredFields = [
-    'first_party_id',
-    'second_party_id', 
-    'promoter_id',
-    'contract_start_date',
-    'contract_end_date',
-    'email',
-    'job_title',
-    'department',
-    'contract_type',
-    'currency',
-    'work_location'
+    "first_party_id",
+    "second_party_id",
+    "promoter_id",
+    "contract_start_date",
+    "contract_end_date",
+    "email",
+    "job_title",
+    "department",
+    "contract_type",
+    "currency",
+    "work_location",
   ] as const
 
-  requiredFields.forEach(field => {
-    if (!data[field] || data[field] === '') {
+  requiredFields.forEach((field) => {
+    if (!data[field] || data[field] === "") {
       missingFields.push(field)
     }
   })
@@ -214,7 +227,7 @@ export function validateContractData(data: Partial<ContractGeneratorFormData>): 
     errors,
     warnings,
     completeness,
-    missingFields
+    missingFields,
   }
 }
 
@@ -230,7 +243,9 @@ export function generateContractNumber(prefix: string = "CT"): string {
 /**
  * Get contract status badge variant
  */
-export function getStatusBadgeVariant(status: ContractStatus): "default" | "secondary" | "destructive" | "outline" {
+export function getStatusBadgeVariant(
+  status: ContractStatus
+): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "active":
     case "approved":
@@ -251,10 +266,10 @@ export function getStatusBadgeVariant(status: ContractStatus): "default" | "seco
  * Format contract dates for display
  */
 export function formatContractDates(startDate: string | Date, endDate: string | Date): string {
-  const start = typeof startDate === 'string' ? parseISO(startDate) : startDate
-  const end = typeof endDate === 'string' ? parseISO(endDate) : endDate
-  
-  return `${format(start, 'dd MMM yyyy')} - ${format(end, 'dd MMM yyyy')}`
+  const start = typeof startDate === "string" ? parseISO(startDate) : startDate
+  const end = typeof endDate === "string" ? parseISO(endDate) : endDate
+
+  return `${format(start, "dd MMM yyyy")} - ${format(end, "dd MMM yyyy")}`
 }
 
 /**
@@ -265,15 +280,15 @@ export function calculateContractProgress(
   endDate: string | Date,
   currentDate: Date = new Date()
 ): number {
-  const start = typeof startDate === 'string' ? parseISO(startDate) : startDate
-  const end = typeof endDate === 'string' ? parseISO(endDate) : endDate
-  
+  const start = typeof startDate === "string" ? parseISO(startDate) : startDate
+  const end = typeof endDate === "string" ? parseISO(endDate) : endDate
+
   if (currentDate < start) return 0
   if (currentDate > end) return 100
-  
+
   const totalDuration = differenceInDays(end, start)
   const elapsed = differenceInDays(currentDate, start)
-  
+
   return Math.round((elapsed / totalDuration) * 100)
 }
 
@@ -281,11 +296,11 @@ export function calculateContractProgress(
  * Get contract age in human readable format
  */
 export function getContractAge(createdAt: string | Date): string {
-  const created = typeof createdAt === 'string' ? parseISO(createdAt) : createdAt
+  const created = typeof createdAt === "string" ? parseISO(createdAt) : createdAt
   const now = new Date()
-  
+
   const days = differenceInDays(now, created)
-  
+
   if (days === 0) return "Today"
   if (days === 1) return "1 day ago"
   if (days < 7) return `${days} days ago`
@@ -297,7 +312,7 @@ export function getContractAge(createdAt: string | Date): string {
     const months = Math.floor(days / 30)
     return months === 1 ? "1 month ago" : `${months} months ago`
   }
-  
+
   const years = Math.floor(days / 365)
   return years === 1 ? "1 year ago" : `${years} years ago`
 }
@@ -307,38 +322,38 @@ export function getContractAge(createdAt: string | Date): string {
  */
 export function exportContractsToCSV(contracts: ContractRow[]): string {
   const headers = [
-    'ID',
-    'Contract Number',
-    'Client ID',
-    'Employer ID', 
-    'Promoter ID',
-    'Job Title',
-    'Start Date',
-    'End Date',
-    'Status',
-    'Work Location',
-    'Email',
-    'Created At'
+    "ID",
+    "Contract Number",
+    "Client ID",
+    "Employer ID",
+    "Promoter ID",
+    "Job Title",
+    "Start Date",
+    "End Date",
+    "Status",
+    "Work Location",
+    "Email",
+    "Created At",
   ]
 
-  const rows = contracts.map(contract => [
+  const rows = contracts.map((contract) => [
     contract.id,
-    contract.contract_number || '',
-    contract.first_party_id || '',
-    contract.second_party_id || '',
-    contract.promoter_id || '',
-    contract.job_title || '',
-    contract.contract_start_date || '',
-    contract.contract_end_date || '',
-    contract.status || '',
-    contract.work_location || '',
-    contract.email || '',
-    contract.created_at || ''
+    contract.contract_number || "",
+    contract.first_party_id || "",
+    contract.second_party_id || "",
+    contract.promoter_id || "",
+    contract.job_title || "",
+    contract.contract_start_date || "",
+    contract.contract_end_date || "",
+    contract.status || "",
+    contract.work_location || "",
+    contract.email || "",
+    contract.created_at || "",
   ])
 
   const csvContent = [headers, ...rows]
-    .map(row => row.map(field => `"${field}"`).join(','))
-    .join('\n')
+    .map((row) => row.map((field) => `"${field}"`).join(","))
+    .join("\n")
 
   return csvContent
 }
@@ -347,14 +362,14 @@ export function exportContractsToCSV(contracts: ContractRow[]): string {
  * Download CSV file
  */
 export function downloadCSV(csvContent: string, filename: string): void {
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const link = document.createElement("a")
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', filename)
-    link.style.visibility = 'hidden'
+    link.setAttribute("href", url)
+    link.setAttribute("download", filename)
+    link.style.visibility = "hidden"
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -371,14 +386,14 @@ export function getSalaryRecommendations(
 ): { min: number; max: number; average: number } | null {
   // Simplified salary recommendations for Oman market (in production, this would come from a database)
   const salaryBands: Record<string, { min: number; max: number; average: number }> = {
-    "senior-software-engineer": { min: 3900, max: 6500, average: 5200 },  // Converted to OMR
-    "software-engineer": { min: 2600, max: 4680, average: 3640 },         // Converted to OMR
+    "senior-software-engineer": { min: 3900, max: 6500, average: 5200 }, // Converted to OMR
+    "software-engineer": { min: 2600, max: 4680, average: 3640 }, // Converted to OMR
     "junior-software-engineer": { min: 6000, max: 12000, average: 9000 },
     "project-manager": { min: 12000, max: 22000, average: 17000 },
     "product-manager": { min: 14000, max: 24000, average: 19000 },
     "ui-ux-designer": { min: 8000, max: 16000, average: 12000 },
     "marketing-specialist": { min: 7000, max: 14000, average: 10500 },
-    "business-analyst": { min: 9000, max: 16000, average: 12500 }
+    "business-analyst": { min: 9000, max: 16000, average: 12500 },
   }
 
   return salaryBands[jobTitle] || null

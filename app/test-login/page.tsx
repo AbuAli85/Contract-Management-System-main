@@ -16,32 +16,32 @@ export default function TestLoginPage() {
   const { user, isAuthenticated, loading, refresh } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
-  
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<"signin" | "signup">("signin")
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       toast({
         title: "Error",
         description: "Please enter both email and password",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
 
     setIsLoading(true)
-    
+
     try {
-      if (mode === 'signin') {
+      if (mode === "signin") {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
-          password
+          password,
         })
 
         if (error) {
@@ -55,16 +55,15 @@ export default function TestLoginPage() {
 
         // Refresh auth state
         await refresh()
-        
+
         // Redirect to dashboard after a short delay
         setTimeout(() => {
-          router.push('/dashboard')
+          router.push("/dashboard")
         }, 1000)
-        
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
-          password
+          password,
         })
 
         if (error) {
@@ -77,14 +76,14 @@ export default function TestLoginPage() {
         })
 
         // Switch to sign in mode
-        setMode('signin')
+        setMode("signin")
       }
     } catch (error: any) {
-      console.error('Auth error:', error)
+      console.error("Auth error:", error)
       toast({
         title: "Error",
         description: error.message || "Authentication failed",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -96,18 +95,18 @@ export default function TestLoginPage() {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-      
+
       toast({
         title: "Success",
         description: "Signed out successfully",
       })
-      
+
       await refresh()
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Sign out failed",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -117,41 +116,45 @@ export default function TestLoginPage() {
   const testCredentials = [
     { email: "admin@example.com", password: "admin123" },
     { email: "user@example.com", password: "user123" },
-    { email: "test@test.com", password: "test123" }
+    { email: "test@test.com", password: "test123" },
   ]
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Authentication Test</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             Test login functionality and debug authentication issues
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Login Form */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {mode === 'signin' ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
-                {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                {mode === "signin" ? (
+                  <LogIn className="h-5 w-5" />
+                ) : (
+                  <UserPlus className="h-5 w-5" />
+                )}
+                {mode === "signin" ? "Sign In" : "Sign Up"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isAuthenticated ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-800 font-medium">✅ You are signed in!</p>
-                    <p className="text-green-700 text-sm mt-1">Email: {user?.email}</p>
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                    <p className="font-medium text-green-800">✅ You are signed in!</p>
+                    <p className="mt-1 text-sm text-green-700">Email: {user?.email}</p>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button onClick={handleSignOut} disabled={isLoading} className="flex-1">
                       {isLoading ? "Signing out..." : "Sign Out"}
                     </Button>
-                    <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                    <Button variant="outline" onClick={() => router.push("/dashboard")}>
                       Go to Dashboard
                     </Button>
                   </div>
@@ -169,7 +172,7 @@ export default function TestLoginPage() {
                       disabled={isLoading}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
@@ -188,33 +191,38 @@ export default function TestLoginPage() {
                         className="absolute right-0 top-0 h-full px-3"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
-                  
+
                   <Button type="submit" disabled={isLoading} className="w-full">
                     {isLoading ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
+                        {mode === "signin" ? "Signing in..." : "Creating account..."}
                       </>
+                    ) : mode === "signin" ? (
+                      "Sign In"
                     ) : (
-                      mode === 'signin' ? 'Sign In' : 'Sign Up'
+                      "Sign Up"
                     )}
                   </Button>
-                  
+
                   <div className="text-center">
                     <Button
                       type="button"
                       variant="link"
-                      onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+                      onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
                       disabled={isLoading}
                     >
-                      {mode === 'signin' 
-                        ? "Don't have an account? Sign up" 
-                        : "Already have an account? Sign in"
-                      }
+                      {mode === "signin"
+                        ? "Don't have an account? Sign up"
+                        : "Already have an account? Sign in"}
                     </Button>
                   </div>
                 </form>
@@ -225,7 +233,7 @@ export default function TestLoginPage() {
           {/* Auth Status */}
           <div className="space-y-6">
             <AuthStatus showDetails={true} />
-            
+
             {/* Test Credentials */}
             {!isAuthenticated && (
               <Card>
@@ -234,9 +242,9 @@ export default function TestLoginPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-xs">
-                    <p className="text-muted-foreground mb-2">Try these test accounts:</p>
+                    <p className="mb-2 text-muted-foreground">Try these test accounts:</p>
                     {testCredentials.map((cred, index) => (
-                      <div key={index} className="p-2 bg-gray-50 rounded">
+                      <div key={index} className="rounded bg-gray-50 p-2">
                         <div className="font-mono">
                           <div>Email: {cred.email}</div>
                           <div>Password: {cred.password}</div>
@@ -244,7 +252,7 @@ export default function TestLoginPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="mt-1 text-xs h-6"
+                          className="mt-1 h-6 text-xs"
                           onClick={() => {
                             setEmail(cred.email)
                             setPassword(cred.password)
@@ -258,7 +266,7 @@ export default function TestLoginPage() {
                 </CardContent>
               </Card>
             )}
-            
+
             {/* Quick Actions */}
             <Card>
               <CardHeader>
@@ -270,17 +278,17 @@ export default function TestLoginPage() {
                     <RefreshCw className="mr-2 h-3 w-3" />
                     Refresh Auth State
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => router.push('/debug-auth')}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push("/debug-auth")}
                     className="w-full"
                   >
                     Debug Auth
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       localStorage.clear()
                       sessionStorage.clear()

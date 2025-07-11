@@ -65,22 +65,30 @@ export default function ContractReportsTable() {
            second_party:parties!second_party_id(name_en),
            promoter:promoters!promoter_id(name_en)`
         )
-        .order(sortKey === 'start_date' ? 'contract_start_date' : sortKey === 'end_date' ? 'contract_end_date' : sortKey || "contract_start_date", { ascending: sortDirection === "asc" })
+        .order(
+          sortKey === "start_date"
+            ? "contract_start_date"
+            : sortKey === "end_date"
+              ? "contract_end_date"
+              : sortKey || "contract_start_date",
+          { ascending: sortDirection === "asc" }
+        )
 
       if (error) throw error
-      
+
       // Map the data to match ContractReportItem structure
-      const mappedData = data?.map(contract => ({
-        id: contract.id,
-        contract_id: contract.id, // Using id as contract_id since contract_number doesn't exist
-        promoter_name: contract.promoter?.name_en || '',
-        employer_name: contract.second_party?.name_en || '', // Party B (Employer)
-        client_name: contract.first_party?.name_en || '', // Party A (Client)
-        start_date: contract.contract_start_date,
-        end_date: contract.contract_end_date,
-        status: contract.status
-      })) || []
-      
+      const mappedData =
+        data?.map((contract) => ({
+          id: contract.id,
+          contract_id: contract.id, // Using id as contract_id since contract_number doesn't exist
+          promoter_name: contract.promoter?.name_en || "",
+          employer_name: contract.second_party?.name_en || "", // Party B (Employer)
+          client_name: contract.first_party?.name_en || "", // Party A (Client)
+          start_date: contract.contract_start_date,
+          end_date: contract.contract_end_date,
+          status: contract.status,
+        })) || []
+
       setContracts(mappedData as ContractReportItem[])
     } catch (error: any) {
       console.error("Error fetching contracts:", error)
@@ -114,19 +122,19 @@ export default function ContractReportsTable() {
     const contractsBaseChannel = supabase
       .channel("public:contracts:for-view")
       .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, (p) =>
-        handleTableChange(p, "contracts"),
+        handleTableChange(p, "contracts")
       )
       .subscribe()
     const promotersChannel = supabase
       .channel("public:promoters:for-view")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, (p) =>
-        handleTableChange(p, "promoters"),
+        handleTableChange(p, "promoters")
       )
       .subscribe()
     const partiesChannel = supabase
       .channel("public:parties:for-view")
       .on("postgres_changes", { event: "*", schema: "public", table: "parties" }, (p) =>
-        handleTableChange(p, "parties"),
+        handleTableChange(p, "parties")
       )
       .subscribe()
 
@@ -199,7 +207,7 @@ export default function ContractReportsTable() {
         isValid(parseISO(item.start_date)) ? format(parseISO(item.start_date), "dd-MM-yyyy") : "",
         isValid(parseISO(item.end_date)) ? format(parseISO(item.end_date), "dd-MM-yyyy") : "",
         item.status,
-      ].join(","),
+      ].join(",")
     )
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n")
     const link = document.createElement("a")

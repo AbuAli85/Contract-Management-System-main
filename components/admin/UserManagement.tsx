@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -78,7 +77,7 @@ import {
   XCircle,
   Settings,
   Key,
-  Ban
+  Ban,
 } from "lucide-react"
 import { format, formatDistanceToNow, isAfter, subDays } from "date-fns"
 import { supabase } from "@/lib/supabase"
@@ -89,7 +88,7 @@ interface UserProfile {
   email: string
   full_name?: string
   avatar_url?: string
-  role?: 'admin' | 'manager' | 'user'
+  role?: "admin" | "manager" | "user"
   department?: string
   phone?: string
   timezone?: string
@@ -100,7 +99,7 @@ interface UserProfile {
   last_login?: string
   created_at?: string
   updated_at?: string
-  status?: 'active' | 'inactive' | 'suspended'
+  status?: "active" | "inactive" | "suspended"
 }
 
 interface UserStats {
@@ -115,12 +114,12 @@ interface UserStats {
   newThisMonth: number
 }
 
-type UserFilter = 'all' | 'active' | 'inactive' | 'suspended' | 'admin' | 'manager' | 'user'
+type UserFilter = "all" | "active" | "inactive" | "suspended" | "admin" | "manager" | "user"
 
 export function UserManagement() {
   const { profile: currentUserProfile, isAuthenticated, loading: authLoading } = useEnhancedAuth()
   const { toast } = useToast()
-  
+
   const [users, setUsers] = useState<UserProfile[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,17 +129,17 @@ export function UserManagement() {
   const [showUserModal, setShowUserModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  
+
   // Filters
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<UserFilter>('all')
-  const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all')
-  
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<UserFilter>("all")
+  const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
-  
+
   // Stats
   const [stats, setStats] = useState<UserStats>({
     total: 0,
@@ -151,11 +150,11 @@ export function UserManagement() {
     managers: 0,
     users: 0,
     recentlyActive: 0,
-    newThisMonth: 0
+    newThisMonth: 0,
   })
 
   // Check if current user is admin
-  const isAdmin = currentUserProfile?.role === 'admin'
+  const isAdmin = currentUserProfile?.role === "admin"
 
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
@@ -171,31 +170,30 @@ export function UserManagement() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false })
 
       if (fetchError) {
         throw new Error(`Failed to fetch users: ${fetchError.message}`)
       }
 
-      const enhancedUsers = (data || []).map(user => ({
+      const enhancedUsers = (data || []).map((user) => ({
         ...user,
-        status: user.status || 'active'
+        status: user.status || "active",
       }))
 
       setUsers(enhancedUsers)
       calculateStats(enhancedUsers)
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load users'
+      const errorMessage = err instanceof Error ? err.message : "Failed to load users"
       setError(errorMessage)
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -206,21 +204,21 @@ export function UserManagement() {
     const now = new Date()
     const thirtyDaysAgo = subDays(now, 30)
     const sevenDaysAgo = subDays(now, 7)
-    
+
     const stats: UserStats = {
       total: userData.length,
-      active: userData.filter(u => u.status === 'active').length,
-      inactive: userData.filter(u => u.status === 'inactive').length,
-      suspended: userData.filter(u => u.status === 'suspended').length,
-      admins: userData.filter(u => u.role === 'admin').length,
-      managers: userData.filter(u => u.role === 'manager').length,
-      users: userData.filter(u => u.role === 'user').length,
-      recentlyActive: userData.filter(u => 
-        u.last_login && isAfter(new Date(u.last_login), sevenDaysAgo)
+      active: userData.filter((u) => u.status === "active").length,
+      inactive: userData.filter((u) => u.status === "inactive").length,
+      suspended: userData.filter((u) => u.status === "suspended").length,
+      admins: userData.filter((u) => u.role === "admin").length,
+      managers: userData.filter((u) => u.role === "manager").length,
+      users: userData.filter((u) => u.role === "user").length,
+      recentlyActive: userData.filter(
+        (u) => u.last_login && isAfter(new Date(u.last_login), sevenDaysAgo)
       ).length,
-      newThisMonth: userData.filter(u => 
-        u.created_at && isAfter(new Date(u.created_at), thirtyDaysAgo)
-      ).length
+      newThisMonth: userData.filter(
+        (u) => u.created_at && isAfter(new Date(u.created_at), thirtyDaysAgo)
+      ).length,
     }
 
     setStats(stats)
@@ -232,97 +230,94 @@ export function UserManagement() {
     // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
-      filtered = filtered.filter(u =>
-        u.full_name?.toLowerCase().includes(searchLower) ||
-        u.email?.toLowerCase().includes(searchLower) ||
-        u.department?.toLowerCase().includes(searchLower) ||
-        u.phone?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (u) =>
+          u.full_name?.toLowerCase().includes(searchLower) ||
+          u.email?.toLowerCase().includes(searchLower) ||
+          u.department?.toLowerCase().includes(searchLower) ||
+          u.phone?.toLowerCase().includes(searchLower)
       )
     }
 
     // Status filter
-    if (statusFilter !== 'all') {
-      if (['active', 'inactive', 'suspended'].includes(statusFilter)) {
-        filtered = filtered.filter(u => u.status === statusFilter)
-      } else if (['admin', 'manager', 'user'].includes(statusFilter)) {
-        filtered = filtered.filter(u => u.role === statusFilter)
+    if (statusFilter !== "all") {
+      if (["active", "inactive", "suspended"].includes(statusFilter)) {
+        filtered = filtered.filter((u) => u.status === statusFilter)
+      } else if (["admin", "manager", "user"].includes(statusFilter)) {
+        filtered = filtered.filter((u) => u.role === statusFilter)
       }
     }
 
     // Role filter
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(u => u.role === roleFilter)
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((u) => u.role === roleFilter)
     }
 
     // Department filter
-    if (departmentFilter !== 'all') {
-      filtered = filtered.filter(u => u.department === departmentFilter)
+    if (departmentFilter !== "all") {
+      filtered = filtered.filter((u) => u.department === departmentFilter)
     }
 
     setFilteredUsers(filtered)
     setCurrentPage(1) // Reset to first page when filters change
   }
 
-  const updateUserStatus = async (userId: string, status: 'active' | 'inactive' | 'suspended') => {
+  const updateUserStatus = async (userId: string, status: "active" | "inactive" | "suspended") => {
     setActionLoading(userId)
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ 
+        .from("profiles")
+        .update({
           status,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', userId)
+        .eq("id", userId)
 
       if (error) throw new Error(`Failed to update user status: ${error.message}`)
 
-      setUsers(prev =>
-        prev.map(u => u.id === userId ? { ...u, status } : u)
-      )
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status } : u)))
 
       toast({
         title: "Success",
         description: `User status updated to ${status}`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update user status'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update user status"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
     }
   }
 
-  const updateUserRole = async (userId: string, role: 'admin' | 'manager' | 'user') => {
+  const updateUserRole = async (userId: string, role: "admin" | "manager" | "user") => {
     setActionLoading(userId)
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ 
+        .from("profiles")
+        .update({
           role,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', userId)
+        .eq("id", userId)
 
       if (error) throw new Error(`Failed to update user role: ${error.message}`)
 
-      setUsers(prev =>
-        prev.map(u => u.id === userId ? { ...u, role } : u)
-      )
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role } : u)))
 
       toast({
         title: "Success",
         description: `User role updated to ${role}`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update user role'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update user role"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -332,25 +327,22 @@ export function UserManagement() {
   const deleteUser = async (userId: string) => {
     setActionLoading(userId)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+      const { error } = await supabase.from("profiles").delete().eq("id", userId)
 
       if (error) throw new Error(`Failed to delete user: ${error.message}`)
 
-      setUsers(prev => prev.filter(u => u.id !== userId))
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
 
       toast({
         title: "Success",
         description: "User deleted successfully",
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user'
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete user"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -359,52 +351,75 @@ export function UserManagement() {
 
   const exportUsers = () => {
     const headers = [
-      'ID', 'Email', 'Full Name', 'Role', 'Department', 'Status',
-      'Last Login', 'Created At', 'Phone', 'Timezone'
+      "ID",
+      "Email",
+      "Full Name",
+      "Role",
+      "Department",
+      "Status",
+      "Last Login",
+      "Created At",
+      "Phone",
+      "Timezone",
     ]
-    
-    const csvData = filteredUsers.map(u => [
+
+    const csvData = filteredUsers.map((u) => [
       u.id,
       u.email,
-      u.full_name || '',
-      u.role || '',
-      u.department || '',
-      u.status || '',
-      u.last_login || '',
-      u.created_at || '',
-      u.phone || '',
-      u.timezone || ''
+      u.full_name || "",
+      u.role || "",
+      u.department || "",
+      u.status || "",
+      u.last_login || "",
+      u.created_at || "",
+      u.phone || "",
+      u.timezone || "",
     ])
 
     const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
+      headers.join(","),
+      ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n")
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const blob = new Blob([csvContent], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = `users-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    a.download = `users-${format(new Date(), "yyyy-MM-dd")}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   const clearFilters = () => {
-    setSearchTerm('')
-    setStatusFilter('all')
-    setRoleFilter('all')
-    setDepartmentFilter('all')
+    setSearchTerm("")
+    setStatusFilter("all")
+    setRoleFilter("all")
+    setDepartmentFilter("all")
   }
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle2 className="w-3 h-3 mr-1" />Active</Badge>
-      case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800"><Clock className="w-3 h-3 mr-1" />Inactive</Badge>
-      case 'suspended':
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />Suspended</Badge>
+      case "active":
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            <CheckCircle2 className="mr-1 h-3 w-3" />
+            Active
+          </Badge>
+        )
+      case "inactive":
+        return (
+          <Badge className="bg-gray-100 text-gray-800">
+            <Clock className="mr-1 h-3 w-3" />
+            Inactive
+          </Badge>
+        )
+      case "suspended":
+        return (
+          <Badge className="bg-red-100 text-red-800">
+            <XCircle className="mr-1 h-3 w-3" />
+            Suspended
+          </Badge>
+        )
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
@@ -416,7 +431,7 @@ export function UserManagement() {
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage)
 
   // Get unique departments for filter
-  const departments = Array.from(new Set(users.map(u => u.department).filter(Boolean)))
+  const departments = Array.from(new Set(users.map((u) => u.department).filter(Boolean)))
 
   // Show loading state while authentication is being checked
   if (authLoading) {
@@ -439,7 +454,7 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="h-5 w-5 mr-2" />
+            <AlertTriangle className="mr-2 h-5 w-5" />
             <span>Authentication required to access user management</span>
           </div>
         </CardContent>
@@ -456,7 +471,7 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <Shield className="h-5 w-5 mr-2" />
+            <Shield className="mr-2 h-5 w-5" />
             <span>Administrator access required</span>
           </div>
         </CardContent>
@@ -471,8 +486,8 @@ export function UserManagement() {
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
+                <div className="h-8 w-1/2 rounded bg-gray-200"></div>
               </CardContent>
             </Card>
           ))}
@@ -493,7 +508,7 @@ export function UserManagement() {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={fetchUsers} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button variant="outline" onClick={exportUsers}>
@@ -509,16 +524,11 @@ export function UserManagement() {
 
       {/* Error Alert */}
       {error && (
-        <div className="bg-destructive/15 border border-destructive/20 rounded-lg p-4">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/15 p-4">
           <div className="flex items-center">
-            <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+            <AlertTriangle className="mr-2 h-4 w-4 text-destructive" />
             <p className="text-sm text-destructive">{error}</p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setError(null)}
-              className="ml-auto"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setError(null)} className="ml-auto">
               ×
             </Button>
           </div>
@@ -538,7 +548,7 @@ export function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -550,7 +560,7 @@ export function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -562,7 +572,7 @@ export function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -590,7 +600,7 @@ export function UserManagement() {
             <div className="grid gap-4 md:grid-cols-5">
               <div className="md:col-span-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                   <Input
                     placeholder="Search users..."
                     value={searchTerm}
@@ -599,8 +609,11 @@ export function UserManagement() {
                   />
                 </div>
               </div>
-              
-              <Select value={statusFilter} onValueChange={(value: UserFilter) => setStatusFilter(value)}>
+
+              <Select
+                value={statusFilter}
+                onValueChange={(value: UserFilter) => setStatusFilter(value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
@@ -611,7 +624,7 @@ export function UserManagement() {
                   <SelectItem value="suspended">Suspended</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Roles" />
@@ -623,38 +636,36 @@ export function UserManagement() {
                   <SelectItem value="user">User</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Departments" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={clearFilters}
-                  size="sm"
-                >
+                <Button variant="outline" onClick={clearFilters} size="sm">
                   Clear Filters
                 </Button>
-                <span className="text-sm text-muted-foreground self-center">
+                <span className="self-center text-sm text-muted-foreground">
                   {filteredUsers.length} users
                 </span>
               </div>
-              
+
               {selectedUsers.length > 0 && (
                 <div className="flex gap-2">
-                  <span className="text-sm text-muted-foreground self-center">
+                  <span className="self-center text-sm text-muted-foreground">
                     {selectedUsers.length} selected
                   </span>
                   <Button variant="outline" size="sm">
@@ -672,8 +683,8 @@ export function UserManagement() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Users</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete {selectedUsers.length} users? 
-                          This action cannot be undone.
+                          Are you sure you want to delete {selectedUsers.length} users? This action
+                          cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -699,10 +710,12 @@ export function UserManagement() {
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
-                checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
+                checked={
+                  selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0
+                }
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setSelectedUsers(paginatedUsers.map(u => u.id))
+                    setSelectedUsers(paginatedUsers.map((u) => u.id))
                   } else {
                     setSelectedUsers([])
                   }
@@ -714,14 +727,13 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           {paginatedUsers.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <Users className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-2 text-sm font-semibold">No users found</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {filteredUsers.length === 0 && users.length === 0
                   ? "No users have been created yet."
-                  : "Try adjusting your filters to see more results."
-                }
+                  : "Try adjusting your filters to see more results."}
               </p>
             </div>
           ) : (
@@ -740,34 +752,34 @@ export function UserManagement() {
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                
+
                 <TableBody>
                   {paginatedUsers.map((user) => {
                     const isSelected = selectedUsers.includes(user.id)
-                    
+
                     return (
-                      <TableRow key={user.id} className={isSelected ? 'bg-muted/50' : ''}>
+                      <TableRow key={user.id} className={isSelected ? "bg-muted/50" : ""}>
                         <TableCell>
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedUsers(prev => [...prev, user.id])
+                                setSelectedUsers((prev) => [...prev, user.id])
                               } else {
-                                setSelectedUsers(prev => prev.filter(id => id !== user.id))
+                                setSelectedUsers((prev) => prev.filter((id) => id !== user.id))
                               }
                             }}
                           />
                         </TableCell>
-                        
+
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <UserAvatar user={user} size="sm" />
                             <div>
-                              <div className="font-medium">{user.full_name || 'No name'}</div>
+                              <div className="font-medium">{user.full_name || "No name"}</div>
                               <div className="text-sm text-muted-foreground">{user.email}</div>
                               {user.phone && (
-                                <div className="text-xs text-muted-foreground flex items-center">
+                                <div className="flex items-center text-xs text-muted-foreground">
                                   <Phone className="mr-1 h-3 w-3" />
                                   {user.phone}
                                 </div>
@@ -775,11 +787,11 @@ export function UserManagement() {
                             </div>
                           </div>
                         </TableCell>
-                        
+
                         <TableCell>
                           <UserRoleBadge role={user.role} />
                         </TableCell>
-                        
+
                         <TableCell>
                           {user.department ? (
                             <Badge variant="outline">{user.department}</Badge>
@@ -787,34 +799,40 @@ export function UserManagement() {
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        
-                        <TableCell>
-                          {getStatusBadge(user.status)}
-                        </TableCell>
-                        
+
+                        <TableCell>{getStatusBadge(user.status)}</TableCell>
+
                         <TableCell>
                           {user.last_login ? (
                             <div className="text-sm">
-                              <div>{formatDistanceToNow(new Date(user.last_login), { addSuffix: true })}</div>
+                              <div>
+                                {formatDistanceToNow(new Date(user.last_login), {
+                                  addSuffix: true,
+                                })}
+                              </div>
                               <div className="text-xs text-muted-foreground">
-                                {format(new Date(user.last_login), 'MMM dd, yyyy')}
+                                {format(new Date(user.last_login), "MMM dd, yyyy")}
                               </div>
                             </div>
                           ) : (
                             <span className="text-muted-foreground">Never</span>
                           )}
                         </TableCell>
-                        
+
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" disabled={actionLoading === user.id}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={actionLoading === user.id}
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              
+
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedUser(user)
@@ -824,32 +842,39 @@ export function UserManagement() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit User
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuSeparator />
-                              
+
                               <DropdownMenuItem
-                                onClick={() => updateUserRole(user.id, user.role === 'admin' ? 'user' : 'admin')}
+                                onClick={() =>
+                                  updateUserRole(user.id, user.role === "admin" ? "user" : "admin")
+                                }
                                 disabled={actionLoading === user.id}
                               >
                                 <Shield className="mr-2 h-4 w-4" />
-                                {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                                {user.role === "admin" ? "Remove Admin" : "Make Admin"}
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem
-                                onClick={() => updateUserStatus(user.id, user.status === 'active' ? 'suspended' : 'active')}
+                                onClick={() =>
+                                  updateUserStatus(
+                                    user.id,
+                                    user.status === "active" ? "suspended" : "active"
+                                  )
+                                }
                                 disabled={actionLoading === user.id}
                               >
                                 <Ban className="mr-2 h-4 w-4" />
-                                {user.status === 'active' ? 'Suspend' : 'Activate'}
+                                {user.status === "active" ? "Suspend" : "Activate"}
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuSeparator />
-                              
+
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -861,18 +886,18 @@ export function UserManagement() {
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Delete User</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete {user.full_name || user.email}? 
-                                      This action cannot be undone.
+                                      Are you sure you want to delete {user.full_name || user.email}
+                                      ? This action cannot be undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
+                                    <AlertDialogAction
                                       onClick={() => deleteUser(user.id)}
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       disabled={actionLoading === user.id}
                                     >
-                                      {actionLoading === user.id ? 'Deleting...' : 'Delete'}
+                                      {actionLoading === user.id ? "Deleting..." : "Delete"}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -887,18 +912,20 @@ export function UserManagement() {
               </Table>
             </div>
           )}
-          
+
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
+                {filteredUsers.length} users
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -909,7 +936,7 @@ export function UserManagement() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -929,62 +956,60 @@ export function UserManagement() {
                 <User className="h-5 w-5" />
                 User Details: {selectedUser.full_name || selectedUser.email}
               </DialogTitle>
-              <DialogDescription>
-                Complete user information and activity
-              </DialogDescription>
+              <DialogDescription>Complete user information and activity</DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <UserAvatar user={selectedUser} size="lg" />
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedUser.full_name || 'No name set'}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {selectedUser.full_name || "No name set"}
+                  </h3>
                   <p className="text-muted-foreground">{selectedUser.email}</p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     <UserRoleBadge role={selectedUser.role} />
                     {getStatusBadge(selectedUser.status)}
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Department</Label>
-                  <p className="text-sm">{selectedUser.department || 'Not set'}</p>
+                  <p className="text-sm">{selectedUser.department || "Not set"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Phone</Label>
-                  <p className="text-sm">{selectedUser.phone || 'Not set'}</p>
+                  <p className="text-sm">{selectedUser.phone || "Not set"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Timezone</Label>
-                  <p className="text-sm">{selectedUser.timezone || 'Not set'}</p>
+                  <p className="text-sm">{selectedUser.timezone || "Not set"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Language</Label>
-                  <p className="text-sm">{selectedUser.language || 'Not set'}</p>
+                  <p className="text-sm">{selectedUser.language || "Not set"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Last Login</Label>
                   <p className="text-sm">
-                    {selectedUser.last_login 
-                      ? format(new Date(selectedUser.last_login), 'PPpp')
-                      : 'Never'
-                    }
+                    {selectedUser.last_login
+                      ? format(new Date(selectedUser.last_login), "PPpp")
+                      : "Never"}
                   </p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Created</Label>
                   <p className="text-sm">
-                    {selectedUser.created_at 
-                      ? format(new Date(selectedUser.created_at), 'PPP')
-                      : 'Unknown'
-                    }
+                    {selectedUser.created_at
+                      ? format(new Date(selectedUser.created_at), "PPP")
+                      : "Unknown"}
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowUserModal(false)}>
                 Close

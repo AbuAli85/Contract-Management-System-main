@@ -9,12 +9,16 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
     return supabaseAdminInstance
   }
 
-  supabaseAdminInstance = createClient<Database>(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
+  supabaseAdminInstance = createClient<Database>(
+    NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
 
   return supabaseAdminInstance
 }

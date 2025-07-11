@@ -5,7 +5,7 @@ import { ContractDetailView } from "@/components/contracts/ContractDetailView"
 
 export default function ContractDetailPage() {
   const params = useParams()
-  
+
   if (!params?.id) {
     return <div>Invalid contract ID</div>
   }

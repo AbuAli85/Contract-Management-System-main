@@ -15,7 +15,7 @@ export const getContract = async (contractId: string): Promise<ContractWithRelat
       first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
       second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
       promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
-    `,
+    `
     )
     .eq("id", contractId)
     .single()

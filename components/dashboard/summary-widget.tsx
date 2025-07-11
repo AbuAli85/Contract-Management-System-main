@@ -40,7 +40,7 @@ export default function SummaryWidget({ data, isLoading = false }: SummaryWidget
               <p
                 className={cn(
                   "text-xs",
-                  data.color ? data.color.replace("text-", "text-") : "text-muted-foreground",
+                  data.color ? data.color.replace("text-", "text-") : "text-muted-foreground"
                 )}
               >
                 {data.comparison}

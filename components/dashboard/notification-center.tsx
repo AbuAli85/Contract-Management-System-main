@@ -8,14 +8,20 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { 
-  Bell, 
-  BellOff, 
-  CheckCircle, 
-  AlertCircle, 
-  Info, 
-  Settings, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Bell,
+  BellOff,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Settings,
   Filter,
   Search,
   MoreHorizontal,
@@ -26,13 +32,21 @@ import {
   FileText,
   Users,
   DollarSign,
-  Zap
+  Zap,
 } from "lucide-react"
 // import { useTranslations } from "next-intl"
 
 interface NotificationItem {
   id: string
-  type: "contract_created" | "contract_completed" | "contract_failed" | "approval_required" | "payment_due" | "deadline_approaching" | "system_update" | "workflow_completed"
+  type:
+    | "contract_created"
+    | "contract_completed"
+    | "contract_failed"
+    | "approval_required"
+    | "payment_due"
+    | "deadline_approaching"
+    | "system_update"
+    | "workflow_completed"
   title: string
   message: string
   priority: "low" | "medium" | "high" | "urgent"
@@ -70,13 +84,13 @@ interface NotificationCenterProps {
   onUpdateSettings: (settings: Partial<NotificationSettings>) => void
 }
 
-export function NotificationCenter({ 
-  notifications, 
-  settings, 
-  onMarkAsRead, 
-  onMarkAllAsRead, 
+export function NotificationCenter({
+  notifications,
+  settings,
+  onMarkAsRead,
+  onMarkAllAsRead,
   onDeleteNotification,
-  onUpdateSettings 
+  onUpdateSettings,
 }: NotificationCenterProps) {
   // const t = useTranslations("NotificationCenter")
   const [activeTab, setActiveTab] = useState("all")
@@ -106,7 +120,7 @@ export function NotificationCenter({
   const getNotificationColor = (type: string, priority: string) => {
     if (priority === "urgent") return "text-red-600"
     if (priority === "high") return "text-orange-600"
-    
+
     switch (type) {
       case "contract_completed":
         return "text-green-600"
@@ -126,66 +140,68 @@ export function NotificationCenter({
       urgent: "bg-red-500 text-white",
       high: "bg-orange-500 text-white",
       medium: "bg-yellow-500 text-white",
-      low: "bg-green-500 text-white"
+      low: "bg-green-500 text-white",
     }
     return colors[priority as keyof typeof colors] || "bg-gray-500 text-white"
   }
 
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesTab = activeTab === "all" || 
-                      (activeTab === "unread" && !notification.read) ||
-                      (activeTab === "urgent" && notification.priority === "urgent") ||
-                      (activeTab === notification.type)
-    
+  const filteredNotifications = notifications.filter((notification) => {
+    const matchesSearch =
+      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "unread" && !notification.read) ||
+      (activeTab === "urgent" && notification.priority === "urgent") ||
+      activeTab === notification.type
+
     return matchesSearch && matchesTab
   })
 
-  const unreadCount = notifications.filter(n => !n.read).length
-  const urgentCount = notifications.filter(n => n.priority === "urgent").length
+  const unreadCount = notifications.filter((n) => !n.read).length
+  const urgentCount = notifications.filter((n) => n.priority === "urgent").length
 
   const NotificationCard = ({ notification }: { notification: NotificationItem }) => (
-    <Card className={`hover:shadow-sm transition-shadow ${!notification.read ? 'bg-blue-50 border-blue-200' : ''}`}>
+    <Card
+      className={`transition-shadow hover:shadow-sm ${!notification.read ? "border-blue-200 bg-blue-50" : ""}`}
+    >
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
-          <div className={`p-2 rounded-full ${getNotificationColor(notification.type, notification.priority)} bg-opacity-10`}>
+          <div
+            className={`rounded-full p-2 ${getNotificationColor(notification.type, notification.priority)} bg-opacity-10`}
+          >
             {getNotificationIcon(notification.type)}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
-                  <h4 className={`font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                  <h4
+                    className={`font-medium ${!notification.read ? "text-gray-900" : "text-gray-700"}`}
+                  >
                     {notification.title}
                   </h4>
                   <Badge variant="outline" className={getPriorityBadge(notification.priority)}>
                     {notification.priority}
                   </Badge>
-                  {!notification.read && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                  )}
+                  {!notification.read && <div className="h-2 w-2 rounded-full bg-blue-500" />}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                <div className="flex items-center space-x-4 mt-2">
+                <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                <div className="mt-2 flex items-center space-x-4">
                   <span className="text-xs text-gray-500">
                     {new Date(notification.created_at).toLocaleString()}
                   </span>
                   {notification.action_url && (
-                    <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                       View Details
                     </Button>
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-1 ml-4">
+              <div className="ml-4 flex items-center space-x-1">
                 {!notification.read && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onMarkAsRead(notification.id)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => onMarkAsRead(notification.id)}>
                     <Eye className="h-4 w-4" />
                   </Button>
                 )}
@@ -207,26 +223,22 @@ export function NotificationCenter({
   const NotificationSettings = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-4">Notification Channels</h3>
+        <h3 className="mb-4 text-lg font-medium">Notification Channels</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="email-notifications" className="text-sm font-medium">
                 Email Notifications
               </Label>
-              <p className="text-xs text-muted-foreground">
-                Receive notifications via email
-              </p>
+              <p className="text-xs text-muted-foreground">Receive notifications via email</p>
             </div>
             <Switch
               id="email-notifications"
               checked={settings.email_notifications}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ email_notifications: checked })
-              }
+              onCheckedChange={(checked) => onUpdateSettings({ email_notifications: checked })}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="push-notifications" className="text-sm font-medium">
@@ -239,12 +251,10 @@ export function NotificationCenter({
             <Switch
               id="push-notifications"
               checked={settings.push_notifications}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ push_notifications: checked })
-              }
+              onCheckedChange={(checked) => onUpdateSettings({ push_notifications: checked })}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="slack-notifications" className="text-sm font-medium">
@@ -257,16 +267,14 @@ export function NotificationCenter({
             <Switch
               id="slack-notifications"
               checked={settings.slack_notifications}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ slack_notifications: checked })
-              }
+              onCheckedChange={(checked) => onUpdateSettings({ slack_notifications: checked })}
             />
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-4">Notification Types</h3>
+        <h3 className="mb-4 text-lg font-medium">Notification Types</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -280,63 +288,59 @@ export function NotificationCenter({
             <Switch
               id="contract-updates"
               checked={settings.notification_types.contract_updates}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  notification_types: { 
-                    ...settings.notification_types, 
-                    contract_updates: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  notification_types: {
+                    ...settings.notification_types,
+                    contract_updates: checked,
+                  },
                 })
               }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="payment-reminders" className="text-sm font-medium">
                 Payment Reminders
               </Label>
-              <p className="text-xs text-muted-foreground">
-                Reminders for upcoming payments
-              </p>
+              <p className="text-xs text-muted-foreground">Reminders for upcoming payments</p>
             </div>
             <Switch
               id="payment-reminders"
               checked={settings.notification_types.payment_reminders}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  notification_types: { 
-                    ...settings.notification_types, 
-                    payment_reminders: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  notification_types: {
+                    ...settings.notification_types,
+                    payment_reminders: checked,
+                  },
                 })
               }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="deadline-alerts" className="text-sm font-medium">
                 Deadline Alerts
               </Label>
-              <p className="text-xs text-muted-foreground">
-                Alerts for approaching deadlines
-              </p>
+              <p className="text-xs text-muted-foreground">Alerts for approaching deadlines</p>
             </div>
             <Switch
               id="deadline-alerts"
               checked={settings.notification_types.deadline_alerts}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  notification_types: { 
-                    ...settings.notification_types, 
-                    deadline_alerts: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  notification_types: {
+                    ...settings.notification_types,
+                    deadline_alerts: checked,
+                  },
                 })
               }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="workflow-updates" className="text-sm font-medium">
@@ -349,17 +353,17 @@ export function NotificationCenter({
             <Switch
               id="workflow-updates"
               checked={settings.notification_types.workflow_updates}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  notification_types: { 
-                    ...settings.notification_types, 
-                    workflow_updates: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  notification_types: {
+                    ...settings.notification_types,
+                    workflow_updates: checked,
+                  },
                 })
               }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="system-updates" className="text-sm font-medium">
@@ -372,12 +376,12 @@ export function NotificationCenter({
             <Switch
               id="system-updates"
               checked={settings.notification_types.system_updates}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  notification_types: { 
-                    ...settings.notification_types, 
-                    system_updates: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  notification_types: {
+                    ...settings.notification_types,
+                    system_updates: checked,
+                  },
                 })
               }
             />
@@ -386,7 +390,7 @@ export function NotificationCenter({
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-4">Quiet Hours</h3>
+        <h3 className="mb-4 text-lg font-medium">Quiet Hours</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -400,17 +404,17 @@ export function NotificationCenter({
             <Switch
               id="quiet-hours"
               checked={settings.quiet_hours.enabled}
-              onCheckedChange={(checked) => 
-                onUpdateSettings({ 
-                  quiet_hours: { 
-                    ...settings.quiet_hours, 
-                    enabled: checked 
-                  } 
+              onCheckedChange={(checked) =>
+                onUpdateSettings({
+                  quiet_hours: {
+                    ...settings.quiet_hours,
+                    enabled: checked,
+                  },
                 })
               }
             />
           </div>
-          
+
           {settings.quiet_hours.enabled && (
             <div className="flex items-center space-x-4">
               <div className="flex-1">
@@ -421,12 +425,12 @@ export function NotificationCenter({
                   type="time"
                   id="start-time"
                   value={settings.quiet_hours.start_time}
-                  onChange={(e) => 
-                    onUpdateSettings({ 
-                      quiet_hours: { 
-                        ...settings.quiet_hours, 
-                        start_time: e.target.value 
-                      } 
+                  onChange={(e) =>
+                    onUpdateSettings({
+                      quiet_hours: {
+                        ...settings.quiet_hours,
+                        start_time: e.target.value,
+                      },
                     })
                   }
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -440,12 +444,12 @@ export function NotificationCenter({
                   type="time"
                   id="end-time"
                   value={settings.quiet_hours.end_time}
-                  onChange={(e) => 
-                    onUpdateSettings({ 
-                      quiet_hours: { 
-                        ...settings.quiet_hours, 
-                        end_time: e.target.value 
-                      } 
+                  onChange={(e) =>
+                    onUpdateSettings({
+                      quiet_hours: {
+                        ...settings.quiet_hours,
+                        end_time: e.target.value,
+                      },
                     })
                   }
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -465,9 +469,7 @@ export function NotificationCenter({
         <div className="flex items-center space-x-4">
           <div>
             <h2 className="text-2xl font-bold">Notifications</h2>
-            <p className="text-muted-foreground">
-              {notifications.length} notifications
-            </p>
+            <p className="text-muted-foreground">{notifications.length} notifications</p>
           </div>
           {unreadCount > 0 && (
             <Badge variant="destructive" className="px-2 py-1">
@@ -482,13 +484,13 @@ export function NotificationCenter({
             onClick={onMarkAllAsRead}
             disabled={unreadCount === 0}
           >
-            <CheckCircle className="h-4 w-4 mr-1" />
+            <CheckCircle className="mr-1 h-4 w-4" />
             Mark All as Read
           </Button>
           <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-1" />
+                <Settings className="mr-1 h-4 w-4" />
                 Settings
               </Button>
             </DialogTrigger>
@@ -534,9 +536,11 @@ export function NotificationCenter({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {notifications.filter(n => 
-                new Date(n.created_at).toDateString() === new Date().toDateString()
-              ).length}
+              {
+                notifications.filter(
+                  (n) => new Date(n.created_at).toDateString() === new Date().toDateString()
+                ).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -544,7 +548,7 @@ export function NotificationCenter({
 
       {/* Filters */}
       <div className="flex items-center space-x-4">
-        <div className="flex-1 max-w-sm">
+        <div className="max-w-sm flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <input
@@ -552,7 +556,7 @@ export function NotificationCenter({
               placeholder="Search notifications..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -562,25 +566,21 @@ export function NotificationCenter({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="unread">
-            Unread {unreadCount > 0 && `(${unreadCount})`}
-          </TabsTrigger>
-          <TabsTrigger value="urgent">
-            Urgent {urgentCount > 0 && `(${urgentCount})`}
-          </TabsTrigger>
+          <TabsTrigger value="unread">Unread {unreadCount > 0 && `(${unreadCount})`}</TabsTrigger>
+          <TabsTrigger value="urgent">Urgent {urgentCount > 0 && `(${urgentCount})`}</TabsTrigger>
           <TabsTrigger value="contract_created">Contracts</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value={activeTab} className="space-y-4">
           <div className="space-y-3">
-            {filteredNotifications.map(notification => (
+            {filteredNotifications.map((notification) => (
               <NotificationCard key={notification.id} notification={notification} />
             ))}
           </div>
-          
+
           {filteredNotifications.length === 0 && (
-            <div className="text-center py-12">
-              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="py-12 text-center">
+              <Bell className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="text-lg font-medium">No notifications</h3>
               <p className="text-muted-foreground">You're all caught up!</p>
             </div>

@@ -47,7 +47,7 @@ export interface NotificationItem {
   type: "success" | "error" | "warning" | "info" | "default"
   message: string
   created_at: string // Changed from timestamp to match DB
-  timestamp?: string // Add timestamp for compatibility  
+  timestamp?: string // Add timestamp for compatibility
   context?: string
   is_read?: boolean // Changed from isRead to match DB
   isRead?: boolean // Add isRead for compatibility
@@ -188,7 +188,7 @@ export interface Notification {
 }
 
 export interface ServerActionResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
+  success: boolean
+  message: string
+  data?: T
 }

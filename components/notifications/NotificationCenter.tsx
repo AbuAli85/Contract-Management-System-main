@@ -6,13 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -70,15 +64,24 @@ import {
   Clock,
   Users,
   TrendingUp,
-  Calendar
+  Calendar,
 } from "lucide-react"
-import { format, formatDistanceToNow, isAfter, isBefore, parseISO, subDays, startOfDay, endOfDay } from "date-fns"
+import {
+  format,
+  formatDistanceToNow,
+  isAfter,
+  isBefore,
+  parseISO,
+  subDays,
+  startOfDay,
+  endOfDay,
+} from "date-fns"
 import { supabase } from "@/lib/supabase"
 import { LoadingSpinner } from "@/components/ui/skeletons"
 
 interface NotificationItem {
   id: string
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: "success" | "error" | "warning" | "info"
   message: string
   created_at: string
   user_email?: string
@@ -88,7 +91,7 @@ interface NotificationItem {
   is_read: boolean
   is_starred?: boolean
   is_archived?: boolean
-  priority?: 'low' | 'medium' | 'high' | 'urgent'
+  priority?: "low" | "medium" | "high" | "urgent"
   category?: string
   metadata?: Record<string, any>
 }
@@ -112,28 +115,38 @@ const iconMap = {
 
 const getIconColor = (type: string) => {
   switch (type) {
-    case 'success': return 'text-green-500'
-    case 'error': return 'text-red-500'
-    case 'warning': return 'text-orange-500'
-    case 'info': return 'text-blue-500'
-    default: return 'text-gray-500'
+    case "success":
+      return "text-green-500"
+    case "error":
+      return "text-red-500"
+    case "warning":
+      return "text-orange-500"
+    case "info":
+      return "text-blue-500"
+    default:
+      return "text-gray-500"
   }
 }
 
 const getPriorityColor = (priority?: string) => {
   switch (priority) {
-    case 'urgent': return 'bg-red-100 text-red-800'
-    case 'high': return 'bg-orange-100 text-orange-800'
-    case 'medium': return 'bg-yellow-100 text-yellow-800'
-    case 'low': return 'bg-gray-100 text-gray-800'
-    default: return 'bg-gray-100 text-gray-800'
+    case "urgent":
+      return "bg-red-100 text-red-800"
+    case "high":
+      return "bg-orange-100 text-orange-800"
+    case "medium":
+      return "bg-yellow-100 text-yellow-800"
+    case "low":
+      return "bg-gray-100 text-gray-800"
+    default:
+      return "bg-gray-100 text-gray-800"
   }
 }
 
 export function NotificationCenter() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const { toast } = useToast()
-  
+
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [filteredNotifications, setFilteredNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -142,19 +155,19 @@ export function NotificationCenter() {
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  
+
   // Filters
-  const [searchTerm, setSearchTerm] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [priorityFilter, setPriorityFilter] = useState<string>('all')
-  const [dateFilter, setDateFilter] = useState<string>('all')
-  const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  
+  const [searchTerm, setSearchTerm] = useState("")
+  const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
+  const [dateFilter, setDateFilter] = useState<string>("all")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
-  
+
   // Stats
   const [stats, setStats] = useState<NotificationStats>({
     total: 0,
@@ -163,7 +176,7 @@ export function NotificationCenter() {
     archived: 0,
     byType: {},
     byPriority: {},
-    recentActivity: 0
+    recentActivity: 0,
   })
 
   useEffect(() => {
@@ -175,39 +188,46 @@ export function NotificationCenter() {
 
   useEffect(() => {
     applyFilters()
-  }, [notifications, searchTerm, typeFilter, statusFilter, priorityFilter, dateFilter, categoryFilter])
+  }, [
+    notifications,
+    searchTerm,
+    typeFilter,
+    statusFilter,
+    priorityFilter,
+    dateFilter,
+    categoryFilter,
+  ])
 
   const fetchNotifications = async () => {
     try {
       setLoading(true)
       setError(null)
-      
+
       const { data, error: fetchError } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false })
         .limit(1000)
 
       if (fetchError) {
         throw new Error(`Failed to fetch notifications: ${fetchError.message}`)
       }
 
-      const enhancedNotifications = (data || []).map(notification => ({
+      const enhancedNotifications = (data || []).map((notification) => ({
         ...notification,
-        priority: notification.priority || 'medium',
-        category: notification.category || 'general'
+        priority: notification.priority || "medium",
+        category: notification.category || "general",
       }))
 
       setNotifications(enhancedNotifications)
       calculateStats(enhancedNotifications)
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load notifications'
+      const errorMessage = err instanceof Error ? err.message : "Failed to load notifications"
       setError(errorMessage)
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -216,24 +236,24 @@ export function NotificationCenter() {
 
   const setupRealtimeSubscription = () => {
     const channel = supabase
-      .channel('notifications_realtime')
+      .channel("notifications_realtime")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === "INSERT") {
             const newNotification = payload.new as NotificationItem
-            setNotifications(prev => [newNotification, ...prev])
+            setNotifications((prev) => [newNotification, ...prev])
             toast({
               title: "New Notification",
               description: newNotification.message,
             })
-          } else if (payload.eventType === 'UPDATE') {
-            setNotifications(prev => 
-              prev.map(n => n.id === payload.new.id ? payload.new as NotificationItem : n)
+          } else if (payload.eventType === "UPDATE") {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === payload.new.id ? (payload.new as NotificationItem) : n))
             )
-          } else if (payload.eventType === 'DELETE') {
-            setNotifications(prev => prev.filter(n => n.id !== payload.old.id))
+          } else if (payload.eventType === "DELETE") {
+            setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id))
           }
         }
       )
@@ -247,23 +267,22 @@ export function NotificationCenter() {
   const calculateStats = (notificationData: NotificationItem[]) => {
     const now = new Date()
     const yesterday = subDays(now, 1)
-    
+
     const stats: NotificationStats = {
       total: notificationData.length,
-      unread: notificationData.filter(n => !n.is_read).length,
-      starred: notificationData.filter(n => n.is_starred).length,
-      archived: notificationData.filter(n => n.is_archived).length,
+      unread: notificationData.filter((n) => !n.is_read).length,
+      starred: notificationData.filter((n) => n.is_starred).length,
+      archived: notificationData.filter((n) => n.is_archived).length,
       byType: {},
       byPriority: {},
-      recentActivity: notificationData.filter(n => 
-        isAfter(parseISO(n.created_at), yesterday)
-      ).length
+      recentActivity: notificationData.filter((n) => isAfter(parseISO(n.created_at), yesterday))
+        .length,
     }
 
     // Calculate type distribution
-    notificationData.forEach(n => {
+    notificationData.forEach((n) => {
       stats.byType[n.type] = (stats.byType[n.type] || 0) + 1
-      stats.byPriority[n.priority || 'medium'] = (stats.byPriority[n.priority || 'medium'] || 0) + 1
+      stats.byPriority[n.priority || "medium"] = (stats.byPriority[n.priority || "medium"] || 0) + 1
     })
 
     setStats(stats)
@@ -275,61 +294,60 @@ export function NotificationCenter() {
     // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
-      filtered = filtered.filter(n =>
-        n.message.toLowerCase().includes(searchLower) ||
-        n.user_email?.toLowerCase().includes(searchLower) ||
-        n.category?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (n) =>
+          n.message.toLowerCase().includes(searchLower) ||
+          n.user_email?.toLowerCase().includes(searchLower) ||
+          n.category?.toLowerCase().includes(searchLower)
       )
     }
 
     // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(n => n.type === typeFilter)
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((n) => n.type === typeFilter)
     }
 
     // Status filter
-    if (statusFilter === 'unread') {
-      filtered = filtered.filter(n => !n.is_read)
-    } else if (statusFilter === 'read') {
-      filtered = filtered.filter(n => n.is_read)
-    } else if (statusFilter === 'starred') {
-      filtered = filtered.filter(n => n.is_starred)
-    } else if (statusFilter === 'archived') {
-      filtered = filtered.filter(n => n.is_archived)
+    if (statusFilter === "unread") {
+      filtered = filtered.filter((n) => !n.is_read)
+    } else if (statusFilter === "read") {
+      filtered = filtered.filter((n) => n.is_read)
+    } else if (statusFilter === "starred") {
+      filtered = filtered.filter((n) => n.is_starred)
+    } else if (statusFilter === "archived") {
+      filtered = filtered.filter((n) => n.is_archived)
     }
 
     // Priority filter
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter(n => n.priority === priorityFilter)
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter((n) => n.priority === priorityFilter)
     }
 
     // Date filter
-    if (dateFilter !== 'all') {
+    if (dateFilter !== "all") {
       const now = new Date()
       let dateThreshold: Date
-      
+
       switch (dateFilter) {
-        case 'today':
+        case "today":
           dateThreshold = startOfDay(now)
           break
-        case 'week':
+        case "week":
           dateThreshold = subDays(now, 7)
           break
-        case 'month':
+        case "month":
           dateThreshold = subDays(now, 30)
           break
         default:
           dateThreshold = new Date(0)
       }
-      
-      filtered = filtered.filter(n => 
-        isAfter(parseISO(n.created_at), dateThreshold)
-      )
+
+      filtered = filtered.filter((n) => isAfter(parseISO(n.created_at), dateThreshold))
     }
 
     // Category filter
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(n => n.category === categoryFilter)
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter((n) => n.category === categoryFilter)
     }
 
     setFilteredNotifications(filtered)
@@ -337,32 +355,32 @@ export function NotificationCenter() {
   }
 
   const toggleNotificationRead = async (notificationId: string) => {
-    const notification = notifications.find(n => n.id === notificationId)
+    const notification = notifications.find((n) => n.id === notificationId)
     if (!notification) return
 
     setActionLoading(notificationId)
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_read: !notification.is_read })
-        .eq('id', notificationId)
+        .eq("id", notificationId)
 
       if (error) throw new Error(`Failed to update notification: ${error.message}`)
 
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: !n.is_read } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: !n.is_read } : n))
       )
 
       toast({
         title: "Success",
-        description: `Marked as ${!notification.is_read ? 'read' : 'unread'}`,
+        description: `Marked as ${!notification.is_read ? "read" : "unread"}`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update notification'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update notification"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -370,32 +388,32 @@ export function NotificationCenter() {
   }
 
   const toggleNotificationStar = async (notificationId: string) => {
-    const notification = notifications.find(n => n.id === notificationId)
+    const notification = notifications.find((n) => n.id === notificationId)
     if (!notification) return
 
     setActionLoading(notificationId)
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_starred: !notification.is_starred })
-        .eq('id', notificationId)
+        .eq("id", notificationId)
 
       if (error) throw new Error(`Failed to update notification: ${error.message}`)
 
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_starred: !n.is_starred } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_starred: !n.is_starred } : n))
       )
 
       toast({
         title: "Success",
-        description: `${!notification.is_starred ? 'Starred' : 'Unstarred'} notification`,
+        description: `${!notification.is_starred ? "Starred" : "Unstarred"} notification`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update notification'
+      const errorMessage = err instanceof Error ? err.message : "Failed to update notification"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -405,17 +423,17 @@ export function NotificationCenter() {
   const bulkMarkAsRead = async () => {
     if (selectedNotifications.length === 0) return
 
-    setActionLoading('bulk-read')
+    setActionLoading("bulk-read")
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_read: true })
-        .in('id', selectedNotifications)
+        .in("id", selectedNotifications)
 
       if (error) throw new Error(`Failed to mark notifications as read: ${error.message}`)
 
-      setNotifications(prev =>
-        prev.map(n => selectedNotifications.includes(n.id) ? { ...n, is_read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (selectedNotifications.includes(n.id) ? { ...n, is_read: true } : n))
       )
 
       setSelectedNotifications([])
@@ -424,11 +442,12 @@ export function NotificationCenter() {
         description: `Marked ${selectedNotifications.length} notifications as read`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to mark notifications as read'
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to mark notifications as read"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -438,17 +457,17 @@ export function NotificationCenter() {
   const bulkArchive = async () => {
     if (selectedNotifications.length === 0) return
 
-    setActionLoading('bulk-archive')
+    setActionLoading("bulk-archive")
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ is_archived: true })
-        .in('id', selectedNotifications)
+        .in("id", selectedNotifications)
 
       if (error) throw new Error(`Failed to archive notifications: ${error.message}`)
 
-      setNotifications(prev =>
-        prev.map(n => selectedNotifications.includes(n.id) ? { ...n, is_archived: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (selectedNotifications.includes(n.id) ? { ...n, is_archived: true } : n))
       )
 
       setSelectedNotifications([])
@@ -457,11 +476,11 @@ export function NotificationCenter() {
         description: `Archived ${selectedNotifications.length} notifications`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to archive notifications'
+      const errorMessage = err instanceof Error ? err.message : "Failed to archive notifications"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -471,18 +490,16 @@ export function NotificationCenter() {
   const bulkDelete = async () => {
     if (selectedNotifications.length === 0) return
 
-    setActionLoading('bulk-delete')
+    setActionLoading("bulk-delete")
     try {
       const { error } = await supabase
-        .from('notifications')
+        .from("notifications")
         .delete()
-        .in('id', selectedNotifications)
+        .in("id", selectedNotifications)
 
       if (error) throw new Error(`Failed to delete notifications: ${error.message}`)
 
-      setNotifications(prev =>
-        prev.filter(n => !selectedNotifications.includes(n.id))
-      )
+      setNotifications((prev) => prev.filter((n) => !selectedNotifications.includes(n.id)))
 
       setSelectedNotifications([])
       toast({
@@ -490,11 +507,11 @@ export function NotificationCenter() {
         description: `Deleted ${selectedNotifications.length} notifications`,
       })
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete notifications'
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete notifications"
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setActionLoading(null)
@@ -503,44 +520,49 @@ export function NotificationCenter() {
 
   const exportNotifications = () => {
     const headers = [
-      'ID', 'Type', 'Message', 'User Email', 'Priority', 'Category',
-      'Created At', 'Is Read', 'Is Starred', 'Is Archived'
+      "ID",
+      "Type",
+      "Message",
+      "User Email",
+      "Priority",
+      "Category",
+      "Created At",
+      "Is Read",
+      "Is Starred",
+      "Is Archived",
     ]
-    
-    const csvData = filteredNotifications.map(n => [
+
+    const csvData = filteredNotifications.map((n) => [
       n.id,
       n.type,
       `"${n.message.replace(/"/g, '""')}"`,
-      n.user_email || '',
-      n.priority || '',
-      n.category || '',
+      n.user_email || "",
+      n.priority || "",
+      n.category || "",
       n.created_at,
-      n.is_read ? 'Yes' : 'No',
-      n.is_starred ? 'Yes' : 'No',
-      n.is_archived ? 'Yes' : 'No'
+      n.is_read ? "Yes" : "No",
+      n.is_starred ? "Yes" : "No",
+      n.is_archived ? "Yes" : "No",
     ])
 
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n')
+    const csvContent = [headers.join(","), ...csvData.map((row) => row.join(","))].join("\n")
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const blob = new Blob([csvContent], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = `notifications-${format(new Date(), 'yyyy-MM-dd')}.csv`
+    a.download = `notifications-${format(new Date(), "yyyy-MM-dd")}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   const clearFilters = () => {
-    setSearchTerm('')
-    setTypeFilter('all')
-    setStatusFilter('all')
-    setPriorityFilter('all')
-    setDateFilter('all')
-    setCategoryFilter('all')
+    setSearchTerm("")
+    setTypeFilter("all")
+    setStatusFilter("all")
+    setPriorityFilter("all")
+    setDateFilter("all")
+    setCategoryFilter("all")
   }
 
   // Pagination
@@ -549,7 +571,7 @@ export function NotificationCenter() {
   const paginatedNotifications = filteredNotifications.slice(startIndex, startIndex + itemsPerPage)
 
   // Get unique categories for filter
-  const categories = Array.from(new Set(notifications.map(n => n.category).filter(Boolean)))
+  const categories = Array.from(new Set(notifications.map((n) => n.category).filter(Boolean)))
 
   // Show loading state while authentication is being checked
   if (authLoading) {
@@ -572,7 +594,7 @@ export function NotificationCenter() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="h-5 w-5 mr-2" />
+            <AlertTriangle className="mr-2 h-5 w-5" />
             <span>Authentication required to access notifications</span>
           </div>
         </CardContent>
@@ -587,8 +609,8 @@ export function NotificationCenter() {
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
+                <div className="h-8 w-1/2 rounded bg-gray-200"></div>
               </CardContent>
             </Card>
           ))}
@@ -609,7 +631,7 @@ export function NotificationCenter() {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={fetchNotifications} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button variant="outline" onClick={exportNotifications}>
@@ -621,16 +643,11 @@ export function NotificationCenter() {
 
       {/* Error Alert */}
       {error && (
-        <div className="bg-destructive/15 border border-destructive/20 rounded-lg p-4">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/15 p-4">
           <div className="flex items-center">
-            <XCircle className="h-4 w-4 text-destructive mr-2" />
+            <XCircle className="mr-2 h-4 w-4 text-destructive" />
             <p className="text-sm text-destructive">{error}</p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setError(null)}
-              className="ml-auto"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setError(null)} className="ml-auto">
               ��
             </Button>
           </div>
@@ -650,7 +667,7 @@ export function NotificationCenter() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -662,7 +679,7 @@ export function NotificationCenter() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -674,7 +691,7 @@ export function NotificationCenter() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -686,7 +703,7 @@ export function NotificationCenter() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -698,7 +715,7 @@ export function NotificationCenter() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -726,7 +743,7 @@ export function NotificationCenter() {
             <div className="grid gap-4 md:grid-cols-6">
               <div className="md:col-span-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                   <Input
                     placeholder="Search notifications..."
                     value={searchTerm}
@@ -735,7 +752,7 @@ export function NotificationCenter() {
                   />
                 </div>
               </div>
-              
+
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Types" />
@@ -748,7 +765,7 @@ export function NotificationCenter() {
                   <SelectItem value="info">Info</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
@@ -761,7 +778,7 @@ export function NotificationCenter() {
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Priorities" />
@@ -774,7 +791,7 @@ export function NotificationCenter() {
                   <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={dateFilter} onValueChange={setDateFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Time" />
@@ -789,46 +806,42 @@ export function NotificationCenter() {
             </div>
 
             {/* Bulk Actions */}
-            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={clearFilters}
-                  size="sm"
-                >
+                <Button variant="outline" onClick={clearFilters} size="sm">
                   Clear Filters
                 </Button>
-                <span className="text-sm text-muted-foreground self-center">
+                <span className="self-center text-sm text-muted-foreground">
                   {filteredNotifications.length} notifications
                 </span>
               </div>
-              
+
               {selectedNotifications.length > 0 && (
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={bulkMarkAsRead}
-                    disabled={actionLoading === 'bulk-read'}
+                    disabled={actionLoading === "bulk-read"}
                   >
                     <Eye className="mr-2 h-4 w-4" />
                     Mark Read ({selectedNotifications.length})
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={bulkArchive}
-                    disabled={actionLoading === 'bulk-archive'}
+                    disabled={actionLoading === "bulk-archive"}
                   >
                     <Archive className="mr-2 h-4 w-4" />
                     Archive
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         size="sm"
-                        disabled={actionLoading === 'bulk-delete'}
+                        disabled={actionLoading === "bulk-delete"}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -838,8 +851,8 @@ export function NotificationCenter() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Notifications</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete {selectedNotifications.length} notifications? 
-                          This action cannot be undone.
+                          Are you sure you want to delete {selectedNotifications.length}{" "}
+                          notifications? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -865,10 +878,13 @@ export function NotificationCenter() {
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
-                checked={selectedNotifications.length === paginatedNotifications.length && paginatedNotifications.length > 0}
+                checked={
+                  selectedNotifications.length === paginatedNotifications.length &&
+                  paginatedNotifications.length > 0
+                }
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setSelectedNotifications(paginatedNotifications.map(n => n.id))
+                    setSelectedNotifications(paginatedNotifications.map((n) => n.id))
                   } else {
                     setSelectedNotifications([])
                   }
@@ -880,14 +896,13 @@ export function NotificationCenter() {
         </CardHeader>
         <CardContent>
           {paginatedNotifications.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <BellRing className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-2 text-sm font-semibold">No notifications found</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {filteredNotifications.length === 0 && notifications.length === 0
                   ? "You're all caught up! New notifications will appear here."
-                  : "Try adjusting your filters to see more results."
-                }
+                  : "Try adjusting your filters to see more results."}
               </p>
             </div>
           ) : (
@@ -895,38 +910,42 @@ export function NotificationCenter() {
               {paginatedNotifications.map((notification) => {
                 const IconComponent = iconMap[notification.type]
                 const isSelected = selectedNotifications.includes(notification.id)
-                
+
                 return (
                   <div
                     key={notification.id}
-                    className={`flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-muted/50 ${
-                      !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-background'
-                    } ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                    className={`flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
+                      !notification.is_read ? "border-blue-200 bg-blue-50" : "bg-background"
+                    } ${isSelected ? "ring-2 ring-primary" : ""}`}
                   >
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedNotifications(prev => [...prev, notification.id])
+                          setSelectedNotifications((prev) => [...prev, notification.id])
                         } else {
-                          setSelectedNotifications(prev => prev.filter(id => id !== notification.id))
+                          setSelectedNotifications((prev) =>
+                            prev.filter((id) => id !== notification.id)
+                          )
                         }
                       }}
                     />
-                    
+
                     <div className="flex-shrink-0">
                       <IconComponent className={`h-5 w-5 ${getIconColor(notification.type)}`} />
                     </div>
-                    
-                    <div className="flex-1 min-w-0">
+
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">
                             {notification.message}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(parseISO(notification.created_at), { addSuffix: true })}
+                              {formatDistanceToNow(parseISO(notification.created_at), {
+                                addSuffix: true,
+                              })}
                             </span>
                             {notification.user_email && (
                               <span className="text-xs text-muted-foreground">
@@ -934,7 +953,10 @@ export function NotificationCenter() {
                               </span>
                             )}
                             {notification.priority && (
-                              <Badge variant="secondary" className={`text-xs ${getPriorityColor(notification.priority)}`}>
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs ${getPriorityColor(notification.priority)}`}
+                              >
                                 {notification.priority}
                               </Badge>
                             )}
@@ -945,12 +967,12 @@ export function NotificationCenter() {
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-1">
                           {notification.is_starred && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <Star className="h-4 w-4 fill-current text-yellow-500" />
                           )}
-                          
+
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
@@ -959,7 +981,7 @@ export function NotificationCenter() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              
+
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedNotification(notification)
@@ -969,7 +991,7 @@ export function NotificationCenter() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem
                                 onClick={() => toggleNotificationRead(notification.id)}
                                 disabled={actionLoading === notification.id}
@@ -979,19 +1001,19 @@ export function NotificationCenter() {
                                 ) : (
                                   <Eye className="mr-2 h-4 w-4" />
                                 )}
-                                Mark as {notification.is_read ? 'Unread' : 'Read'}
+                                Mark as {notification.is_read ? "Unread" : "Read"}
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem
                                 onClick={() => toggleNotificationStar(notification.id)}
                                 disabled={actionLoading === notification.id}
                               >
                                 <Star className="mr-2 h-4 w-4" />
-                                {notification.is_starred ? 'Unstar' : 'Star'}
+                                {notification.is_starred ? "Unstar" : "Star"}
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuSeparator />
-                              
+
                               {notification.related_contract_id && (
                                 <DropdownMenuItem asChild>
                                   <a href={`/contracts/${notification.related_contract_id}`}>
@@ -1010,18 +1032,20 @@ export function NotificationCenter() {
               })}
             </div>
           )}
-          
+
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredNotifications.length)} of {filteredNotifications.length} notifications
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + itemsPerPage, filteredNotifications.length)} of{" "}
+                {filteredNotifications.length} notifications
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1032,7 +1056,7 @@ export function NotificationCenter() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1050,15 +1074,13 @@ export function NotificationCenter() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {React.createElement(iconMap[selectedNotification.type], {
-                  className: `h-5 w-5 ${getIconColor(selectedNotification.type)}`
+                  className: `h-5 w-5 ${getIconColor(selectedNotification.type)}`,
                 })}
                 Notification Details
               </DialogTitle>
-              <DialogDescription>
-                Complete information about this notification
-              </DialogDescription>
+              <DialogDescription>Complete information about this notification</DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1068,12 +1090,12 @@ export function NotificationCenter() {
                 <div>
                   <Label className="text-sm font-medium">Priority</Label>
                   <Badge className={getPriorityColor(selectedNotification.priority)}>
-                    {selectedNotification.priority || 'medium'}
+                    {selectedNotification.priority || "medium"}
                   </Badge>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Category</Label>
-                  <p className="text-sm">{selectedNotification.category || 'General'}</p>
+                  <p className="text-sm">{selectedNotification.category || "General"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Status</Label>
@@ -1083,40 +1105,37 @@ export function NotificationCenter() {
                     ) : (
                       <Badge variant="default">Unread</Badge>
                     )}
-                    {selectedNotification.is_starred && (
-                      <Badge variant="outline">Starred</Badge>
-                    )}
-                    {selectedNotification.is_archived && (
-                      <Badge variant="outline">Archived</Badge>
-                    )}
+                    {selectedNotification.is_starred && <Badge variant="outline">Starred</Badge>}
+                    {selectedNotification.is_archived && <Badge variant="outline">Archived</Badge>}
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label className="text-sm font-medium">Message</Label>
-                <p className="text-sm mt-1 p-3 bg-muted rounded-md">
+                <p className="mt-1 rounded-md bg-muted p-3 text-sm">
                   {selectedNotification.message}
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">User Email</Label>
-                  <p className="text-sm">{selectedNotification.user_email || 'N/A'}</p>
+                  <p className="text-sm">{selectedNotification.user_email || "N/A"}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Created At</Label>
                   <p className="text-sm">
-                    {format(parseISO(selectedNotification.created_at), 'PPpp')}
+                    {format(parseISO(selectedNotification.created_at), "PPpp")}
                   </p>
                 </div>
               </div>
-              
-              {(selectedNotification.related_contract_id || selectedNotification.related_entity_id) && (
+
+              {(selectedNotification.related_contract_id ||
+                selectedNotification.related_entity_id) && (
                 <div>
                   <Label className="text-sm font-medium">Related Links</Label>
-                  <div className="flex gap-2 mt-1">
+                  <div className="mt-1 flex gap-2">
                     {selectedNotification.related_contract_id && (
                       <Button variant="outline" size="sm" asChild>
                         <a href={`/contracts/${selectedNotification.related_contract_id}`}>
@@ -1127,9 +1146,11 @@ export function NotificationCenter() {
                     )}
                     {selectedNotification.related_entity_id && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={`/${selectedNotification.related_entity_type || 'entity'}/${selectedNotification.related_entity_id}`}>
+                        <a
+                          href={`/${selectedNotification.related_entity_type || "entity"}/${selectedNotification.related_entity_id}`}
+                        >
                           <LinkIcon className="mr-2 h-4 w-4" />
-                          View {selectedNotification.related_entity_type || 'Entity'}
+                          View {selectedNotification.related_entity_type || "Entity"}
                         </a>
                       </Button>
                     )}
@@ -1137,13 +1158,13 @@ export function NotificationCenter() {
                 </div>
               )}
             </div>
-            
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDetailsModal(false)}>
                 Close
               </Button>
               <Button onClick={() => toggleNotificationRead(selectedNotification.id)}>
-                Mark as {selectedNotification.is_read ? 'Unread' : 'Read'}
+                Mark as {selectedNotification.is_read ? "Unread" : "Read"}
               </Button>
             </DialogFooter>
           </DialogContent>

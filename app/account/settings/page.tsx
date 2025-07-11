@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
-import { 
+import {
   User,
   Mail,
   Lock,
@@ -34,7 +34,7 @@ import {
   Copy,
   RefreshCw,
   LogOut,
-  Trash2
+  Trash2,
 } from "lucide-react"
 import { format } from "date-fns"
 import Image from "next/image"
@@ -43,191 +43,194 @@ export default function AccountSettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { supabase } = useSupabase()
-  
+
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [mfaSettings, setMfaSettings] = useState<any>(null)
   const [sessions, setSessions] = useState<any[]>([])
   const [authLogs, setAuthLogs] = useState<any[]>([])
-  
+
   // MFA setup states
   const [showMFASetup, setShowMFASetup] = useState(false)
   const [mfaSecret, setMfaSecret] = useState("")
   const [mfaQRCode, setMfaQRCode] = useState("")
   const [mfaBackupCodes, setMfaBackupCodes] = useState<string[]>([])
   const [mfaVerificationCode, setMfaVerificationCode] = useState("")
-  
+
   // Form states
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-  
+
   const profileForm = useForm({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       fullName: "",
       phone: "",
-      avatarUrl: ""
-    }
+      avatarUrl: "",
+    },
   })
-  
+
   const passwordForm = useForm({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
-      confirmPassword: ""
-    }
+      confirmPassword: "",
+    },
   })
-  
+
   useEffect(() => {
     fetchUserData()
   }, [])
-  
+
   async function fetchUserData() {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
       if (userError || !user) throw userError
-      
+
       setUser(user)
-      
+
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single()
-      
+
       if (profileError) throw profileError
       setProfile(profileData)
-      
+
       // Set form defaults
       profileForm.reset({
         fullName: profileData.full_name || "",
         phone: profileData.phone || "",
-        avatarUrl: profileData.avatar_url || ""
+        avatarUrl: profileData.avatar_url || "",
       })
-      
+
       // Fetch MFA settings
       const { data: mfaData } = await supabase
-        .from('mfa_settings')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("mfa_settings")
+        .select("*")
+        .eq("user_id", user.id)
         .single()
-      
+
       setMfaSettings(mfaData)
-      
+
       // Fetch active sessions
       const { data: sessionsData } = await supabase
-        .from('user_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('last_activity_at', { ascending: false })
-      
+        .from("user_sessions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("last_activity_at", { ascending: false })
+
       setSessions(sessionsData || [])
-      
+
       // Fetch recent auth logs
       const { data: logsData } = await supabase
-        .from('auth_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .from("auth_logs")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(10)
-      
+
       setAuthLogs(logsData || [])
     } catch (error: any) {
       toast({
         title: "Error loading account data",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
   }
-  
+
   async function updateProfile(data: any) {
     setIsUpdatingProfile(true)
-    
+
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           full_name: data.fullName,
           phone: data.phone,
-          avatar_url: data.avatarUrl
+          avatar_url: data.avatarUrl,
         })
-        .eq('id', user.id)
-      
+        .eq("id", user.id)
+
       if (error) throw error
-      
+
       toast({
         title: "Profile updated",
-        description: "Your profile has been updated successfully"
+        description: "Your profile has been updated successfully",
       })
-      
+
       fetchUserData()
     } catch (error: any) {
       toast({
         title: "Error updating profile",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsUpdatingProfile(false)
     }
   }
-  
+
   async function changePassword(data: any) {
     setIsChangingPassword(true)
-    
+
     try {
       // Verify current password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
-        password: data.currentPassword
+        password: data.currentPassword,
       })
-      
+
       if (signInError) {
         throw new Error("Current password is incorrect")
       }
-      
+
       // Update password
       const { error } = await supabase.auth.updateUser({
-        password: data.newPassword
+        password: data.newPassword,
       })
-      
+
       if (error) throw error
-      
+
       toast({
         title: "Password changed",
-        description: "Your password has been changed successfully"
+        description: "Your password has been changed successfully",
       })
-      
+
       passwordForm.reset()
     } catch (error: any) {
       toast({
         title: "Error changing password",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsChangingPassword(false)
     }
   }
-  
+
   async function setupMFA() {
     try {
       const response = await fetch("/api/auth/mfa/setup", {
-        method: "POST"
+        method: "POST",
       })
-      
+
       const result = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Failed to setup MFA")
       }
-      
+
       setMfaSecret(result.secret)
       setMfaQRCode(result.qrCode)
       setMfaBackupCodes(result.backupCodes)
@@ -236,106 +239,103 @@ export default function AccountSettingsPage() {
       toast({
         title: "Error setting up MFA",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
-  
+
   async function verifyMFA() {
     try {
       const response = await fetch("/api/auth/mfa/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: mfaVerificationCode })
+        body: JSON.stringify({ code: mfaVerificationCode }),
       })
-      
+
       const result = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Verification failed")
       }
-      
+
       toast({
         title: "MFA enabled",
-        description: "Two-factor authentication has been enabled for your account"
+        description: "Two-factor authentication has been enabled for your account",
       })
-      
+
       setShowMFASetup(false)
       fetchUserData()
     } catch (error: any) {
       toast({
         title: "Verification failed",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
-  
+
   async function disableMFA() {
     try {
       const { error } = await supabase
-        .from('mfa_settings')
+        .from("mfa_settings")
         .update({ totp_enabled: false })
-        .eq('user_id', user.id)
-      
+        .eq("user_id", user.id)
+
       if (error) throw error
-      
+
       toast({
         title: "MFA disabled",
-        description: "Two-factor authentication has been disabled"
+        description: "Two-factor authentication has been disabled",
       })
-      
+
       fetchUserData()
     } catch (error: any) {
       toast({
         title: "Error disabling MFA",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
-  
+
   async function revokeSession(sessionId: string) {
     try {
-      const { error } = await supabase
-        .from('user_sessions')
-        .delete()
-        .eq('id', sessionId)
-      
+      const { error } = await supabase.from("user_sessions").delete().eq("id", sessionId)
+
       if (error) throw error
-      
+
       toast({
         title: "Session revoked",
-        description: "The session has been terminated"
+        description: "The session has been terminated",
       })
-      
+
       fetchUserData()
     } catch (error: any) {
       toast({
         title: "Error revoking session",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
-  
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
-  
+
   return (
-    <div className="container max-w-4xl py-8 space-y-8">
+    <div className="container max-w-4xl space-y-8 py-8">
       <div>
         <h1 className="text-3xl font-bold">Account Settings</h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="mt-1 text-muted-foreground">
           Manage your account settings and security preferences
         </p>
       </div>
-      
+
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -343,14 +343,12 @@ export default function AccountSettingsPage() {
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your personal information and preferences
-              </CardDescription>
+              <CardDescription>Update your personal information and preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
@@ -364,53 +362,47 @@ export default function AccountSettingsPage() {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
                       <User className="h-10 w-10 text-primary" />
                     </div>
                   )}
                   <Button
                     size="sm"
                     variant="outline"
-                    className="absolute bottom-0 right-0 rounded-full p-1 h-8 w-8"
+                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-1"
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 <div>
-                  <p className="font-medium">{profile?.full_name || 'No name set'}</p>
+                  <p className="font-medium">{profile?.full_name || "No name set"}</p>
                   <p className="text-sm text-muted-foreground">{user?.email}</p>
                   <Badge variant="outline" className="mt-2">
                     <Shield className="mr-1 h-3 w-3" />
-                    {profile?.role || 'user'}
+                    {profile?.role || "user"}
                   </Badge>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <form onSubmit={profileForm.handleSubmit(updateProfile)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    {...profileForm.register("fullName")}
-                    placeholder="John Doe"
-                  />
+                  <Input {...profileForm.register("fullName")} placeholder="John Doe" />
                   {profileForm.formState.errors.fullName && (
                     <p className="text-sm text-destructive">
                       {profileForm.formState.errors.fullName.message}
                     </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    {...profileForm.register("phone")}
-                    placeholder="+1 (555) 123-4567"
-                  />
+                  <Input {...profileForm.register("phone")} placeholder="+1 (555) 123-4567" />
                 </div>
-                
+
                 <Button type="submit" disabled={isUpdatingProfile}>
                   {isUpdatingProfile ? (
                     <>
@@ -425,14 +417,12 @@ export default function AccountSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
-              <CardDescription>
-                Update your password to keep your account secure
-              </CardDescription>
+              <CardDescription>Update your password to keep your account secure</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={passwordForm.handleSubmit(changePassword)} className="space-y-4">
@@ -449,7 +439,7 @@ export default function AccountSettingsPage() {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
                   <Input
@@ -463,7 +453,7 @@ export default function AccountSettingsPage() {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
                   <Input
@@ -477,7 +467,7 @@ export default function AccountSettingsPage() {
                     </p>
                   )}
                 </div>
-                
+
                 <Button type="submit" disabled={isChangingPassword}>
                   {isChangingPassword ? (
                     <>
@@ -491,13 +481,11 @@ export default function AccountSettingsPage() {
               </form>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>
-                Add an extra layer of security to your account
-              </CardDescription>
+              <CardDescription>Add an extra layer of security to your account</CardDescription>
             </CardHeader>
             <CardContent>
               {mfaSettings?.totp_enabled ? (
@@ -508,7 +496,7 @@ export default function AccountSettingsPage() {
                       Two-factor authentication is enabled for your account
                     </AlertDescription>
                   </Alert>
-                  
+
                   <Button variant="destructive" onClick={disableMFA}>
                     Disable Two-Factor Authentication
                   </Button>
@@ -518,10 +506,11 @@ export default function AccountSettingsPage() {
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Two-factor authentication is not enabled. Enable it to add an extra layer of security.
+                      Two-factor authentication is not enabled. Enable it to add an extra layer of
+                      security.
                     </AlertDescription>
                   </Alert>
-                  
+
                   <Button onClick={setupMFA}>
                     <Smartphone className="mr-2 h-4 w-4" />
                     Enable Two-Factor Authentication
@@ -531,7 +520,7 @@ export default function AccountSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="sessions" className="space-y-6">
           <Card>
             <CardHeader>
@@ -543,20 +532,20 @@ export default function AccountSettingsPage() {
             <CardContent>
               <div className="space-y-4">
                 {sessions.map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
                     <div>
                       <p className="font-medium">
-                        {session.user_agent?.includes('Mobile') ? 'Mobile Device' : 'Desktop'}
+                        {session.user_agent?.includes("Mobile") ? "Mobile Device" : "Desktop"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {session.ip_address} • Last active {format(new Date(session.last_activity_at), 'PPp')}
+                        {session.ip_address} • Last active{" "}
+                        {format(new Date(session.last_activity_at), "PPp")}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => revokeSession(session.id)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => revokeSession(session.id)}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Revoke
                     </Button>
@@ -566,33 +555,33 @@ export default function AccountSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="activity" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Your recent account activity and security events
-              </CardDescription>
+              <CardDescription>Your recent account activity and security events</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {authLogs.map((log) => (
-                  <div key={log.id} className="flex items-start gap-4 p-4 border rounded-lg">
-                    <div className={`rounded-full p-2 ${
-                      log.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                    }`}>
+                  <div key={log.id} className="flex items-start gap-4 rounded-lg border p-4">
+                    <div
+                      className={`rounded-full p-2 ${
+                        log.success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                      }`}
+                    >
                       <Activity className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">
-                        {log.event_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {log.event_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(log.created_at), 'PPp')} • {log.ip_address}
+                        {format(new Date(log.created_at), "PPp")} • {log.ip_address}
                       </p>
                       {log.error_message && (
-                        <p className="text-sm text-destructive mt-1">{log.error_message}</p>
+                        <p className="mt-1 text-sm text-destructive">{log.error_message}</p>
                       )}
                     </div>
                   </div>
@@ -602,10 +591,10 @@ export default function AccountSettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-      
+
       {/* MFA Setup Dialog */}
       {showMFASetup && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg">
             <div className="space-y-4">
               <div>
@@ -614,15 +603,15 @@ export default function AccountSettingsPage() {
                   Scan the QR code with your authenticator app
                 </p>
               </div>
-              
+
               <div className="flex justify-center">
-                <img src={mfaQRCode} alt="MFA QR Code" className="border rounded" />
+                <img src={mfaQRCode} alt="MFA QR Code" className="rounded border" />
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Manual Entry Code</Label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 p-2 bg-muted rounded text-sm">{mfaSecret}</code>
+                  <code className="flex-1 rounded bg-muted p-2 text-sm">{mfaSecret}</code>
                   <Button
                     size="sm"
                     variant="outline"
@@ -635,41 +624,42 @@ export default function AccountSettingsPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <Alert>
                 <Key className="h-4 w-4" />
                 <AlertDescription>
-                  Save these backup codes in a safe place. You can use them to access your account if you lose your device.
+                  Save these backup codes in a safe place. You can use them to access your account
+                  if you lose your device.
                 </AlertDescription>
               </Alert>
-              
+
               <div className="grid grid-cols-2 gap-2">
                 {mfaBackupCodes.map((code, index) => (
-                  <code key={index} className="p-2 bg-muted rounded text-sm text-center">
+                  <code key={index} className="rounded bg-muted p-2 text-center text-sm">
                     {code}
                   </code>
                 ))}
               </div>
-              
+
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  const codes = mfaBackupCodes.join('\n')
-                  const blob = new Blob([codes], { type: 'text/plain' })
+                  const codes = mfaBackupCodes.join("\n")
+                  const blob = new Blob([codes], { type: "text/plain" })
                   const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
+                  const a = document.createElement("a")
                   a.href = url
-                  a.download = 'backup-codes.txt'
+                  a.download = "backup-codes.txt"
                   a.click()
                 }}
               >
                 <Download className="mr-2 h-4 w-4" />
                 Download Backup Codes
               </Button>
-              
+
               <Separator />
-              
+
               <div className="space-y-2">
                 <Label>Verification Code</Label>
                 <Input
@@ -681,13 +671,9 @@ export default function AccountSettingsPage() {
                   className="text-center text-2xl tracking-widest"
                 />
               </div>
-              
+
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowMFASetup(false)}
-                >
+                <Button variant="outline" className="flex-1" onClick={() => setShowMFASetup(false)}>
                   Cancel
                 </Button>
                 <Button

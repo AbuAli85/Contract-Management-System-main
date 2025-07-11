@@ -16,24 +16,16 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
 )
 Pagination.displayName = "Pagination"
 
-const PaginationContent = React.forwardRef<
-  HTMLUListElement,
-  React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    className={cn("flex flex-row items-center gap-1", className)}
-    {...props}
-  />
-))
+const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
+  ({ className, ...props }, ref) => (
+    <ul ref={ref} className={cn("flex flex-row items-center gap-1", className)} {...props} />
+  )
+)
 PaginationContent.displayName = "PaginationContent"
 
-const PaginationItem = React.forwardRef<
-  HTMLLIElement,
-  React.ComponentProps<"li">
->(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
-))
+const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(
+  ({ className, ...props }, ref) => <li ref={ref} className={cn("", className)} {...props} />
+)
 PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
@@ -41,12 +33,7 @@ type PaginationLinkProps = {
   size?: "default" | "sm" | "lg" | "icon"
 } & Omit<React.ComponentProps<"button">, "size">
 
-const PaginationLink = ({
-  className,
-  isActive,
-  size = "icon",
-  ...props
-}: PaginationLinkProps) => (
+const PaginationLink = ({ className, isActive, size = "icon", ...props }: PaginationLinkProps) => (
   <Button
     aria-current={isActive ? "page" : undefined}
     variant={isActive ? "outline" : "ghost"}
@@ -77,10 +64,7 @@ const PaginationPrevious = ({
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
-const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
     aria-label="Go to next page"
     size="default"
@@ -93,10 +77,7 @@ const PaginationNext = ({
 )
 PaginationNext.displayName = "PaginationNext"
 
-const PaginationEllipsis = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
+const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
   <span
     aria-hidden
     className={cn("flex h-9 w-9 items-center justify-center", className)}
@@ -116,24 +97,24 @@ export function usePagination(
   onPageChange: (page: number) => void
 ) {
   const totalPages = Math.ceil(totalItems / itemsPerPage)
-  
+
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems)
-  
+
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       onPageChange(page)
     }
   }
-  
+
   const goToNextPage = () => goToPage(currentPage + 1)
   const goToPreviousPage = () => goToPage(currentPage - 1)
-  
+
   const getVisiblePages = () => {
     const delta = 2
     const range = []
     const rangeWithDots = []
-    
+
     for (
       let i = Math.max(2, currentPage - delta);
       i <= Math.min(totalPages - 1, currentPage + delta);
@@ -141,24 +122,24 @@ export function usePagination(
     ) {
       range.push(i)
     }
-    
+
     if (currentPage - delta > 2) {
       rangeWithDots.push(1, "...")
     } else {
       rangeWithDots.push(1)
     }
-    
+
     rangeWithDots.push(...range)
-    
+
     if (currentPage + delta < totalPages - 1) {
       rangeWithDots.push("...", totalPages)
     } else {
       rangeWithDots.push(totalPages)
     }
-    
+
     return rangeWithDots
   }
-  
+
   return {
     totalPages,
     startIndex,

@@ -1,16 +1,22 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, Download, Users, FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
-import { parsePromoterCSV, analyzePromoterData, downloadPromoterCSV, validatePromoterData, type PromoterCSVRow } from '@/lib/promoter-data-utils'
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Upload, Download, Users, FileText, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import {
+  parsePromoterCSV,
+  analyzePromoterData,
+  downloadPromoterCSV,
+  validatePromoterData,
+  type PromoterCSVRow,
+} from "@/lib/promoter-data-utils"
 
 export default function PromoterDataAnalyzer() {
-  const [csvData, setCsvData] = useState('')
+  const [csvData, setCsvData] = useState("")
   const [parsedData, setParsedData] = useState<PromoterCSVRow[]>([])
   const [analysis, setAnalysis] = useState<any>(null)
   const [errors, setErrors] = useState<string[]>([])
@@ -25,7 +31,7 @@ export default function PromoterDataAnalyzer() {
 
   const analyzeData = () => {
     if (!csvData.trim()) {
-      setErrors(['Please enter CSV data'])
+      setErrors(["Please enter CSV data"])
       return
     }
 
@@ -37,7 +43,7 @@ export default function PromoterDataAnalyzer() {
       setParsedData(parsed)
 
       if (parsed.length === 0) {
-        setErrors(['No valid data found in CSV'])
+        setErrors(["No valid data found in CSV"])
         return
       }
 
@@ -45,7 +51,7 @@ export default function PromoterDataAnalyzer() {
       parsed.forEach((row, index) => {
         const validation = validatePromoterData(row)
         if (!validation.isValid) {
-          validationErrors.push(`Row ${index + 1}: ${validation.errors.join(', ')}`)
+          validationErrors.push(`Row ${index + 1}: ${validation.errors.join(", ")}`)
         }
       })
 
@@ -55,9 +61,8 @@ export default function PromoterDataAnalyzer() {
 
       const analysisResult = analyzePromoterData(parsed)
       setAnalysis(analysisResult)
-
     } catch (error) {
-      setErrors([`Error parsing CSV: ${error instanceof Error ? error.message : 'Unknown error'}`])
+      setErrors([`Error parsing CSV: ${error instanceof Error ? error.message : "Unknown error"}`])
     } finally {
       setIsAnalyzing(false)
     }
@@ -77,7 +82,7 @@ export default function PromoterDataAnalyzer() {
 
   const exportAnalysis = () => {
     if (parsedData.length > 0) {
-      const promoters = parsedData.map(row => ({
+      const promoters = parsedData.map((row) => ({
         id: row.id,
         name_en: row.name_en,
         name_ar: row.name_ar,
@@ -95,10 +100,10 @@ export default function PromoterDataAnalyzer() {
         notify_days_before_id_expiry: row.notify_days_before_id_expiry,
         notify_days_before_passport_expiry: row.notify_days_before_passport_expiry,
         notes: row.notes,
-        created_at: row.created_at
+        created_at: row.created_at,
       }))
-      
-      downloadPromoterCSV(promoters, 'promoter-analysis.csv')
+
+      downloadPromoterCSV(promoters, "promoter-analysis.csv")
     }
   }
 
@@ -127,7 +132,7 @@ export default function PromoterDataAnalyzer() {
             <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
-                onClick={() => document.getElementById('csv-upload')?.click()}
+                onClick={() => document.getElementById("csv-upload")?.click()}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload CSV
@@ -144,7 +149,7 @@ export default function PromoterDataAnalyzer() {
 
           <div className="flex gap-2">
             <Button onClick={analyzeData} disabled={isAnalyzing || !csvData.trim()}>
-              {isAnalyzing ? 'Analyzing...' : 'Analyze Data'}
+              {isAnalyzing ? "Analyzing..." : "Analyze Data"}
             </Button>
             {parsedData.length > 0 && (
               <Button variant="outline" onClick={exportAnalysis}>
@@ -158,7 +163,7 @@ export default function PromoterDataAnalyzer() {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <ul className="list-disc list-inside space-y-1">
+                <ul className="list-inside list-disc space-y-1">
                   {errors.map((error, index) => (
                     <li key={index}>{error}</li>
                   ))}
@@ -175,8 +180,8 @@ export default function PromoterDataAnalyzer() {
             <CardTitle>Analysis Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center gap-3 p-4 border rounded-lg">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="flex items-center gap-3 rounded-lg border p-4">
                 <Users className="h-8 w-8 text-blue-500" />
                 <div>
                   <p className="text-2xl font-bold">{analysis.total}</p>
@@ -184,45 +189,37 @@ export default function PromoterDataAnalyzer() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 border rounded-lg">
+              <div className="flex items-center gap-3 rounded-lg border p-4">
                 <CheckCircle className="h-8 w-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {analysis.byStatus.active || 0}
-                  </p>
+                  <p className="text-2xl font-bold">{analysis.byStatus.active || 0}</p>
                   <p className="text-sm text-muted-foreground">Active</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 border rounded-lg">
+              <div className="flex items-center gap-3 rounded-lg border p-4">
                 <FileText className="h-8 w-8 text-orange-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {analysis.byDocumentStatus.hasBothDocuments}
-                  </p>
+                  <p className="text-2xl font-bold">{analysis.byDocumentStatus.hasBothDocuments}</p>
                   <p className="text-sm text-muted-foreground">Complete Documents</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 border rounded-lg">
+              <div className="flex items-center gap-3 rounded-lg border p-4">
                 <Clock className="h-8 w-8 text-purple-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {analysis.recentUpdates.length}
-                  </p>
+                  <p className="text-2xl font-bold">{analysis.recentUpdates.length}</p>
                   <p className="text-sm text-muted-foreground">Recent Updates</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="font-semibold mb-3">Status Distribution</h4>
+              <h4 className="mb-3 font-semibold">Status Distribution</h4>
               <div className="space-y-2">
                 {Object.entries(analysis.byStatus).map(([status, count]) => (
                   <div key={status} className="flex items-center justify-between">
-                    <Badge variant={status === 'active' ? 'default' : 'secondary'}>
-                      {status}
-                    </Badge>
+                    <Badge variant={status === "active" ? "default" : "secondary"}>{status}</Badge>
                     <span className="font-medium">{count as number}</span>
                   </div>
                 ))}

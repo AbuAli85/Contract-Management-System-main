@@ -58,7 +58,7 @@ export class MakeWebhookIntegration {
 
     try {
       // Fetch contract data with all relations
-      const supabase = createClient()
+      const supabase = await createClient()
 
       const { data: contract, error: contractError } = await supabase
         .from("contracts")
@@ -144,7 +144,7 @@ export class MakeWebhookIntegration {
     valid: boolean
     missingFields: string[]
   }> {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data: contract, error } = await supabase
       .from("contracts")

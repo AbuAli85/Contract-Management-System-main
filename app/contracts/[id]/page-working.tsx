@@ -72,7 +72,6 @@ export default function ContractDetailPage() {
             setPromoter(promoterData)
           }
         }
-
       } catch (err) {
         console.error("Unexpected error:", err)
         setError("An unexpected error occurred")
@@ -88,7 +87,7 @@ export default function ContractDetailPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-32 w-32 animate-spin rounded-full border-b-2 border-blue-500"></div>
           <p>Loading contract details...</p>
         </div>
       </div>
@@ -98,7 +97,7 @@ export default function ContractDetailPage() {
   if (error) {
     return (
       <div className="container mx-auto py-8">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
+        <div className="rounded border border-red-400 bg-red-100 px-4 py-3 text-center text-red-700">
           <strong>Error:</strong> {error}
         </div>
       </div>
@@ -108,7 +107,7 @@ export default function ContractDetailPage() {
   if (!contract) {
     return (
       <div className="container mx-auto py-8">
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded text-center">
+        <div className="rounded border border-yellow-400 bg-yellow-100 px-4 py-3 text-center text-yellow-700">
           Contract not found
         </div>
       </div>
@@ -116,92 +115,107 @@ export default function ContractDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto px-4 py-8">
       <div className="space-y-8">
         {/* Header */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Contract Details</h1>
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">Contract Details</h1>
           <p className="text-gray-600">ID: {contract.id}</p>
           <div className="mt-4">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              contract.status === 'active' ? 'bg-green-100 text-green-800' :
-              contract.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              contract.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {contract.status || 'Unknown'}
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                contract.status === "active"
+                  ? "bg-green-100 text-green-800"
+                  : contract.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : contract.status === "completed"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {contract.status || "Unknown"}
             </span>
           </div>
         </div>
-        
+
         {/* Basic Information */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-6 text-gray-900">Basic Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">Basic Information</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Job Title</label>
-              <p className="text-gray-900">{contract.job_title || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Job Title</label>
+              <p className="text-gray-900">{contract.job_title || "N/A"}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Work Location</label>
-              <p className="text-gray-900">{contract.work_location || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Work Location</label>
+              <p className="text-gray-900">{contract.work_location || "N/A"}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-              <p className="text-gray-900">{contract.email || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Email</label>
+              <p className="text-gray-900">{contract.email || "N/A"}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Contract Number</label>
-              <p className="text-gray-900">{contract.contract_number || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">
+                Contract Number
+              </label>
+              <p className="text-gray-900">{contract.contract_number || "N/A"}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Start Date</label>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Start Date</label>
               <p className="text-gray-900">
-                {contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : 'N/A'}
+                {contract.contract_start_date
+                  ? new Date(contract.contract_start_date).toLocaleDateString()
+                  : "N/A"}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">End Date</label>
+              <label className="mb-1 block text-sm font-medium text-gray-500">End Date</label>
               <p className="text-gray-900">
-                {contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : 'N/A'}
+                {contract.contract_end_date
+                  ? new Date(contract.contract_end_date).toLocaleDateString()
+                  : "N/A"}
               </p>
             </div>
           </div>
         </div>
 
         {/* Parties */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-6 text-gray-900">Parties Involved</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">Parties Involved</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Party A</label>
-              <p className="text-gray-900">{contract.first_party_name_en || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Party A</label>
+              <p className="text-gray-900">{contract.first_party_name_en || "N/A"}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Party B</label>
-              <p className="text-gray-900">{contract.second_party_name_en || 'N/A'}</p>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Party B</label>
+              <p className="text-gray-900">{contract.second_party_name_en || "N/A"}</p>
             </div>
           </div>
         </div>
 
         {/* Promoter Information */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-6 text-gray-900">Promoter Information</h2>
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">Promoter Information</h2>
           {promoter ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Promoter Name (English)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-500">
+                  Promoter Name (English)
+                </label>
                 <p className="text-gray-900">{promoter.name_en}</p>
               </div>
               {promoter.name_ar && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Promoter Name (Arabic)</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-500">
+                    Promoter Name (Arabic)
+                  </label>
                   <p className="text-gray-900">{promoter.name_ar}</p>
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Promoter ID</label>
-                <p className="text-gray-900 font-mono text-sm">{promoter.id}</p>
+                <label className="mb-1 block text-sm font-medium text-gray-500">Promoter ID</label>
+                <p className="font-mono text-sm text-gray-900">{promoter.id}</p>
               </div>
             </div>
           ) : (
@@ -210,35 +224,35 @@ export default function ContractDetailPage() {
         </div>
 
         {/* Metadata */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-6 text-gray-900">Metadata</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="rounded-lg bg-white p-6 shadow-md">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">Metadata</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
+              <label className="mb-1 block text-sm font-medium text-gray-500">Created At</label>
               <p className="text-gray-900">
-                {contract.created_at ? new Date(contract.created_at).toLocaleString() : 'N/A'}
+                {contract.created_at ? new Date(contract.created_at).toLocaleString() : "N/A"}
               </p>
             </div>
           </div>
         </div>
 
         {/* Raw Data Debug */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900">Debug Information</h2>
+        <div className="rounded-lg bg-gray-50 p-6">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Debug Information</h2>
           <details>
-            <summary className="cursor-pointer text-blue-600 hover:text-blue-800 mb-2">
+            <summary className="mb-2 cursor-pointer text-blue-600 hover:text-blue-800">
               View Raw Contract Data
             </summary>
-            <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
+            <pre className="overflow-auto rounded bg-gray-100 p-4 text-xs">
               {JSON.stringify(contract, null, 2)}
             </pre>
           </details>
           {promoter && (
             <details className="mt-4">
-              <summary className="cursor-pointer text-blue-600 hover:text-blue-800 mb-2">
+              <summary className="mb-2 cursor-pointer text-blue-600 hover:text-blue-800">
                 View Raw Promoter Data
               </summary>
-              <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
+              <pre className="overflow-auto rounded bg-gray-100 p-4 text-xs">
                 {JSON.stringify(promoter, null, 2)}
               </pre>
             </details>

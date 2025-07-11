@@ -27,7 +27,7 @@ export default function AuthStatus() {
         role: user.role || "user",
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at,
-        email_confirmed_at: user.email_confirmed_at
+        email_confirmed_at: user.email_confirmed_at,
       })
     } else {
       setUserDetails(null)
@@ -52,15 +52,29 @@ export default function AuthStatus() {
           <div className="flex items-center gap-2">
             <UserCircle className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">{user.email}</span>
-            {userDetails?.email_confirmed_at && <BadgeCheck className="h-4 w-4 text-green-500" aria-label="Email Verified" />}
+            {userDetails?.email_confirmed_at && (
+              <BadgeCheck className="h-4 w-4 text-green-500" aria-label="Email Verified" />
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4" />
-            <span>Role: <span className="font-semibold capitalize">{userDetails?.role}</span></span>
-            <Calendar className="h-4 w-4 ml-4" />
-            <span>Created: {userDetails?.created_at ? new Date(userDetails.created_at).toLocaleDateString() : "-"}</span>
-            <UserIcon className="h-4 w-4 ml-4" />
-            <span>Last Sign In: {userDetails?.last_sign_in_at ? new Date(userDetails.last_sign_in_at).toLocaleString() : "-"}</span>
+            <span>
+              Role: <span className="font-semibold capitalize">{userDetails?.role}</span>
+            </span>
+            <Calendar className="ml-4 h-4 w-4" />
+            <span>
+              Created:{" "}
+              {userDetails?.created_at
+                ? new Date(userDetails.created_at).toLocaleDateString()
+                : "-"}
+            </span>
+            <UserIcon className="ml-4 h-4 w-4" />
+            <span>
+              Last Sign In:{" "}
+              {userDetails?.last_sign_in_at
+                ? new Date(userDetails.last_sign_in_at).toLocaleString()
+                : "-"}
+            </span>
           </div>
           <Button variant="outline" size="sm" onClick={handleLogout} className="mt-2">
             <LogOutIcon className="mr-2 h-4 w-4" />

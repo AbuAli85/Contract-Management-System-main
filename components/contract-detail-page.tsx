@@ -1,9 +1,9 @@
-import React from 'react';
-import { format, parseISO } from 'date-fns';
+import React from "react"
+import { format, parseISO } from "date-fns"
 
 interface DetailItemProps {
-  label: string;
-  value: React.ReactNode;
+  label: string
+  value: React.ReactNode
 }
 
 const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
@@ -11,15 +11,15 @@ const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
     <span className="text-sm font-medium text-gray-500">{label}</span>
     <span className="text-sm font-medium text-gray-900">{value}</span>
   </div>
-);
+)
 
 interface ContractDetails {
-    contract_start_date?: string | null;
-    contract_end_date?: string | null;
+  contract_start_date?: string | null
+  contract_end_date?: string | null
 }
 
 interface ContractDetailPageProps {
-    contract: ContractDetails;
+  contract: ContractDetails
 }
 
 const ContractDetailPage: React.FC<ContractDetailPageProps> = ({ contract }) => {
@@ -42,7 +42,7 @@ const ContractDetailPage: React.FC<ContractDetailPageProps> = ({ contract }) => 
         }
       />
     </div>
-  );
-};
+  )
+}
 
-export default ContractDetailPage;
+export default ContractDetailPage

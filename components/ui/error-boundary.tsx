@@ -29,9 +29,7 @@ export default function ErrorBoundary({
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
             <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
           </div>
-          <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-            {title}
-          </CardTitle>
+          <CardTitle className="text-xl text-slate-800 dark:text-slate-100">{title}</CardTitle>
           <CardDescription className="text-slate-600 dark:text-slate-400">
             {description}
           </CardDescription>
@@ -60,4 +58,4 @@ export default function ErrorBoundary({
       </Card>
     </div>
   )
-} 
+}

@@ -50,7 +50,7 @@ export default function DatePickerWithPresetsField({
           className={cn(
             "w-full justify-start text-left font-normal", // Ensure justify-start for icon alignment
             !field.value && "text-muted-foreground",
-            disabled && "cursor-not-allowed bg-muted/50 opacity-50",
+            disabled && "cursor-not-allowed bg-muted/50 opacity-50"
           )}
           disabled={disabled}
           ref={field.ref} // Pass ref to the trigger

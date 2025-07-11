@@ -28,7 +28,7 @@ interface Permission {
 export const RolesPermissions = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const { toast } = useToast()
-  
+
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,51 +39,51 @@ export const RolesPermissions = () => {
     try {
       setError(null)
       const response = await fetch("/api/admin/roles", {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include', // Include cookies for authentication
+        credentials: "include", // Include cookies for authentication
       })
-      
+
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Authentication required. Please log in.')
+          throw new Error("Authentication required. Please log in.")
         } else if (response.status === 403) {
-          throw new Error('Admin access required to view roles.')
+          throw new Error("Admin access required to view roles.")
         } else {
           throw new Error(`Failed to fetch roles: ${response.statusText}`)
         }
       }
-      
+
       const data = await response.json()
       setRoles(data.roles || [])
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch roles'
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch roles"
       setError(errorMessage)
-      console.error('Error fetching roles:', err)
+      console.error("Error fetching roles:", err)
     }
   }
 
   const fetchPermissions = async () => {
     try {
       const response = await fetch("/api/admin/permissions", {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
       })
-      
+
       if (!response.ok) {
-        console.warn('Failed to fetch permissions:', response.statusText)
+        console.warn("Failed to fetch permissions:", response.statusText)
         return // Don't throw error for permissions, it's optional
       }
-      
+
       const data = await response.json()
       setPermissions(data.permissions || [])
     } catch (err) {
-      console.warn('Error fetching permissions:', err)
+      console.warn("Error fetching permissions:", err)
       // Don't set error state for permissions failure
     }
   }
@@ -100,7 +100,7 @@ export const RolesPermissions = () => {
       toast({
         title: "Error",
         description: "Failed to refresh data",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setRefreshing(false)
@@ -117,7 +117,7 @@ export const RolesPermissions = () => {
           setLoading(false)
         }
       } else if (isAuthenticated === false) {
-        setError('Authentication required')
+        setError("Authentication required")
         setLoading(false)
       }
     }
@@ -159,7 +159,7 @@ export const RolesPermissions = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="h-5 w-5 mr-2" />
+            <AlertTriangle className="mr-2 h-5 w-5" />
             <span>Authentication required to view roles and permissions</span>
           </div>
         </CardContent>
@@ -177,11 +177,11 @@ export const RolesPermissions = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               Refresh
             </Button>
             <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Role
             </Button>
           </div>
@@ -190,13 +190,13 @@ export const RolesPermissions = () => {
       <CardContent>
         {error && (
           <div className="mb-4 space-y-4">
-            <div className="p-4 bg-destructive/15 border border-destructive/20 rounded-lg">
+            <div className="rounded-lg border border-destructive/20 bg-destructive/15 p-4">
               <div className="flex items-center">
-                <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+                <AlertTriangle className="mr-2 h-4 w-4 text-destructive" />
                 <p className="text-sm text-destructive">{error}</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setError(null)}
                   className="ml-auto"
                 >
@@ -204,11 +204,11 @@ export const RolesPermissions = () => {
                 </Button>
               </div>
             </div>
-            
+
             {/* Debug section for authentication issues */}
-            {error.includes('Authentication') && (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
+            {error.includes("Authentication") && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="mb-3 flex items-center gap-2">
                   <Bug className="h-4 w-4 text-blue-600" />
                   <h4 className="font-medium text-blue-900">Debug Information</h4>
                 </div>
@@ -224,14 +224,14 @@ export const RolesPermissions = () => {
             <span className="ml-2">Loading roles...</span>
           </div>
         ) : roles.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="py-8 text-center">
             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-2 text-sm font-semibold">No roles found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Get started by creating your first role.
             </p>
             <Button className="mt-4">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Role
             </Button>
           </div>
@@ -242,14 +242,14 @@ export const RolesPermissions = () => {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 font-medium">Role</th>
-                    <th className="text-left py-2 font-medium">Description</th>
-                    <th className="text-left py-2 font-medium">Permissions</th>
-                    <th className="text-left py-2 font-medium">Actions</th>
+                    <th className="py-2 text-left font-medium">Role</th>
+                    <th className="py-2 text-left font-medium">Description</th>
+                    <th className="py-2 text-left font-medium">Permissions</th>
+                    <th className="py-2 text-left font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {roles.map(role => (
+                  {roles.map((role) => (
                     <tr key={role.id} className="border-b hover:bg-gray-50">
                       <td className="py-3">
                         <div className="font-medium">{role.name}</div>
@@ -257,7 +257,7 @@ export const RolesPermissions = () => {
                       </td>
                       <td className="py-3">
                         <div className="text-sm text-muted-foreground">
-                          {role.description || 'No description'}
+                          {role.description || "No description"}
                         </div>
                       </td>
                       <td className="py-3">
@@ -269,7 +269,7 @@ export const RolesPermissions = () => {
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-muted-foreground text-xs">No permissions</span>
+                            <span className="text-xs text-muted-foreground">No permissions</span>
                           )}
                         </div>
                       </td>
@@ -278,7 +278,11 @@ export const RolesPermissions = () => {
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -291,42 +295,43 @@ export const RolesPermissions = () => {
 
             {/* Permissions Summary */}
             {permissions.length > 0 && (
-              <div className="mt-6 pt-6 border-t">
-                <h4 className="text-sm font-medium mb-3">Available Permissions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-6 border-t pt-6">
+                <h4 className="mb-3 text-sm font-medium">Available Permissions</h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {permissions.reduce((acc: Record<string, Permission[]>, permission) => {
-                    const category = permission.category || 'general'
+                    const category = permission.category || "general"
                     if (!acc[category]) acc[category] = []
                     acc[category].push(permission)
                     return acc
-                  }, {}) && Object.entries(
-                    permissions.reduce((acc: Record<string, Permission[]>, permission) => {
-                      const category = permission.category || 'general'
-                      if (!acc[category]) acc[category] = []
-                      acc[category].push(permission)
-                      return acc
-                    }, {})
-                  ).map(([category, categoryPermissions]) => (
-                    <div key={category} className="space-y-2">
-                      <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {category}
-                      </h5>
-                      <div className="space-y-1">
-                        {categoryPermissions.map(permission => (
-                          <div key={permission.id} className="text-xs">
-                            <Badge variant="outline" className="text-xs">
-                              {permission.name}
-                            </Badge>
-                            {permission.description && (
-                              <div className="text-muted-foreground mt-1">
-                                {permission.description}
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                  }, {}) &&
+                    Object.entries(
+                      permissions.reduce((acc: Record<string, Permission[]>, permission) => {
+                        const category = permission.category || "general"
+                        if (!acc[category]) acc[category] = []
+                        acc[category].push(permission)
+                        return acc
+                      }, {})
+                    ).map(([category, categoryPermissions]) => (
+                      <div key={category} className="space-y-2">
+                        <h5 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {category}
+                        </h5>
+                        <div className="space-y-1">
+                          {categoryPermissions.map((permission) => (
+                            <div key={permission.id} className="text-xs">
+                              <Badge variant="outline" className="text-xs">
+                                {permission.name}
+                              </Badge>
+                              {permission.description && (
+                                <div className="mt-1 text-muted-foreground">
+                                  {permission.description}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}

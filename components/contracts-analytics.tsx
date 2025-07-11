@@ -4,13 +4,13 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -18,18 +18,18 @@ import {
   LineChart,
   Line,
   Area,
-  AreaChart
+  AreaChart,
 } from "recharts"
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
+import {
+  TrendingUp,
+  TrendingDown,
+  FileText,
+  CheckCircle2,
+  Clock,
   AlertTriangle,
   DollarSign,
   Calendar,
-  Users
+  Users,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { CONTRACT_STATUSES } from "./enhanced-status-badge"
@@ -41,7 +41,7 @@ interface ContractAnalytics {
   draftContracts: number
   statusDistribution: Array<{ name: string; value: number; color: string }>
   monthlyTrends: Array<{ month: string; contracts: number; value?: number }>
-  recentActivity: Array<{ 
+  recentActivity: Array<{
     id: string
     date: string
     action: string
@@ -58,7 +58,7 @@ interface ContractAnalytics {
 export function ContractsAnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<ContractAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
 
   useEffect(() => {
     fetchAnalytics()
@@ -68,9 +68,7 @@ export function ContractsAnalyticsDashboard() {
     setLoading(true)
     try {
       // Fetch contracts data
-      const { data: contracts, error } = await supabase
-        .from('contracts')
-        .select('*')
+      const { data: contracts, error } = await supabase.from("contracts").select("*")
 
       if (error) throw error
 
@@ -78,32 +76,40 @@ export function ContractsAnalyticsDashboard() {
       const getTimeRangeDate = () => {
         const date = new Date()
         switch (timeRange) {
-          case '7d': return new Date(date.setDate(date.getDate() - 7))
-          case '30d': return new Date(date.setDate(date.getDate() - 30))
-          case '90d': return new Date(date.setDate(date.getDate() - 90))
-          case '1y': return new Date(date.setFullYear(date.getFullYear() - 1))
-          default: return new Date(date.setDate(date.getDate() - 30))
+          case "7d":
+            return new Date(date.setDate(date.getDate() - 7))
+          case "30d":
+            return new Date(date.setDate(date.getDate() - 30))
+          case "90d":
+            return new Date(date.setDate(date.getDate() - 90))
+          case "1y":
+            return new Date(date.setFullYear(date.getFullYear() - 1))
+          default:
+            return new Date(date.setDate(date.getDate() - 30))
         }
       }
 
       const rangeStart = getTimeRangeDate()
-      const recentContracts = contracts.filter(contract => 
-        new Date(contract.created_at) >= rangeStart
+      const recentContracts = contracts.filter(
+        (contract) => new Date(contract.created_at) >= rangeStart
       )
 
       // Calculate status distribution
-      const statusCounts = CONTRACT_STATUSES.reduce((acc, status) => {
-        acc[status.value] = contracts.filter(c => c.status === status.value).length
-        return acc
-      }, {} as Record<string, number>)
+      const statusCounts = CONTRACT_STATUSES.reduce(
+        (acc, status) => {
+          acc[status.value] = contracts.filter((c) => c.status === status.value).length
+          return acc
+        },
+        {} as Record<string, number>
+      )
 
-      const statusDistribution = CONTRACT_STATUSES
-        .filter(status => statusCounts[status.value] > 0)
-        .map(status => ({
-          name: status.label,
-          value: statusCounts[status.value],
-          color: getStatusColor(status.value)
-        }))
+      const statusDistribution = CONTRACT_STATUSES.filter(
+        (status) => statusCounts[status.value] > 0
+      ).map((status) => ({
+        name: status.label,
+        value: statusCounts[status.value],
+        color: getStatusColor(status.value),
+      }))
 
       // Calculate monthly trends
       const monthlyData = generateMonthlyTrends(recentContracts)
@@ -111,17 +117,18 @@ export function ContractsAnalyticsDashboard() {
       // Calculate upcoming expirations (next 30 days)
       const thirtyDaysFromNow = new Date()
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-      
-      const upcomingExpirations = contracts.filter(contract => {
+
+      const upcomingExpirations = contracts.filter((contract) => {
         if (!contract.end_date) return false
         const endDate = new Date(contract.end_date)
         return endDate <= thirtyDaysFromNow && endDate >= now
       }).length
 
       // Calculate contract values (if available)
-      const contractsWithValue = contracts.filter(c => c.contract_value && c.contract_value > 0)
+      const contractsWithValue = contracts.filter((c) => c.contract_value && c.contract_value > 0)
       const totalValue = contractsWithValue.reduce((sum, c) => sum + (c.contract_value || 0), 0)
-      const averageValue = contractsWithValue.length > 0 ? totalValue / contractsWithValue.length : 0
+      const averageValue =
+        contractsWithValue.length > 0 ? totalValue / contractsWithValue.length : 0
 
       // Generate recent activity data
       const recentActivity = await generateRecentActivity(contracts, rangeStart)
@@ -136,10 +143,10 @@ export function ContractsAnalyticsDashboard() {
         recentActivity,
         upcomingExpirations,
         averageContractValue: averageValue,
-        totalContractValue: totalValue
+        totalContractValue: totalValue,
       })
     } catch (error) {
-      console.error('Error fetching analytics:', error)
+      console.error("Error fetching analytics:", error)
     } finally {
       setLoading(false)
     }
@@ -148,47 +155,49 @@ export function ContractsAnalyticsDashboard() {
   const generateMonthlyTrends = (contracts: any[]) => {
     const months = []
     const now = new Date()
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const monthName = date.toLocaleDateString('en-US', { month: 'short' })
-      const monthContracts = contracts.filter(contract => {
+      const monthName = date.toLocaleDateString("en-US", { month: "short" })
+      const monthContracts = contracts.filter((contract) => {
         const createdDate = new Date(contract.created_at)
-        return createdDate.getMonth() === date.getMonth() && 
-               createdDate.getFullYear() === date.getFullYear()
+        return (
+          createdDate.getMonth() === date.getMonth() &&
+          createdDate.getFullYear() === date.getFullYear()
+        )
       })
-      
+
       months.push({
         month: monthName,
         contracts: monthContracts.length,
-        value: monthContracts.reduce((sum, c) => sum + (c.contract_value || 0), 0)
+        value: monthContracts.reduce((sum, c) => sum + (c.contract_value || 0), 0),
       })
     }
-    
+
     return months
   }
 
   const getStatusColor = (status: string) => {
-    const statusConfig = CONTRACT_STATUSES.find(s => s.value === status)
+    const statusConfig = CONTRACT_STATUSES.find((s) => s.value === status)
     const colorMap: Record<string, string> = {
-      'draft': '#6B7280',
-      'pending_review': '#F59E0B',
-      'active': '#10B981',
-      'expired': '#EF4444',
-      'terminated': '#EF4444',
-      'suspended': '#F97316',
-      'archived': '#6B7280',
-      'unknown': '#9CA3AF'
+      draft: "#6B7280",
+      pending_review: "#F59E0B",
+      active: "#10B981",
+      expired: "#EF4444",
+      terminated: "#EF4444",
+      suspended: "#F97316",
+      archived: "#6B7280",
+      unknown: "#9CA3AF",
     }
-    return colorMap[status] || '#9CA3AF'
+    return colorMap[status] || "#9CA3AF"
   }
 
   const generateRecentActivity = async (contracts: any[], rangeStart: Date) => {
     const activities = []
-    
+
     // Generate activity from recent contracts
     const recentContracts = contracts
-      .filter(contract => new Date(contract.created_at) >= rangeStart)
+      .filter((contract) => new Date(contract.created_at) >= rangeStart)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 10) // Get latest 10 activities
 
@@ -196,13 +205,13 @@ export function ContractsAnalyticsDashboard() {
       const createdDate = new Date(contract.created_at)
       const now = new Date()
       const diffInDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
-      
-      let timeAgo = ''
+
+      let timeAgo = ""
       if (diffInDays === 0) {
         const diffInHours = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60))
-        timeAgo = diffInHours === 0 ? 'Just now' : `${diffInHours}h ago`
+        timeAgo = diffInHours === 0 ? "Just now" : `${diffInHours}h ago`
       } else if (diffInDays === 1) {
-        timeAgo = 'Yesterday'
+        timeAgo = "Yesterday"
       } else {
         timeAgo = `${diffInDays} days ago`
       }
@@ -211,40 +220,42 @@ export function ContractsAnalyticsDashboard() {
       activities.push({
         id: `create-${contract.id}`,
         date: timeAgo,
-        action: 'Contract Created',
+        action: "Contract Created",
         contractId: contract.id,
         contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
-        userName: 'System', // In a real app, this would come from user data
-        details: `New ${contract.status || 'draft'} contract created`
+        userName: "System", // In a real app, this would come from user data
+        details: `New ${contract.status || "draft"} contract created`,
       })
 
       // Status change activities (simulated based on current status)
-      if (contract.status === 'active') {
+      if (contract.status === "active") {
         activities.push({
           id: `activate-${contract.id}`,
           date: timeAgo,
-          action: 'Contract Activated',
+          action: "Contract Activated",
           contractId: contract.id,
           contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
-          userName: 'System',
-          details: 'Contract status changed to active'
+          userName: "System",
+          details: "Contract status changed to active",
         })
       }
 
       // Expiration warnings for contracts ending soon
       if (contract.end_date) {
         const endDate = new Date(contract.end_date)
-        const daysUntilExpiry = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-        
+        const daysUntilExpiry = Math.floor(
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        )
+
         if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
           activities.push({
             id: `expiry-warning-${contract.id}`,
-            date: 'Today',
-            action: 'Expiration Warning',
+            date: "Today",
+            action: "Expiration Warning",
             contractId: contract.id,
             contractTitle: contract.job_title || `Contract #${contract.id.slice(0, 8)}`,
-            userName: 'System',
-            details: `Contract expires in ${daysUntilExpiry} days`
+            userName: "System",
+            details: `Contract expires in ${daysUntilExpiry} days`,
           })
         }
       }
@@ -254,10 +265,10 @@ export function ContractsAnalyticsDashboard() {
     return activities
       .sort((a, b) => {
         // Simple sorting by date string (in a real app, use proper date comparison)
-        if (a.date === 'Just now') return -1
-        if (b.date === 'Just now') return 1
-        if (a.date === 'Today') return -1
-        if (b.date === 'Today') return 1
+        if (a.date === "Just now") return -1
+        if (b.date === "Just now") return 1
+        if (a.date === "Today") return -1
+        if (b.date === "Today") return 1
         return 0
       })
       .slice(0, 15)
@@ -274,11 +285,11 @@ export function ContractsAnalyticsDashboard() {
         {[...Array(8)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 w-3/4 rounded bg-gray-200"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-full"></div>
+              <div className="mb-2 h-8 w-1/2 rounded bg-gray-200"></div>
+              <div className="h-3 w-full rounded bg-gray-200"></div>
             </CardContent>
           </Card>
         ))}
@@ -294,18 +305,18 @@ export function ContractsAnalyticsDashboard() {
       <div className="flex justify-end">
         <div className="flex space-x-2">
           {[
-            { key: '7d', label: '7 Days' },
-            { key: '30d', label: '30 Days' },
-            { key: '90d', label: '90 Days' },
-            { key: '1y', label: '1 Year' }
-          ].map(range => (
+            { key: "7d", label: "7 Days" },
+            { key: "30d", label: "30 Days" },
+            { key: "90d", label: "90 Days" },
+            { key: "1y", label: "1 Year" },
+          ].map((range) => (
             <button
               key={range.key}
               onClick={() => setTimeRange(range.key as any)}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                timeRange === range.key 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted hover:bg-muted/80'
+              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+                timeRange === range.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80"
               }`}
             >
               {range.label}
@@ -337,8 +348,8 @@ export function ContractsAnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{analytics.activeContracts}</div>
-            <Progress 
-              value={(analytics.activeContracts / analytics.totalContracts) * 100} 
+            <Progress
+              value={(analytics.activeContracts / analytics.totalContracts) * 100}
               className="mt-2"
             />
           </CardContent>
@@ -350,7 +361,9 @@ export function ContractsAnalyticsDashboard() {
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{analytics.upcomingExpirations}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {analytics.upcomingExpirations}
+            </div>
             <p className="text-xs text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
@@ -400,14 +413,13 @@ export function ContractsAnalyticsDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               {analytics.statusDistribution.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-sm">{item.name} ({item.value})</span>
+                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-sm">
+                    {item.name} ({item.value})
+                  </span>
                 </div>
               ))}
             </div>
@@ -428,11 +440,11 @@ export function ContractsAnalyticsDashboard() {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="contracts" 
-                    stroke="#3B82F6" 
-                    fill="#3B82F6" 
+                  <Area
+                    type="monotone"
+                    dataKey="contracts"
+                    stroke="#3B82F6"
+                    fill="#3B82F6"
                     fillOpacity={0.1}
                   />
                 </AreaChart>
@@ -448,42 +460,36 @@ export function ContractsAnalyticsDashboard() {
             <CardDescription>Latest contract activities and updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-64 overflow-y-auto">
+            <div className="max-h-64 space-y-4 overflow-y-auto">
               {analytics.recentActivity.length > 0 ? (
                 analytics.recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start space-x-3 text-sm">
                     <div className="flex-shrink-0">
-                      {activity.action === 'Contract Created' && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      {activity.action === "Contract Created" && (
+                        <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
                       )}
-                      {activity.action === 'Contract Activated' && (
-                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      {activity.action === "Contract Activated" && (
+                        <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
                       )}
-                      {activity.action === 'Expiration Warning' && (
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                      {activity.action === "Expiration Warning" && (
+                        <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900 truncate">
-                          {activity.action}
-                        </p>
+                        <p className="truncate font-medium text-gray-900">{activity.action}</p>
                         <p className="text-xs text-gray-500">{activity.date}</p>
                       </div>
-                      <p className="text-xs text-gray-600 truncate">
-                        {activity.contractTitle}
-                      </p>
+                      <p className="truncate text-xs text-gray-600">{activity.contractTitle}</p>
                       {activity.details && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {activity.details}
-                        </p>
+                        <p className="mt-1 text-xs text-gray-500">{activity.details}</p>
                       )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  <Clock className="mx-auto h-8 w-8 mb-2" />
+                <div className="py-8 text-center text-gray-500">
+                  <Clock className="mx-auto mb-2 h-8 w-8" />
                   <p className="text-sm">No recent activity</p>
                 </div>
               )}

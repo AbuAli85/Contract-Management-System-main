@@ -3,7 +3,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { useContracts, useDeleteContractMutation, type ContractWithRelations } from "@/hooks/use-contracts"
+import {
+  useContracts,
+  useDeleteContractMutation,
+  type ContractWithRelations,
+} from "@/hooks/use-contracts"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -71,7 +75,7 @@ import {
   Archive,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
@@ -114,33 +118,33 @@ const getContractStatus = (contract: ContractWithRelations): ContractStatus => {
 const enhanceContract = (contract: ContractWithRelations): EnhancedContract => {
   const status = getContractStatus(contract)
   const now = new Date()
-  
+
   let days_until_expiry: number | undefined
   let contract_duration_days: number | undefined
   let age_days: number | undefined
-  
+
   if (contract.contract_end_date) {
     const endDate = parseISO(contract.contract_end_date)
     days_until_expiry = differenceInDays(endDate, now)
   }
-  
+
   if (contract.contract_start_date && contract.contract_end_date) {
     const startDate = parseISO(contract.contract_start_date)
     const endDate = parseISO(contract.contract_end_date)
     contract_duration_days = differenceInDays(endDate, startDate)
   }
-  
+
   if (contract.created_at) {
     const createdDate = parseISO(contract.created_at)
     age_days = differenceInDays(now, createdDate)
   }
-  
+
   return {
     ...contract,
     status_type: status.toLowerCase() as "active" | "expired" | "upcoming" | "unknown",
     days_until_expiry,
     contract_duration_days,
-    age_days
+    age_days,
   }
 }
 
@@ -165,18 +169,21 @@ export default function ContractsDashboardPage() {
   const [showStats, setShowStats] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
-  
+
   const isMountedRef = useRef(true)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Auto-refresh setup
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (isMountedRef.current) {
-        handleRefresh()
-      }
-    }, 5 * 60 * 1000) // 5 minutes
-    
+    const interval = setInterval(
+      () => {
+        if (isMountedRef.current) {
+          handleRefresh()
+        }
+      },
+      5 * 60 * 1000
+    ) // 5 minutes
+
     refreshIntervalRef.current = interval
     return () => {
       clearInterval(interval)
@@ -186,62 +193,68 @@ export default function ContractsDashboardPage() {
 
   // Calculate statistics
   const contractStats = useMemo((): ContractStats => {
-    if (!contracts) return {
-      total: 0,
-      active: 0,
-      expired: 0,
-      upcoming: 0,
-      unknown: 0,
-      expiring_soon: 0,
-      total_value: 0,
-      avg_duration: 0
-    }
+    if (!contracts)
+      return {
+        total: 0,
+        active: 0,
+        expired: 0,
+        upcoming: 0,
+        unknown: 0,
+        expiring_soon: 0,
+        total_value: 0,
+        avg_duration: 0,
+      }
 
     const enhanced = contracts.map(enhanceContract)
     const now = new Date()
-    
+
     return {
       total: enhanced.length,
-      active: enhanced.filter(c => c.status_type === "active").length,
-      expired: enhanced.filter(c => c.status_type === "expired").length,
-      upcoming: enhanced.filter(c => c.status_type === "upcoming").length,
-      unknown: enhanced.filter(c => c.status_type === "unknown").length,
-      expiring_soon: enhanced.filter(c => 
-        c.days_until_expiry !== undefined && 
-        c.days_until_expiry > 0 && 
-        c.days_until_expiry <= 30
+      active: enhanced.filter((c) => c.status_type === "active").length,
+      expired: enhanced.filter((c) => c.status_type === "expired").length,
+      upcoming: enhanced.filter((c) => c.status_type === "upcoming").length,
+      unknown: enhanced.filter((c) => c.status_type === "unknown").length,
+      expiring_soon: enhanced.filter(
+        (c) =>
+          c.days_until_expiry !== undefined && c.days_until_expiry > 0 && c.days_until_expiry <= 30
       ).length,
       total_value: enhanced.reduce((sum, c) => sum + (c.contract_value || 0), 0),
-      avg_duration: enhanced.reduce((sum, c) => sum + (c.contract_duration_days || 0), 0) / enhanced.length || 0
+      avg_duration:
+        enhanced.reduce((sum, c) => sum + (c.contract_duration_days || 0), 0) / enhanced.length ||
+        0,
     }
   }, [contracts])
 
   // Enhanced filtering and sorting
   const filteredAndSortedContracts = useMemo(() => {
     if (!contracts) return []
-    
+
     const enhanced = contracts.map(enhanceContract)
-    
+
     const filtered = enhanced.filter((contract) => {
       const contractStatus = getContractStatus(contract)
       const matchesStatus = statusFilter === "all" || contractStatus === statusFilter
 
       const firstParty =
-        (contract.first_party && typeof contract.first_party === 'object' && 'name_en' in contract.first_party
-          ? (locale === "ar" 
-              ? contract.first_party.name_ar || contract.first_party.name_en
-              : contract.first_party.name_en || contract.first_party.name_ar)
+        (contract.first_party &&
+        typeof contract.first_party === "object" &&
+        "name_en" in contract.first_party
+          ? locale === "ar"
+            ? contract.first_party.name_ar || contract.first_party.name_en
+            : contract.first_party.name_en || contract.first_party.name_ar
           : "") || ""
       const secondParty =
-        (contract.second_party && typeof contract.second_party === 'object' && 'name_en' in contract.second_party
-          ? (locale === "ar" 
-              ? contract.second_party.name_ar || contract.second_party.name_en
-              : contract.second_party.name_en || contract.second_party.name_ar)
+        (contract.second_party &&
+        typeof contract.second_party === "object" &&
+        "name_en" in contract.second_party
+          ? locale === "ar"
+            ? contract.second_party.name_ar || contract.second_party.name_en
+            : contract.second_party.name_en || contract.second_party.name_ar
           : "") || ""
       const promoterName = contract.promoters
-        ? (locale === "ar" 
-            ? contract.promoters.name_ar || contract.promoters.name_en
-            : contract.promoters.name_en || contract.promoters.name_ar)
+        ? locale === "ar"
+          ? contract.promoters.name_ar || contract.promoters.name_en
+          : contract.promoters.name_en || contract.promoters.name_ar
         : ""
 
       const matchesSearch =
@@ -250,9 +263,11 @@ export default function ContractsDashboardPage() {
         firstParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
         secondParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
         promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (contract.job_title && contract.job_title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (contract.contract_number && contract.contract_number.toLowerCase().includes(searchTerm.toLowerCase()))
-      
+        (contract.job_title &&
+          contract.job_title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (contract.contract_number &&
+          contract.contract_number.toLowerCase().includes(searchTerm.toLowerCase()))
+
       return matchesStatus && matchesSearch
     })
 
@@ -289,7 +304,7 @@ export default function ContractsDashboardPage() {
       toast({
         title: "Refreshed",
         description: "Contract data has been updated",
-        variant: "default"
+        variant: "default",
       })
     } finally {
       setIsRefreshing(false)
@@ -307,7 +322,7 @@ export default function ContractsDashboardPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedContracts(filteredAndSortedContracts.map(c => c.id))
+      setSelectedContracts(filteredAndSortedContracts.map((c) => c.id))
     } else {
       setSelectedContracts([])
     }
@@ -315,22 +330,20 @@ export default function ContractsDashboardPage() {
 
   const handleSelectContract = (contractId: string, checked: boolean) => {
     if (checked) {
-      setSelectedContracts(prev => [...prev, contractId])
+      setSelectedContracts((prev) => [...prev, contractId])
     } else {
-      setSelectedContracts(prev => prev.filter(id => id !== contractId))
+      setSelectedContracts((prev) => prev.filter((id) => id !== contractId))
     }
   }
 
   const handleBulkDelete = async () => {
     setBulkActionLoading(true)
     try {
-      await Promise.all(
-        selectedContracts.map(id => deleteContractMutation.mutateAsync(id))
-      )
+      await Promise.all(selectedContracts.map((id) => deleteContractMutation.mutateAsync(id)))
       toast({
         title: "Success",
         description: `Deleted ${selectedContracts.length} contracts`,
-        variant: "default"
+        variant: "default",
       })
       setSelectedContracts([])
     } catch (error) {
@@ -338,7 +351,7 @@ export default function ContractsDashboardPage() {
       toast({
         title: "Error",
         description: "Failed to delete contracts",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setBulkActionLoading(false)
@@ -348,39 +361,49 @@ export default function ContractsDashboardPage() {
   const handleExportCSV = async () => {
     setIsExporting(true)
     try {
-      const csvData = filteredAndSortedContracts.map(contract => ({
-        'Contract ID': contract.id,
-        'Contract Number': contract.contract_number || 'N/A',
-        'First Party': contract.first_party && typeof contract.first_party === 'object' && 'name_en' in contract.first_party
-          ? contract.first_party.name_en || 'N/A'
-          : 'N/A',
-        'Second Party': contract.second_party && typeof contract.second_party === 'object' && 'name_en' in contract.second_party
-          ? contract.second_party.name_en || 'N/A'
-          : 'N/A',
-        'Promoter': contract.promoters ? contract.promoters.name_en || 'N/A' : 'N/A',
-        'Job Title': contract.job_title || 'N/A',
-        'Start Date': contract.contract_start_date || 'N/A',
-        'End Date': contract.contract_end_date || 'N/A',
-        'Status': getContractStatus(contract),
-        'Contract Value': contract.contract_value || 0,
-        'Work Location': contract.work_location || 'N/A',
-        'Email': contract.email || 'N/A',
-        'PDF URL': contract.pdf_url || 'N/A',
-        'Created At': contract.created_at || 'N/A',
-        'Days Until Expiry': contract.days_until_expiry || 'N/A',
-        'Contract Duration (Days)': contract.contract_duration_days || 'N/A'
+      const csvData = filteredAndSortedContracts.map((contract) => ({
+        "Contract ID": contract.id,
+        "Contract Number": contract.contract_number || "N/A",
+        "First Party":
+          contract.first_party &&
+          typeof contract.first_party === "object" &&
+          "name_en" in contract.first_party
+            ? contract.first_party.name_en || "N/A"
+            : "N/A",
+        "Second Party":
+          contract.second_party &&
+          typeof contract.second_party === "object" &&
+          "name_en" in contract.second_party
+            ? contract.second_party.name_en || "N/A"
+            : "N/A",
+        Promoter: contract.promoters ? contract.promoters.name_en || "N/A" : "N/A",
+        "Job Title": contract.job_title || "N/A",
+        "Start Date": contract.contract_start_date || "N/A",
+        "End Date": contract.contract_end_date || "N/A",
+        Status: getContractStatus(contract),
+        "Contract Value": contract.contract_value || 0,
+        "Work Location": contract.work_location || "N/A",
+        Email: contract.email || "N/A",
+        "PDF URL": contract.pdf_url || "N/A",
+        "Created At": contract.created_at || "N/A",
+        "Days Until Expiry": contract.days_until_expiry || "N/A",
+        "Contract Duration (Days)": contract.contract_duration_days || "N/A",
       }))
 
       const csv = [
-        Object.keys(csvData[0] || {}).join(','),
-        ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
-      ].join('\n')
+        Object.keys(csvData[0] || {}).join(","),
+        ...csvData.map((row) =>
+          Object.values(row)
+            .map((val) => `"${val}"`)
+            .join(",")
+        ),
+      ].join("\n")
 
-      const blob = new Blob([csv], { type: 'text/csv' })
+      const blob = new Blob([csv], { type: "text/csv" })
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a")
       a.href = url
-      a.download = `contracts-export-${new Date().toISOString().split('T')[0]}.csv`
+      a.download = `contracts-export-${new Date().toISOString().split("T")[0]}.csv`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -389,14 +412,14 @@ export default function ContractsDashboardPage() {
       toast({
         title: "Export Successful",
         description: `Exported ${csvData.length} contracts to CSV`,
-        variant: "default"
+        variant: "default",
       })
     } catch (error) {
       console.error("Export error:", error)
       toast({
         title: "Export Failed",
         description: "Failed to export contracts",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsExporting(false)
@@ -438,10 +461,18 @@ export default function ContractsDashboardPage() {
 
   const getStatusBadge = (status: ContractStatus) => {
     const variants = {
-      "Active": { variant: "default" as const, className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200", icon: CheckCircle },
-      "Expired": { variant: "destructive" as const, className: "", icon: XCircle },
-      "Upcoming": { variant: "secondary" as const, className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: Clock },
-      "Unknown": { variant: "outline" as const, className: "", icon: AlertTriangle }
+      Active: {
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+        icon: CheckCircle,
+      },
+      Expired: { variant: "destructive" as const, className: "", icon: XCircle },
+      Upcoming: {
+        variant: "secondary" as const,
+        className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+        icon: Clock,
+      },
+      Unknown: { variant: "outline" as const, className: "", icon: AlertTriangle },
     }
     const config = variants[status]
     const Icon = config.icon
@@ -460,91 +491,91 @@ export default function ContractsDashboardPage() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total</p>
+              <p className="text-sm text-blue-100">Total</p>
               <p className="text-2xl font-bold">{contractStats.total}</p>
             </div>
             <FileText className="h-8 w-8 text-blue-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Active</p>
+              <p className="text-sm text-green-100">Active</p>
               <p className="text-2xl font-bold">{contractStats.active}</p>
             </div>
             <CheckCircle className="h-8 w-8 text-green-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-amber-100 text-sm">Expiring</p>
+              <p className="text-sm text-amber-100">Expiring</p>
               <p className="text-2xl font-bold">{contractStats.expiring_soon}</p>
             </div>
             <AlertTriangle className="h-8 w-8 text-amber-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-100 text-sm">Expired</p>
+              <p className="text-sm text-red-100">Expired</p>
               <p className="text-2xl font-bold">{contractStats.expired}</p>
             </div>
             <XCircle className="h-8 w-8 text-red-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm">Upcoming</p>
+              <p className="text-sm text-purple-100">Upcoming</p>
               <p className="text-2xl font-bold">{contractStats.upcoming}</p>
             </div>
             <Clock className="h-8 w-8 text-purple-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-100 text-sm">Total Value</p>
+              <p className="text-sm text-indigo-100">Total Value</p>
               <p className="text-lg font-bold">${contractStats.total_value.toLocaleString()}</p>
             </div>
             <TrendingUp className="h-8 w-8 text-indigo-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-pink-500 to-pink-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-pink-100 text-sm">Avg Duration</p>
+              <p className="text-sm text-pink-100">Avg Duration</p>
               <p className="text-lg font-bold">{Math.round(contractStats.avg_duration)}d</p>
             </div>
             <Calendar className="h-8 w-8 text-pink-200" />
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-100 text-sm">Unknown</p>
+              <p className="text-sm text-gray-100">Unknown</p>
               <p className="text-2xl font-bold">{contractStats.unknown}</p>
             </div>
             <Activity className="h-8 w-8 text-gray-200" />
@@ -589,13 +620,9 @@ export default function ContractsDashboardPage() {
         {/* Statistics Cards */}
         {showStats && (
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Contract Statistics</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowStats(!showStats)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowStats(!showStats)}>
                 {showStats ? "Hide Stats" : "Show Stats"}
               </Button>
             </div>
@@ -605,7 +632,7 @@ export default function ContractsDashboardPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
@@ -615,7 +642,7 @@ export default function ContractsDashboardPage() {
                   View, manage, and track all your contracts in real-time.
                 </CardDescription>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
@@ -641,18 +668,18 @@ export default function ContractsDashboardPage() {
                         size="icon"
                         onClick={() => setCurrentView(currentView === "table" ? "grid" : "table")}
                       >
-                        {currentView === "table" ? <Grid3x3 className="h-4 w-4" /> : <List className="h-4 w-4" />}
+                        {currentView === "table" ? (
+                          <Grid3x3 className="h-4 w-4" />
+                        ) : (
+                          <List className="h-4 w-4" />
+                        )}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Toggle view</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button
-                  variant="outline"
-                  onClick={handleExportCSV}
-                  disabled={isExporting}
-                >
+                <Button variant="outline" onClick={handleExportCSV} disabled={isExporting}>
                   {isExporting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -662,14 +689,12 @@ export default function ContractsDashboardPage() {
                 </Button>
 
                 <Button asChild>
-                  <Link href={`/${locale}/dashboard/generate-contract`}>
-                    Create New Contract
-                  </Link>
+                  <Link href={`/${locale}/dashboard/generate-contract`}>Create New Contract</Link>
                 </Button>
               </div>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {/* Filters and Search */}
             <div className="flex flex-col items-center gap-4 md:flex-row">
@@ -705,7 +730,7 @@ export default function ContractsDashboardPage() {
 
             {/* Bulk Actions */}
             {selectedContracts.length > 0 && (
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
                 <span className="text-sm font-medium">
                   {selectedContracts.length} contract(s) selected
                 </span>
@@ -739,9 +764,7 @@ export default function ContractsDashboardPage() {
                 </p>
                 {!(searchTerm || statusFilter !== "all") && (
                   <Button asChild className="mt-6">
-                    <Link href={`/${locale}/dashboard/generate-contract`}>
-                      Create New Contract
-                    </Link>
+                    <Link href={`/${locale}/dashboard/generate-contract`}>Create New Contract</Link>
                   </Button>
                 )}
               </div>
@@ -786,61 +809,71 @@ export default function ContractsDashboardPage() {
                       const contractStatus = getContractStatus(contract)
                       const enhanced = enhanceContract(contract)
                       const promoterName = contract.promoters
-                        ? (locale === "ar" 
-                            ? contract.promoters.name_ar || contract.promoters.name_en
-                            : contract.promoters.name_en || contract.promoters.name_ar)
+                        ? locale === "ar"
+                          ? contract.promoters.name_ar || contract.promoters.name_en
+                          : contract.promoters.name_en || contract.promoters.name_ar
                         : ""
                       return (
                         <TableRow key={contract.id} className="group">
                           <TableCell>
                             <Checkbox
                               checked={selectedContracts.includes(contract.id)}
-                              onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                              onCheckedChange={(checked) =>
+                                handleSelectContract(contract.id, checked as boolean)
+                              }
                             />
                           </TableCell>
                           <TableCell className="font-mono text-xs">
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
-                                  {contract.id.substring(0, 8)}...
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Full ID: {contract.id}
-                                </TooltipContent>
+                                <TooltipTrigger>{contract.id.substring(0, 8)}...</TooltipTrigger>
+                                <TooltipContent>Full ID: {contract.id}</TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
                                 <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                               </div>
                               <span>
-                                {contract.first_party && typeof contract.first_party === 'object' && 'name_en' in contract.first_party
-                                  ? (locale === "ar" 
-                                      ? contract.first_party.name_ar || contract.first_party.name_en || "N/A"
-                                      : contract.first_party.name_en || contract.first_party.name_ar || "N/A")
+                                {contract.first_party &&
+                                typeof contract.first_party === "object" &&
+                                "name_en" in contract.first_party
+                                  ? locale === "ar"
+                                    ? contract.first_party.name_ar ||
+                                      contract.first_party.name_en ||
+                                      "N/A"
+                                    : contract.first_party.name_en ||
+                                      contract.first_party.name_ar ||
+                                      "N/A"
                                   : "N/A"}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                                 <Building2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                               </div>
                               <span>
-                                {contract.second_party && typeof contract.second_party === 'object' && 'name_en' in contract.second_party
-                                  ? (locale === "ar" 
-                                      ? contract.second_party.name_ar || contract.second_party.name_en || "N/A"
-                                      : contract.second_party.name_en || contract.second_party.name_ar || "N/A")
+                                {contract.second_party &&
+                                typeof contract.second_party === "object" &&
+                                "name_en" in contract.second_party
+                                  ? locale === "ar"
+                                    ? contract.second_party.name_ar ||
+                                      contract.second_party.name_en ||
+                                      "N/A"
+                                    : contract.second_party.name_en ||
+                                      contract.second_party.name_ar ||
+                                      "N/A"
                                   : "N/A"}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
                                 <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                               </div>
                               <span>{promoterName || "N/A"}</span>
@@ -858,16 +891,16 @@ export default function ContractsDashboardPage() {
                                   ? format(parseISO(contract.contract_end_date), "dd-MM-yyyy")
                                   : "N/A"}
                               </span>
-                              {enhanced.days_until_expiry !== undefined && enhanced.days_until_expiry <= 30 && enhanced.days_until_expiry > 0 && (
-                                <span className="text-xs text-amber-600 font-medium">
-                                  {enhanced.days_until_expiry} days left
-                                </span>
-                              )}
+                              {enhanced.days_until_expiry !== undefined &&
+                                enhanced.days_until_expiry <= 30 &&
+                                enhanced.days_until_expiry > 0 && (
+                                  <span className="text-xs font-medium text-amber-600">
+                                    {enhanced.days_until_expiry} days left
+                                  </span>
+                                )}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {getStatusBadge(contractStatus)}
-                          </TableCell>
+                          <TableCell>{getStatusBadge(contractStatus)}</TableCell>
                           <TableCell>
                             {contract.pdf_url ? (
                               <a
@@ -893,9 +926,7 @@ export default function ContractsDashboardPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <Link
-                                  href={`/${locale}/contracts/${contract.id}`}
-                                >
+                                <Link href={`/${locale}/contracts/${contract.id}`}>
                                   <DropdownMenuItem>
                                     <Eye className="mr-2 h-4 w-4" /> View Details
                                   </DropdownMenuItem>
@@ -932,27 +963,33 @@ export default function ContractsDashboardPage() {
                   const contractStatus = getContractStatus(contract)
                   const enhanced = enhanceContract(contract)
                   const promoterName = contract.promoters
-                    ? (locale === "ar" 
-                        ? contract.promoters.name_ar || contract.promoters.name_en
-                        : contract.promoters.name_en || contract.promoters.name_ar)
+                    ? locale === "ar"
+                      ? contract.promoters.name_ar || contract.promoters.name_en
+                      : contract.promoters.name_en || contract.promoters.name_ar
                     : ""
-                  
+
                   return (
-                    <Card key={contract.id} className="group hover:shadow-md transition-shadow">
+                    <Card key={contract.id} className="group transition-shadow hover:shadow-md">
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="mb-3 flex items-start justify-between">
                           <div className="flex items-center gap-2">
                             <Checkbox
                               checked={selectedContracts.includes(contract.id)}
-                              onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                              onCheckedChange={(checked) =>
+                                handleSelectContract(contract.id, checked as boolean)
+                              }
                             />
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
                               <FileText className="h-5 w-5 text-white" />
                             </div>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100"
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -976,20 +1013,24 @@ export default function ContractsDashboardPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-sm">Contract #{contract.id.substring(0, 8)}...</h3>
+                            <h3 className="text-sm font-medium">
+                              Contract #{contract.id.substring(0, 8)}...
+                            </h3>
                             {getStatusBadge(contractStatus)}
                           </div>
-                          
-                          <div className="text-sm text-muted-foreground space-y-1">
+
+                          <div className="space-y-1 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Building2 className="h-3 w-3" />
                               <span className="font-medium">First Party:</span>
                               <span>
-                                {contract.first_party && typeof contract.first_party === 'object' && 'name_en' in contract.first_party
-                                  ? (contract.first_party.name_en || "N/A")
+                                {contract.first_party &&
+                                typeof contract.first_party === "object" &&
+                                "name_en" in contract.first_party
+                                  ? contract.first_party.name_en || "N/A"
                                   : "N/A"}
                               </span>
                             </div>
@@ -997,8 +1038,10 @@ export default function ContractsDashboardPage() {
                               <Building2 className="h-3 w-3" />
                               <span className="font-medium">Second Party:</span>
                               <span>
-                                {contract.second_party && typeof contract.second_party === 'object' && 'name_en' in contract.second_party
-                                  ? (contract.second_party.name_en || "N/A")
+                                {contract.second_party &&
+                                typeof contract.second_party === "object" &&
+                                "name_en" in contract.second_party
+                                  ? contract.second_party.name_en || "N/A"
                                   : "N/A"}
                               </span>
                             </div>
@@ -1008,17 +1051,20 @@ export default function ContractsDashboardPage() {
                               <span>{promoterName || "N/A"}</span>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center justify-between pt-2 border-t">
+
+                          <div className="flex items-center justify-between border-t pt-2">
                             <div className="text-xs text-muted-foreground">
                               {contract.contract_start_date && contract.contract_end_date && (
                                 <>
-                                  {format(parseISO(contract.contract_start_date), "dd/MM/yy")} - {format(parseISO(contract.contract_end_date), "dd/MM/yy")}
-                                  {enhanced.days_until_expiry !== undefined && enhanced.days_until_expiry <= 30 && enhanced.days_until_expiry > 0 && (
-                                    <div className="text-amber-600 font-medium">
-                                      {enhanced.days_until_expiry} days left
-                                    </div>
-                                  )}
+                                  {format(parseISO(contract.contract_start_date), "dd/MM/yy")} -{" "}
+                                  {format(parseISO(contract.contract_end_date), "dd/MM/yy")}
+                                  {enhanced.days_until_expiry !== undefined &&
+                                    enhanced.days_until_expiry <= 30 &&
+                                    enhanced.days_until_expiry > 0 && (
+                                      <div className="font-medium text-amber-600">
+                                        {enhanced.days_until_expiry} days left
+                                      </div>
+                                    )}
                                 </>
                               )}
                             </div>
