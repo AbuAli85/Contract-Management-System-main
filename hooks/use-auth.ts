@@ -8,6 +8,8 @@ interface AuthState {
   isAuthenticated: boolean
   loading: boolean
   initialized: boolean
+  profile: { role: string; is_premium: boolean } | null
+  error: string | null
 }
 
 // Global auth state to prevent multiple instances
@@ -17,11 +19,53 @@ let globalAuthState: AuthState = {
   isAuthenticated: false,
   loading: true,
   initialized: false,
+  profile: null,
+  error: null,
 }
 
 let globalListeners: Set<(state: AuthState) => void> = new Set()
 let authSubscription: any = null
 let isInitialized = false
+
+// Improved profile fetching with error handling
+const fetchUserProfile = async (userId: string) => {
+  const supabase = createClient()
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role,is_premium")
+      .eq("id", userId)
+      .maybeSingle() // Use maybeSingle instead of single to avoid errors when no row exists
+
+    if (error) {
+      console.error("Profile fetch error:", error)
+      // Create profile if it doesn't exist
+      const { data: newProfile, error: insertError } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            id: userId,
+            role: "user",
+            is_premium: false,
+          },
+        ])
+        .select("role,is_premium")
+        .single()
+
+      if (insertError) {
+        console.error("Profile creation error:", insertError)
+        return { role: "user", is_premium: false }
+      }
+      return newProfile || { role: "user", is_premium: false }
+    }
+
+    return data || { role: "user", is_premium: false }
+  } catch (err) {
+    console.error("Unexpected error fetching profile:", err)
+    return { role: "user", is_premium: false }
+  }
+}
 
 // Initialize auth state once
 const initializeAuth = async () => {
@@ -39,7 +83,7 @@ const initializeAuth = async () => {
 
     if (error) {
       console.error("Error getting initial session:", error)
-      updateGlobalState(null)
+      updateGlobalState(null, null, `Session error: ${error.message}`)
       return
     }
 
@@ -52,12 +96,14 @@ const initializeAuth = async () => {
 
       if (userError || !user) {
         console.error("Initial session invalid:", userError)
-        updateGlobalState(null)
+        updateGlobalState(null, null, "Invalid session")
       } else {
-        updateGlobalState({ ...session, user })
+        // Fetch user profile
+        const profile = await fetchUserProfile(user.id)
+        updateGlobalState({ ...session, user }, profile, null)
       }
     } else {
-      updateGlobalState(null)
+      updateGlobalState(null, null, null)
     }
 
     // Set up auth state listener (only once)
@@ -78,49 +124,62 @@ const initializeAuth = async () => {
                 } = await supabase.auth.getUser()
                 if (error || !user) {
                   console.error("Session verification failed:", error)
-                  updateGlobalState(null)
+                  updateGlobalState(null, null, "Session verification failed")
                 } else {
-                  updateGlobalState({ ...session, user })
+                  const profile = await fetchUserProfile(user.id)
+                  updateGlobalState({ ...session, user }, profile, null)
                 }
               } catch (error) {
                 console.error("Error verifying session:", error)
-                updateGlobalState(null)
+                updateGlobalState(null, null, "Session verification error")
               }
             } else {
-              updateGlobalState(null)
+              updateGlobalState(null, null, null)
             }
             break
 
           case "SIGNED_OUT":
-            updateGlobalState(null)
+            updateGlobalState(null, null, null)
             break
 
           case "USER_UPDATED":
             if (session) {
-              updateGlobalState(session)
+              const profile = await fetchUserProfile(session.user.id)
+              updateGlobalState(session, profile, null)
             }
             break
 
           default:
             // For other events, just update with the session
-            updateGlobalState(session)
+            if (session) {
+              const profile = await fetchUserProfile(session.user.id)
+              updateGlobalState(session, profile, null)
+            } else {
+              updateGlobalState(null, null, null)
+            }
         }
       })
       authSubscription = subscription
     }
   } catch (error) {
     console.error("Error initializing auth:", error)
-    updateGlobalState(null)
+    updateGlobalState(null, null, `Initialization error: ${error}`)
   }
 }
 
-const updateGlobalState = (session: Session | null) => {
+const updateGlobalState = (
+  session: Session | null,
+  profile: { role: string; is_premium: boolean } | null,
+  error: string | null
+) => {
   globalAuthState = {
     user: session?.user ?? null,
     session: session,
     isAuthenticated: !!session?.user,
     loading: false,
     initialized: true,
+    profile: profile,
+    error: error,
   }
 
   // Notify all listeners
@@ -128,10 +187,8 @@ const updateGlobalState = (session: Session | null) => {
 }
 
 export function useAuth() {
-  // Always call useState - never conditionally
   const [authState, setAuthState] = useState<AuthState>(globalAuthState)
 
-  // Always call useEffect - never conditionally
   useEffect(() => {
     const listener = (newState: AuthState) => {
       setAuthState(newState)
@@ -152,7 +209,6 @@ export function useAuth() {
     }
   }, [])
 
-  // Always call useCallback - never conditionally
   const refresh = useCallback(async () => {
     const supabase = createClient()
 
@@ -166,7 +222,7 @@ export function useAuth() {
 
       if (error) {
         console.error("Error refreshing session:", error)
-        updateGlobalState(null)
+        updateGlobalState(null, null, `Refresh error: ${error.message}`)
         return
       }
 
@@ -178,16 +234,17 @@ export function useAuth() {
 
         if (userError || !user) {
           console.error("Session invalid during refresh:", userError)
-          updateGlobalState(null)
+          updateGlobalState(null, null, "Invalid session during refresh")
         } else {
-          updateGlobalState({ ...session, user })
+          const profile = await fetchUserProfile(user.id)
+          updateGlobalState({ ...session, user }, profile, null)
         }
       } else {
-        updateGlobalState(null)
+        updateGlobalState(null, null, null)
       }
     } catch (error) {
       console.error("Error during refresh:", error)
-      updateGlobalState(null)
+      updateGlobalState(null, null, `Refresh error: ${error}`)
     }
   }, [])
 
@@ -197,29 +254,9 @@ export function useAuth() {
     isAuthenticated: authState.isAuthenticated,
     loading: authState.loading,
     initialized: authState.initialized,
+    profile: authState.profile,
+    error: authState.error,
     refresh,
-  }
-}
-
-// Improved error handling for fetching user profile
-const fetchUserProfile = async (userId: string) => {
-  const supabase = createClient()
-
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("role,is_premium")
-      .eq("id", userId)
-      .single()
-
-    if (error) {
-      console.error("Profile fetch error:", error)
-      return { role: "user", is_premium: false } // Default values
-    }
-    return data
-  } catch (err) {
-    console.error("Unexpected error fetching profile:", err)
-    return { role: "user", is_premium: false } // Default values
   }
 }
 

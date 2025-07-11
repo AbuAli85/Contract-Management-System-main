@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
+import { useAuth } from "@/hooks/use-auth"
 import AuthStatus from "@/components/auth-status"
 
 // --- Types ---
@@ -38,58 +39,32 @@ const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) 
     color: "bg-blue-500",
   },
   {
-    title: t("viewContracts"),
-    description: t("viewContractsDesc"),
-    icon: <FileText className="h-6 w-6" />,
-    href: `/${locale}/contracts`,
-    color: "bg-green-500",
-  },
-  {
     title: t("manageParties"),
     description: t("managePartiesDesc"),
     icon: <Users className="h-6 w-6" />,
     href: `/${locale}/manage-parties`,
+    color: "bg-green-500",
+  },
+  {
+    title: t("viewReports"),
+    description: t("viewReportsDesc"),
+    icon: <BarChart3 className="h-6 w-6" />,
+    href: `/${locale}/reports`,
     color: "bg-purple-500",
   },
   {
-    title: t("analytics"),
-    description: t("analyticsDesc"),
-    icon: <BarChart3 className="h-6 w-6" />,
-    href: `/${locale}/dashboard`,
+    title: t("searchContracts"),
+    description: t("searchContractsDesc"),
+    icon: <Search className="h-6 w-6" />,
+    href: `/${locale}/contracts`,
     color: "bg-orange-500",
-  },
-]
-
-const getStatsCards = (t: ReturnType<typeof useTranslations>, stats: Stats) => [
-  {
-    title: t("totalContracts"),
-    value: stats.contracts,
-    icon: <FileText className="h-8 w-8 text-blue-600" />,
-    description: t("allContracts"),
-  },
-  {
-    title: t("activeContracts"),
-    value: stats.activeContracts,
-    icon: <TrendingUp className="h-8 w-8 text-green-600" />,
-    description: t("currentlyActive"),
-  },
-  {
-    title: t("totalParties"),
-    value: stats.parties,
-    icon: <Users className="h-8 w-8 text-purple-600" />,
-    description: t("registeredParties"),
-  },
-  {
-    title: t("promoters"),
-    value: stats.promoters,
-    icon: <Users className="h-8 w-8 text-orange-600" />,
-    description: t("activePromoters"),
   },
 ]
 
 export function HomePageContent({ locale }: HomePageContentProps) {
   const t = useTranslations("Home")
   const { theme, setTheme } = useTheme()
+  const { user, profile, loading: authLoading, error: authError } = useAuth()
   const [stats, setStats] = useState<Stats>({
     contracts: 0,
     parties: 0,
@@ -97,209 +72,110 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     activeContracts: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [isPremium, setIsPremium] = useState<boolean>(false)
   const [statsError, setStatsError] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
-    async function fetchUserAndStats() {
-      // Fetch user session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-
-      if (!currentUser) {
-        setUserRole(null)
-        setIsPremium(false)
+    async function fetchStats() {
+      if (!user || !profile) {
         setLoading(false)
         return
       }
 
-      // Fetch user profile from 'profiles' table
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role, is_premium")
-        .eq("id", currentUser.id)
-        .single<Profile>()
-
-      if (error || !profile || "code" in profile) {
-        setUserRole(null)
-        setIsPremium(false)
-        setLoading(false)
-        setStatsError("Could not load user profile.")
-        return
-      }
-
-      setUserRole(profile.role ?? null)
-      setIsPremium(!!profile.is_premium)
-
-      // Fetch stats if user is admin or premium
+      // Only fetch stats if user is admin or premium
       if (profile.role === "admin" || profile.is_premium) {
         try {
-          const { count: contractsCount } = await supabase
-            .from("contracts")
-            .select("*", { count: "exact", head: true })
-          const { count: partiesCount } = await supabase
-            .from("parties")
-            .select("*", { count: "exact", head: true })
-          const { count: promotersCount } = await supabase
-            .from("promoters")
-            .select("*", { count: "exact", head: true })
-          const { count: activeContractsCount } = await supabase
-            .from("contracts")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "active")
+          const [contractsResult, partiesResult, promotersResult, activeContractsResult] =
+            await Promise.all([
+              supabase.from("contracts").select("*", { count: "exact", head: true }),
+              supabase.from("parties").select("*", { count: "exact", head: true }),
+              supabase.from("promoters").select("*", { count: "exact", head: true }),
+              supabase
+                .from("contracts")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "active"),
+            ])
+
           if (isMounted) {
             setStats({
-              contracts: contractsCount || 0,
-              parties: partiesCount || 0,
-              promoters: promotersCount || 0,
-              activeContracts: activeContractsCount || 0,
+              contracts: contractsResult.count || 0,
+              parties: partiesResult.count || 0,
+              promoters: promotersResult.count || 0,
+              activeContracts: activeContractsResult.count || 0,
             })
-            setLoading(false)
             setStatsError(null)
           }
         } catch (error) {
           console.error("Error fetching stats:", error)
           if (isMounted) {
             setStatsError("Failed to load statistics.")
-            setLoading(false)
           }
         }
-      } else {
+      }
+
+      if (isMounted) {
         setLoading(false)
       }
     }
 
-    fetchUserAndStats()
+    if (!authLoading) {
+      fetchStats()
+    }
+
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [user, profile, authLoading])
 
   const quickActions = getQuickActions(t, locale)
-  const statsCards = getStatsCards(t, stats)
 
-  if (loading) {
-    // Skeleton loader for stats
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (authError) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="flex h-32 w-full animate-pulse flex-col items-center justify-center rounded-lg bg-gray-100"
-            >
-              <div className="mb-2 h-8 w-8 rounded-full bg-gray-300" aria-hidden="true"></div>
-              <div className="mb-1 h-4 w-1/2 rounded bg-gray-300" aria-hidden="true"></div>
-              <div className="h-3 w-1/3 rounded bg-gray-200" aria-hidden="true"></div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <h2 className="mb-2 text-lg font-semibold text-red-600">Authentication Error</h2>
+              <p className="text-gray-600">{authError}</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">
+                Retry
+              </Button>
             </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (statsError) {
-    return (
-      <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
-        <AuthStatus />
-        <div className="mt-8 max-w-lg rounded-lg border border-red-300 bg-red-100 p-6 text-center text-red-800">
-          <h2 className="mb-2 text-2xl font-bold">Error</h2>
-          <p className="mb-4">{statsError}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user || (userRole !== "admin" && !isPremium)) {
-    return (
-      <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
-        <AuthStatus />
-        <div className="mt-8 max-w-lg rounded-lg border border-yellow-300 bg-yellow-100 p-6 text-center text-yellow-800">
-          <h2 className="mb-2 text-2xl font-bold">Premium Access Required</h2>
-          <p className="mb-4">
-            You must have a <span className="font-semibold">premium</span> or{" "}
-            <span className="font-semibold">admin</span> account to access the contract management
-            features.
-          </p>
-          <p>If you believe this is a mistake or want to upgrade, please contact support.</p>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* AuthStatus: show user info and role at the top */}
-      <div className="mb-6">
+      <div className="mb-8">
         <AuthStatus />
       </div>
-      {/* Dark mode toggle */}
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded bg-gray-200 px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-gray-200"
-          aria-label={theme === "dark" ? t("lightMode") : t("darkMode")}
-        >
-          {theme === "dark" ? t("lightMode") : t("darkMode")}
-        </button>
-      </div>
-      {/* Header */}
-      <header className="mb-8" aria-label="Page header">
-        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        <p className="text-xl text-gray-600 dark:text-gray-300">{t("subtitle")}</p>
-      </header>
 
-      {/* Stats Cards */}
-      <section
-        className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
-        aria-label="System statistics"
-      >
-        {statsCards.map((stat, index) => (
-          <Card
-            key={index}
-            className="transition-shadow hover:shadow-lg dark:bg-gray-800"
-            tabIndex={0}
-            aria-label={stat.title}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                {stat.title}
-              </CardTitle>
-              {stat.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {stat.value.toLocaleString()}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+      <div className="space-y-8">
+        <div className="text-center">
+          <h1 className="mb-2 text-4xl font-bold">{t("welcome")}</h1>
+          <p className="mb-8 text-xl text-muted-foreground">{t("subtitle")}</p>
+        </div>
 
-      {/* Quick Actions */}
-      <section className="mb-8" aria-label="Quick actions">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {t("quickActions")}
-        </h2>
+        {/* Quick Actions */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((action, index) => (
-            <Link key={index} href={action.href} aria-label={action.title} tabIndex={0}>
-              <Card
-                className="cursor-pointer transition-all hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800"
-                tabIndex={-1}
-              >
-                <CardHeader>
+            <Link key={index} href={action.href}>
+              <Card className="cursor-pointer transition-shadow hover:shadow-lg">
+                <CardHeader className="pb-3">
                   <div
-                    className={`h-12 w-12 ${action.color} mb-4 flex items-center justify-center rounded-lg text-white`}
-                    aria-hidden="true"
+                    className={`h-12 w-12 rounded-lg ${action.color} mb-3 flex items-center justify-center text-white`}
                   >
                     {action.icon}
                   </div>
@@ -310,60 +186,59 @@ export function HomePageContent({ locale }: HomePageContentProps) {
             </Link>
           ))}
         </div>
-      </section>
 
-      {/* Recent Activity */}
-      <section aria-label="System overview">
-        <Card className="dark:bg-gray-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              {t("systemOverview")}
-            </CardTitle>
-            <CardDescription>{t("getStarted")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                <div>
-                  <h4 className="font-medium">{t("contractGeneration")}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t("contractGenerationDesc")}
-                  </p>
-                </div>
-                <Link
-                  href={`/${locale}/generate-contract`}
-                  aria-label={t("getStartedContractGeneration")}
-                >
-                  <Button>{t("getStarted")}</Button>
-                </Link>
+        {/* Stats Section - Only show if user has access */}
+        {user && profile && (profile.role === "admin" || profile.is_premium) && (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? "..." : stats.contracts}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Parties</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? "..." : stats.parties}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Promoters</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? "..." : stats.promoters}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? "..." : stats.activeContracts}</div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {statsError && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-red-600">
+                <p>{statsError}</p>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                <div>
-                  <h4 className="font-medium">{t("partyManagement")}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t("partyManagementDesc")}
-                  </p>
-                </div>
-                <Link href={`/${locale}/manage-parties`} aria-label={t("manageContractParties")}>
-                  <Button variant="outline">{t("manage")}</Button>
-                </Link>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                <div>
-                  <h4 className="font-medium">{t("analyticsDashboard")}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t("analyticsDashboardDesc")}
-                  </p>
-                </div>
-                <Link href={`/${locale}/dashboard`} aria-label={t("viewAnalyticsDashboard")}>
-                  <Button variant="outline">{t("viewAnalytics")}</Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }
