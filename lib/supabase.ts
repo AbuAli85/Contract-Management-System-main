@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
-import { devLog } from "@/lib/dev-log"
 
 // Support both client and server environments
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
@@ -13,15 +12,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: 'pkce',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'sb-auth-token',
+    debug: process.env.NODE_ENV === 'development'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
   },
   global: {
     headers: {
@@ -36,7 +39,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession()
     return !!session?.user
   } catch (error) {
-    devLog("Error checking authentication status:", error)
+    console.error("Error checking authentication status:", error)
     return false
   }
 }
@@ -46,12 +49,42 @@ export const getCurrentUser = async () => {
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
-      devLog("Error getting current user:", error)
+      console.error("Error getting current user:", error)
       return null
     }
     return user
   } catch (error) {
-    devLog("Error getting current user:", error)
+    console.error("Error getting current user:", error)
+    return null
+  }
+}
+
+// Utility function to get current session
+export const getCurrentSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error("Error getting current session:", error)
+      return null
+    }
+    return session
+  } catch (error) {
+    console.error("Error getting current session:", error)
+    return null
+  }
+}
+
+// Utility function to refresh session
+export const refreshSession = async () => {
+  try {
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error) {
+      console.error("Error refreshing session:", error)
+      return null
+    }
+    return data.session
+  } catch (error) {
+    console.error("Error refreshing session:", error)
     return null
   }
 }
@@ -62,21 +95,21 @@ export const handleRealtimeError = (error: any, tableName: string) => {
   
   // Check for specific error types
   if (message.includes("JWT") || message.includes("auth") || message.includes("permission")) {
-    devLog(`Authentication error for ${tableName}:`, message)
+    console.warn(`Authentication error for ${tableName}:`, message)
     return "AUTH_ERROR"
   }
   
   if (message.includes("timeout") || message.includes("TIMED_OUT")) {
-    devLog(`Timeout error for ${tableName}:`, message)
+    console.warn(`Timeout error for ${tableName}:`, message)
     return "TIMEOUT_ERROR"
   }
   
   if (message.includes("network") || message.includes("connection")) {
-    devLog(`Network error for ${tableName}:`, message)
+    console.warn(`Network error for ${tableName}:`, message)
     return "NETWORK_ERROR"
   }
   
-  devLog(`Unknown error for ${tableName}:`, message)
+  console.warn(`Unknown error for ${tableName}:`, message)
   return "UNKNOWN_ERROR"
 }
 
@@ -87,7 +120,7 @@ export const createRealtimeChannel = (tableName: string, callback: (payload: any
       .channel(`public-${tableName}-realtime`)
       .on("postgres_changes", { event: "*", schema: "public", table: tableName }, callback)
   } catch (error) {
-    devLog(`Error creating realtime channel for ${tableName}:`, error)
+    console.error(`Error creating realtime channel for ${tableName}:`, error)
     return null
   }
 }
@@ -103,7 +136,31 @@ export const subscribeToChannel = (channel: any, onStatusChange?: (status: strin
       }
     })
   } catch (error) {
-    devLog("Error subscribing to channel:", error)
+    console.error("Error subscribing to channel:", error)
     return null
+  }
+}
+
+// Debug function to log current auth state
+export const debugAuthState = async () => {
+  if (process.env.NODE_ENV !== 'development') return
+  
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    console.log('🔍 Auth Debug:', {
+      session: !!session,
+      sessionError: sessionError?.message,
+      user: !!user,
+      userError: userError?.message,
+      userId: user?.id,
+      userEmail: user?.email,
+      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000) : null,
+      accessToken: session?.access_token ? 'Present' : 'Missing',
+      refreshToken: session?.refresh_token ? 'Present' : 'Missing'
+    })
+  } catch (error) {
+    console.error('🔍 Auth Debug Error:', error)
   }
 }
