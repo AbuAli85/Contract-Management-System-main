@@ -8,3 +8,10 @@ export default function PromotersPage() {
     </ProtectedRoute>
   )
 }
+
+fetch("/path/to/promoters_rows.csv")
+  .then((response) => response.text())
+  .then((csvString) => {
+    const result = Papa.parse(csvString, { header: true })
+    console.log(result.data)
+  })
