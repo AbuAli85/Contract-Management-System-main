@@ -4,7 +4,7 @@ import React from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp } from "lucide-react"
+import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp, LogIn } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -24,41 +24,62 @@ interface HomePageContentProps {
   locale: string
 }
 
-const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => [
-  {
-    title: t("generateContract"),
-    description: t("generateContractDesc"),
-    icon: <Plus className="h-6 w-6" />,
-    href: `/${locale}/generate-contract`,
-    color: "bg-blue-500",
-  },
-  {
-    title: t("manageParties"),
-    description: t("managePartiesDesc"),
-    icon: <Users className="h-6 w-6" />,
-    href: `/${locale}/manage-parties`,
-    color: "bg-green-500",
-  },
-  {
-    title: t("viewReports"),
-    description: t("viewReportsDesc"),
-    icon: <BarChart3 className="h-6 w-6" />,
-    href: `/${locale}/reports`,
-    color: "bg-purple-500",
-  },
-  {
-    title: t("searchContracts"),
-    description: t("searchContractsDesc"),
-    icon: <Search className="h-6 w-6" />,
-    href: `/${locale}/contracts`,
-    color: "bg-orange-500",
-  },
-]
+const getQuickActions = (
+  t: ReturnType<typeof useTranslations>,
+  locale: string,
+  isAuthenticated: boolean
+) => {
+  const actions = [
+    {
+      title: t("generateContract"),
+      description: t("generateContractDesc"),
+      icon: <Plus className="h-6 w-6" />,
+      href: `/${locale}/generate-contract`,
+      color: "bg-blue-500",
+      requiresAuth: true,
+    },
+    {
+      title: t("manageParties"),
+      description: t("managePartiesDesc"),
+      icon: <Users className="h-6 w-6" />,
+      href: `/${locale}/manage-parties`,
+      color: "bg-green-500",
+      requiresAuth: true,
+    },
+    {
+      title: t("viewReports"),
+      description: t("viewReportsDesc"),
+      icon: <BarChart3 className="h-6 w-6" />,
+      href: `/${locale}/reports`,
+      color: "bg-purple-500",
+      requiresAuth: true,
+    },
+    {
+      title: t("searchContracts"),
+      description: t("searchContractsDesc"),
+      icon: <Search className="h-6 w-6" />,
+      href: `/${locale}/contracts`,
+      color: "bg-orange-500",
+      requiresAuth: true,
+    },
+  ]
+
+  // Filter actions based on authentication
+  if (!isAuthenticated) {
+    return actions.map((action) => ({
+      ...action,
+      href: `/${locale}/auth/signin?redirect=${encodeURIComponent(action.href)}`,
+    }))
+  }
+
+  return actions
+}
 
 export function HomePageContent({ locale }: HomePageContentProps) {
   const t = useTranslations("Home")
   const { theme, setTheme } = useTheme()
   const { user, profile, loading: authLoading, error: authError } = useAuth()
+  const router = useRouter()
   const [stats, setStats] = useState<Stats>({
     contracts: 0,
     parties: 0,
@@ -124,31 +145,13 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   // Simple approach - directly use the translations without try-catch
   const quickActions = React.useMemo(() => {
-    return getQuickActions(t, locale)
-  }, [t, locale])
+    return getQuickActions(t, locale, !!user)
+  }, [t, locale, user])
 
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (authError) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <h2 className="mb-2 text-lg font-semibold text-red-600">Authentication Error</h2>
-              <p className="text-gray-600">{authError}</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     )
   }
@@ -163,6 +166,23 @@ export function HomePageContent({ locale }: HomePageContentProps) {
         <div className="text-center">
           <h1 className="mb-2 text-4xl font-bold">{t("welcome")}</h1>
           <p className="mb-8 text-xl text-muted-foreground">{t("subtitle")}</p>
+
+          {!user && (
+            <div className="mb-8">
+              <Card className="mx-auto max-w-md">
+                <CardContent className="p-6 text-center">
+                  <LogIn className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 text-lg font-semibold">Get Started</h3>
+                  <p className="mb-4 text-muted-foreground">
+                    Sign in to access all features and manage your contracts.
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link href={`/${locale}/auth/signin`}>Sign In to Continue</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -177,7 +197,14 @@ export function HomePageContent({ locale }: HomePageContentProps) {
                     {action.icon}
                   </div>
                   <CardTitle className="text-lg">{action.title}</CardTitle>
-                  <CardDescription>{action.description}</CardDescription>
+                  <CardDescription>
+                    {action.description}
+                    {action.requiresAuth && !user && (
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        (Requires login)
+                      </span>
+                    )}
+                  </CardDescription>
                 </CardHeader>
               </Card>
             </Link>
