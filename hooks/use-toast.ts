@@ -106,7 +106,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t,
+            : t
         ),
       }
     }
@@ -166,22 +166,56 @@ function toast({ ...props }: Toast) {
   }
 }
 
-function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+export function useToast() {
+  // All hooks must be at the top
+  const [toasts, setToasts] = React.useState<Toast[]>([])
 
   React.useEffect(() => {
-    listeners.push(setState)
+    listeners.push(setToasts)
     return () => {
-      const index = listeners.indexOf(setState)
+      const index = listeners.indexOf(setToasts)
       if (index > -1) {
         listeners.splice(index, 1)
       }
     }
   }, [])
 
+  // Don't put hooks inside conditions, loops, or nested functions
+  const toast = React.useCallback(
+    (props: Toast) => {
+      const id = genId()
+
+      const update = (props: ToasterToast) =>
+        dispatch({
+          type: "UPDATE_TOAST",
+          toast: { ...props, id },
+        })
+      const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+      dispatch({
+        type: "ADD_TOAST",
+        toast: {
+          ...props,
+          id,
+          open: true,
+          onOpenChange: (open) => {
+            if (!open) dismiss()
+          },
+        },
+      })
+
+      return {
+        id: id,
+        dismiss,
+        update,
+      }
+    },
+    [dispatch]
+  )
+
   return {
-    ...state,
     toast,
+    toasts,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }

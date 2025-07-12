@@ -1,163 +1,270 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useState, useEffect } from "react"
 import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import {
-  User,
-  Plus,
-  Search,
-  Filter,
-  RefreshCw,
-  MoreHorizontal,
-  Edit,
-  Eye,
-  Trash2,
-  Download,
-  Upload,
-  FileText,
-  Calendar,
   AlertTriangle,
+  Briefcase,
   CheckCircle2,
   Clock,
-  Users,
-  Building2,
-  Phone,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Filter,
   Mail,
-  MapPin,
-  Briefcase,
-  Star,
-  Archive,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  RefreshCw,
+  Trash2,
   TrendingUp,
-  Activity,
+  Upload,
+  Users,
 } from "lucide-react"
-import { format, parseISO, differenceInDays, isPast, isAfter, isBefore, subDays } from "date-fns"
+import { format, isAfter, isBefore, isPast, parseISO, subDays } from "date-fns"
 import { createClient } from "@/lib/supabase/client"
-import { LoadingSpinner, ContractCardSkeleton } from "@/components/ui/skeletons"
-import type { Promoter } from "@/lib/types"
 
-interface PromoterWithStats extends Promoter {
-  active_contracts_count?: number
-  total_contracts_count?: number
-  document_status?: "valid" | "expiring" | "expired"
-  overall_status?: "active" | "warning" | "critical" | "inactive"
+const TOAST_LIMIT = 1
+const TOAST_REMOVE_DELAY = 5000
+
+type ToasterToast = ToastProps & {
+  id: string
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: ToastActionElement
 }
 
-interface PromoterStats {
-  total: number
-  active: number
-  inactive: number
-  documentsExpiring: number
-  documentsExpired: number
-  withActiveContracts: number
-  recentlyAdded: number
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST",
+} as const
+
+type ActionType = typeof actionTypes
+type Action =
+  | {
+      type: ActionType["ADD_TOAST"]
+      toast: ToasterToast
+    }
+  | {
+      type: ActionType["UPDATE_TOAST"]
+      toast: Partial<ToasterToast>
+    }
+  | {
+      type: ActionType["DISMISS_TOAST"]
+      toastId?: ToasterToast["id"]
+    }
+  | {
+      type: ActionType["REMOVE_TOAST"]
+      toastId?: ToasterToast["id"]
+    }
+
+interface State {
+  toasts: ToasterToast[]
 }
 
-type PromoterFilter = "all" | "active" | "inactive" | "expiring" | "expired"
-type DocumentFilter = "all" | "valid" | "expiring" | "expired"
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-export function PromoterManagement() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth()
+const addToRemoveQueue = (toastId: string) => {
+  if (toastTimeouts.has(toastId)) {
+    return
+  }
+
+  const timeout = setTimeout(() => {
+    toastTimeouts.delete(toastId)
+    dispatch({
+      type: "REMOVE_TOAST",
+      toastId: toastId,
+    })
+  }, TOAST_REMOVE_DELAY)
+
+  toastTimeouts.set(toastId, timeout)
+}
+
+export const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD_TOAST":
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      }
+    case "UPDATE_TOAST":
+      return {
+        ...state,
+        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
+      }
+    case "DISMISS_TOAST": {
+      const { toastId } = action
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        addToRemoveQueue(toastId)
+      } else {
+        state.toasts.forEach((toast) => {
+          addToRemoveQueue(toast.id)
+        })
+      }
+
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t
+        ),
+      }
+    }
+    case "REMOVE_TOAST":
+      if (action.toastId === undefined) {
+        return {
+          ...state,
+          toasts: [],
+        }
+      }
+
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      }
+  }
+}
+
+let count = 0
+function genId() {
+  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  return count.toString()
+}
+
+const listeners: Array<(state: State) => void> = []
+
+let memoryState: State = { toasts: [] }
+export function useToast() {
+  const [toasts, setToasts] = React.useState<Toast[]>([])
+
+  React.useEffect(() => {
+    listeners.push(setToasts)
+    return () => {
+      const index = listeners.indexOf(setToasts)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
+  }, [setToasts])
+
+  memoryState = reducer(memoryState, action)
+
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+
+  const toast = ({ ...props }: Toast) => {
+    const id = genId()
+    const update = (props: ToasterToast) =>
+      dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } })
+    const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+    dispatch({
+      type: "ADD_TOAST",
+      toast: {
+        ...props,
+        id,
+        onOpenChange: (open) => {
+          if (!open) dismiss()
+        },
+      },
+    })
+
+    return {
+      id: id,
+      dismiss,
+      update,
+    }
+  }
+
+  return {
+    toast,
+    toasts,
+  }
+}
+
+export default function PromoterManagement() {
+  // ALL HOOKS MUST BE DECLARED AT THE TOP
   const { toast } = useToast()
-
+  const { user, profile, loading, isAuthenticated } = useAuth()
   const [promoters, setPromoters] = useState<PromoterWithStats[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<PromoterWithStats[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedPromoters, setSelectedPromoters] = useState<string[]>([])
   const [selectedPromoter, setSelectedPromoter] = useState<PromoterWithStats | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-
-  // Filters
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<PromoterFilter>("all")
   const [documentFilter, setDocumentFilter] = useState<DocumentFilter>("all")
   const [contractFilter, setContractFilter] = useState<string>("all")
-
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
-
-  // Stats
-  const [stats, setStats] = useState<PromoterStats>({
-    total: 0,
-    active: 0,
-    inactive: 0,
-    documentsExpiring: 0,
-    documentsExpired: 0,
-    withActiveContracts: 0,
-    recentlyAdded: 0,
-  })
+  const [loading2, setLoading2] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (user) {
       fetchPromoters()
       setupRealtimeSubscription()
     }
-  }, [isAuthenticated])
+  }, [user])
 
   useEffect(() => {
     applyFilters()
   }, [promoters, searchTerm, statusFilter, documentFilter, contractFilter])
 
   const fetchPromoters = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+    setLoading2(true)
 
+    try {
       const supabase = createClient()
 
-      // Fetch promoters
+      // Fetch promoters data
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
         .select("*")
@@ -167,62 +274,7 @@ export function PromoterManagement() {
         throw new Error(`Failed to fetch promoters: ${promotersError.message}`)
       }
 
-      if (!promotersData || promotersData.length === 0) {
-        setPromoters([])
-        calculateStats([])
-        return
-      }
-
-      // Fetch contract counts for each promoter
-      const promoterIds = promotersData.map((p) => p.id).filter(Boolean)
-
-      let contractsData: any[] = []
-
-      // Try to fetch contracts data, but don't fail if there's an error
-      try {
-        const { data, error } = await supabase
-          .from("contracts")
-          .select("promoter_id, contract_end_date, status")
-          .in("promoter_id", promoterIds)
-
-        if (error) {
-          console.warn("Error fetching contract data:", error)
-          // Continue without contract data
-        } else {
-          contractsData = data || []
-        }
-      } catch (err) {
-        console.warn("Failed to fetch contracts:", err)
-        // Continue without contract data
-      }
-
-      // Enhance promoters with stats and status
-      const enhancedPromoters = promotersData
-        .filter((promoter) => promoter.id)
-        .map((promoter) => {
-          const promoterContracts =
-            contractsData?.filter((c) => c.promoter_id === promoter.id) || []
-          const activeContracts = promoterContracts.filter(
-            (c) =>
-              c.contract_end_date &&
-              isAfter(parseISO(c.contract_end_date), new Date()) &&
-              c.status === "active"
-          )
-
-          const documentStatus = getDocumentStatus(promoter)
-          const overallStatus = getOverallStatus(promoter, activeContracts.length)
-
-          return {
-            ...promoter,
-            active_contracts_count: activeContracts.length,
-            total_contracts_count: promoterContracts.length,
-            document_status: documentStatus,
-            overall_status: overallStatus,
-          }
-        })
-
-      setPromoters(enhancedPromoters)
-      calculateStats(enhancedPromoters)
+      setPromoters(promotersData || [])
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load promoters"
       setError(errorMessage)
@@ -232,7 +284,7 @@ export function PromoterManagement() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setLoading2(false)
     }
   }
 
@@ -468,11 +520,11 @@ export function PromoterManagement() {
   const paginatedPromoters = filteredPromoters.slice(startIndex, startIndex + itemsPerPage)
 
   // Show loading state while authentication is being checked
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-8">
-          <LoadingSpinner size="lg" />
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
           <span className="ml-2">Checking authentication...</span>
         </div>
       </div>
@@ -480,23 +532,16 @@ export function PromoterManagement() {
   }
 
   // Show authentication required message
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Promoter Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <AlertTriangle className="mr-2 h-5 w-5" />
-            <span>Authentication required to access promoter management</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-8 text-center">
+        <h2 className="mb-4 text-xl font-semibold">Authentication Required</h2>
+        <p>Please log in to access promoter management.</p>
+      </div>
     )
   }
 
-  if (loading) {
+  if (loading2) {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -525,8 +570,8 @@ export function PromoterManagement() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={fetchPromoters} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          <Button variant="outline" onClick={fetchPromoters} disabled={loading2}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading2 ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button variant="outline" onClick={exportPromoters}>
