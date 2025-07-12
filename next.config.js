@@ -4,7 +4,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, // Disable strict mode to avoid double effects
   swcMinify: true,
   experimental: {
     optimizePackageImports: ["lucide-react"],

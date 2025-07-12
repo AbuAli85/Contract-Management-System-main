@@ -23,8 +23,8 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   const messages = await getMessages({ locale })
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <ClientLayout locale={locale}>{children}</ClientLayout>
-    </NextIntlClientProvider>
+    <div suppressHydrationWarning>
+      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+    </div>
   )
 }

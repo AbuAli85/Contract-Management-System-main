@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Lock, LogIn } from "lucide-react"
+import { ClientOnly } from "@/components/ClientOnly"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -14,19 +15,18 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole = "user", fallback }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, isHydrated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
-      // Redirect to login with return URL
+    if (isHydrated && !loading && !user) {
       const currentPath = window.location.pathname
       router.push(`/auth/signin?redirect=${encodeURIComponent(currentPath)}`)
     }
-  }, [user, loading, router])
+  }, [user, loading, isHydrated, router])
 
-  // Show loading state
-  if (loading) {
+  // Show loading state during hydration or auth loading
+  if (!isHydrated || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
@@ -34,6 +34,35 @@ export function ProtectedRoute({ children, requiredRole = "user", fallback }: Pr
     )
   }
 
+  return (
+    <ClientOnly
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <ProtectedContent user={user} profile={profile} requiredRole={requiredRole} router={router}>
+        {children}
+      </ProtectedContent>
+    </ClientOnly>
+  )
+}
+
+// Separate component to avoid hydration issues
+function ProtectedContent({
+  user,
+  profile,
+  requiredRole,
+  router,
+  children,
+}: {
+  user: any
+  profile: any
+  requiredRole: string
+  router: any
+  children: React.ReactNode
+}) {
   // Show unauthorized if no user
   if (!user) {
     return (
@@ -94,6 +123,5 @@ export function ProtectedRoute({ children, requiredRole = "user", fallback }: Pr
     )
   }
 
-  // User is authenticated and authorized
   return <>{children}</>
 }
