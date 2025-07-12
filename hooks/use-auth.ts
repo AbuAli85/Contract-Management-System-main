@@ -45,11 +45,11 @@ export function useAuth() {
         } = await supabase.auth.getSession()
 
         if (session?.user) {
-          // Try to fetch profile first
+          // Change user_id to id - this is likely the issue
           let { data: profile, error } = await supabase
             .from("profiles")
             .select("*")
-            .eq("user_id", session.user.id)
+            .eq("id", session.user.id) // Changed from "user_id" to "id"
             .single()
 
           // If profile doesn't exist, create it
@@ -58,7 +58,7 @@ export function useAuth() {
               .from("profiles")
               .insert([
                 {
-                  user_id: session.user.id,
+                  id: session.user.id, // Changed from user_id to id
                   email: session.user.email,
                   full_name: session.user.user_metadata?.full_name || "",
                   avatar_url: session.user.user_metadata?.avatar_url || "",
@@ -76,19 +76,31 @@ export function useAuth() {
             console.error("Profile fetch error:", error)
           }
 
-          setUser(session.user)
-          setProfile(profile)
-          setLoading(false)
+          setState((prev) => ({
+            ...prev,
+            user: session.user,
+            profile: profile || null,
+            loading: false,
+            error: null,
+          }))
           return { user: session.user, profile }
         }
 
-        setUser(null)
-        setProfile(null)
-        setLoading(false)
+        setState((prev) => ({
+          ...prev,
+          user: null,
+          profile: null,
+          loading: false,
+          error: null,
+        }))
         return { user: null, profile: null }
       } catch (error) {
         console.error("Session error:", error)
-        setLoading(false)
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Failed to get session",
+        }))
         return { user: null, profile: null }
       }
     }
@@ -107,7 +119,7 @@ export function useAuth() {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("user_id", session.user.id)
+          .eq("id", session.user.id) // Changed from "user_id" to "id"
           .single()
 
         if (profileError && profileError.code !== "PGRST116") {
