@@ -35,10 +35,39 @@ export interface ContractWithRelations extends Contract {
   promoter?: Promoter | null
 }
 
-// Legacy types for backward compatibility
+// Enhanced ContractDetail interface for detail views
 export interface ContractDetail extends Contract {
-  // This can be used to enforce non-optional properties for detail views
-  // For now, it will just be an alias for Contract
+  // Relations from the database query
+  first_party?: {
+    id: string
+    name_en: string
+    name_ar: string
+    crn: string
+    type?: "Employer" | "Client" | "Generic" | null
+  } | null
+  second_party?: {
+    id: string
+    name_en: string
+    name_ar: string
+    crn: string
+    type?: "Employer" | "Client" | "Generic" | null
+  } | null
+  promoters?: {
+    id: string
+    name_en: string
+    name_ar: string
+    id_card_number: string
+    id_card_url?: string | null
+    passport_url?: string | null
+    status?: string | null
+  } | null
+
+  // Legacy fields for backward compatibility
+  employer?: Party
+  client?: Party
+
+  // Additional UI fields (not in database but might be computed)
+  // These should be handled carefully to avoid TypeScript errors
 }
 
 export interface SimpleContract extends Contract {
