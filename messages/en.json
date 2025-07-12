@@ -9,18 +9,7 @@
     "viewReports": "View Reports",
     "viewReportsDesc": "Analyze contract data and generate insights",
     "searchContracts": "Search Contracts",
-    "searchContractsDesc": "Find and manage your existing contracts",
-    "totalContracts": "Total Contracts",
-    "totalParties": "Total Parties",
-    "promoters": "Promoters",
-    "activeContracts": "Active Contracts",
-    "quickActions": "Quick Actions",
-    "statistics": "Statistics",
-    "recentActivity": "Recent Activity",
-    "contractManagement": "Contract Management",
-    "partyManagement": "Party Management",
-    "systemReports": "System Reports",
-    "contractSearch": "Contract Search"
+    "searchContractsDesc": "Find and manage your existing contracts"
   },
   "Navigation": {
     "dashboard": "Dashboard",
