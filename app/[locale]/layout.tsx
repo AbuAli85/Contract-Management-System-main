@@ -7,10 +7,13 @@ import { notFound } from "next/navigation"
 
 interface LocaleLayoutProps {
   children: React.ReactNode
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export default async function LocaleLayout({ children, params: { locale } }: LocaleLayoutProps) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  // Await params before accessing properties
+  const { locale } = await params
+
   // Validate locale - this is safe to use here since it's not the root layout
   const supportedLocales = ["en", "ar"]
   if (!supportedLocales.includes(locale)) {

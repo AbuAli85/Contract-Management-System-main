@@ -1,6 +1,16 @@
 import { HomePageContent } from "@/components/home-page-content"
 
-export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params
-  return <HomePageContent locale={locale} />
+interface ContractPageProps {
+  params: Promise<{ locale: string; id: string }>
+}
+
+export default async function ContractPage({ params }: ContractPageProps) {
+  const { locale, id } = await params
+
+  return (
+    <div>
+      <HomePageContent locale={locale} />
+      {/* Component content */}
+    </div>
+  )
 }
