@@ -4,14 +4,25 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
-  webpack: (config) => {
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       "@": "./src",
     }
+
+    // Provide React globally for all environments
+    config.plugins.push(
+      new webpack.ProvidePlugin({
+        React: "react",
+        react: "react",
+      })
+    )
+
     return config
   },
   // Disable resource preloading for unused assets

@@ -1,41 +1,76 @@
-# Node
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
 
 # Next.js
 .next/
 out/
+build/
+dist/
 
-# Logs
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+.vs/
+*.vsidx
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Env
-.env*
-
-# Editor
-.vscode/
-.idea/
 *.swp
+*.swo
 
-# Test coverage
-coverage/
-
-# Build
-build/
-dist/
-
-# Misc
-*.local
+# Logs
+logs/
 *.log
 
-# Ignore lock files (optional, if you use only one package manager)
-# yarn.lock
-# package-lock.json
-# pnpm-lock.yaml
-.vs/
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Temporary folders
+tmp/
+temp/

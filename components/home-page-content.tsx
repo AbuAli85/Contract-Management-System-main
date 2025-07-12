@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -121,7 +122,7 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     }
   }, [user, profile, authLoading])
 
-  // Use fallback actions if translations are missing
+  // Use React.useMemo instead of bare useMemo
   const quickActions = React.useMemo(() => {
     try {
       return getQuickActions(t, locale)
