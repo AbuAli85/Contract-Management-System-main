@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -46,9 +45,9 @@ export default function AuthStatus() {
   }
 
   return (
-    <div className="flex flex-col gap-2 border-b p-4">
+    <>
       {isAuthenticated && user ? (
-        <>
+        <div className="flex flex-col gap-2 border-b p-4">
           <div className="flex items-center gap-2">
             <UserCircle className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-medium">{user.email}</span>
@@ -80,15 +79,8 @@ export default function AuthStatus() {
             <LogOutIcon className="mr-2 h-4 w-4" />
             Logout
           </Button>
-        </>
-      ) : (
-        <Link href="/login" passHref legacyBehavior>
-          <Button variant="default" size="sm">
-            <LogInIcon className="mr-2 h-4 w-4" />
-            Login / Sign Up
-          </Button>
-        </Link>
-      )}
-    </div>
+        </div>
+      ) : null}
+    </>
   )
 }

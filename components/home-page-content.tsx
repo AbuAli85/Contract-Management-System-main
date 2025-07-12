@@ -158,9 +158,10 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      {/* Keep AuthStatus commented out */}
+      {/* <div className="mb-8">
         <AuthStatus />
-      </div>
+      </div> */}
 
       <div className="space-y-8">
         <div className="text-center">
