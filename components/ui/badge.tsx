@@ -31,13 +31,3 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants }
-
-import React from "react"
-
-export function Badge({ children, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
-  return (
-    <span {...props} style={{ padding: "0.25em 0.5em", borderRadius: 4, background: "#eee" }}>
-      {children}
-    </span>
-  )
-}
