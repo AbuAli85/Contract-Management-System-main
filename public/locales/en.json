@@ -1,4 +1,39 @@
 {
+  "Home": {
+    "welcome": "Welcome to Contract Management System",
+    "subtitle": "Manage your contracts efficiently and securely",
+    "generateContract": "Generate Contract",
+    "generateContractDesc": "Create a new contract with our easy-to-use form",
+    "manageParties": "Manage Parties",
+    "managePartiesDesc": "Add, edit, and organize contract parties",
+    "viewReports": "View Reports",
+    "viewReportsDesc": "Analyze contract data and generate insights",
+    "searchContracts": "Search Contracts",
+    "searchContractsDesc": "Find and manage your existing contracts"
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "contracts": "Contracts",
+    "parties": "Parties",
+    "promoters": "Promoters",
+    "reports": "Reports",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "home": "Home"
+  },
+  "Auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "passwordTooShort": "Password must be at least 6 characters"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

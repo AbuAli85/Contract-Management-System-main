@@ -24,50 +24,36 @@ interface HomePageContentProps {
   locale: string
 }
 
-const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => {
-  // Helper function to get translation with fallback
-  const getTranslation = (key: string, fallback: string) => {
-    try {
-      return t(key)
-    } catch (error) {
-      return fallback
-    }
-  }
-
-  return [
-    {
-      title: getTranslation("generateContract", "Generate Contract"),
-      description: getTranslation(
-        "generateContractDesc",
-        "Create a new contract with our easy-to-use form"
-      ),
-      icon: <Plus className="h-6 w-6" />,
-      href: `/${locale}/generate-contract`,
-      color: "bg-blue-500",
-    },
-    {
-      title: getTranslation("manageParties", "Manage Parties"),
-      description: getTranslation("managePartiesDesc", "Add, edit, and organize contract parties"),
-      icon: <Users className="h-6 w-6" />,
-      href: `/${locale}/manage-parties`,
-      color: "bg-green-500",
-    },
-    {
-      title: getTranslation("viewReports", "View Reports"),
-      description: getTranslation("viewReportsDesc", "Analyze contract data and generate insights"),
-      icon: <BarChart3 className="h-6 w-6" />,
-      href: `/${locale}/reports`,
-      color: "bg-purple-500",
-    },
-    {
-      title: getTranslation("searchContracts", "Search Contracts"),
-      description: getTranslation("searchContractsDesc", "Find and manage your existing contracts"),
-      icon: <Search className="h-6 w-6" />,
-      href: `/${locale}/contracts`,
-      color: "bg-orange-500",
-    },
-  ]
-}
+const getQuickActions = (t: ReturnType<typeof useTranslations>, locale: string) => [
+  {
+    title: t("generateContract"),
+    description: t("generateContractDesc"),
+    icon: <Plus className="h-6 w-6" />,
+    href: `/${locale}/generate-contract`,
+    color: "bg-blue-500",
+  },
+  {
+    title: t("manageParties"),
+    description: t("managePartiesDesc"),
+    icon: <Users className="h-6 w-6" />,
+    href: `/${locale}/manage-parties`,
+    color: "bg-green-500",
+  },
+  {
+    title: t("viewReports"),
+    description: t("viewReportsDesc"),
+    icon: <BarChart3 className="h-6 w-6" />,
+    href: `/${locale}/reports`,
+    color: "bg-purple-500",
+  },
+  {
+    title: t("searchContracts"),
+    description: t("searchContractsDesc"),
+    icon: <Search className="h-6 w-6" />,
+    href: `/${locale}/contracts`,
+    color: "bg-orange-500",
+  },
+]
 
 export function HomePageContent({ locale }: HomePageContentProps) {
   const t = useTranslations("Home")
@@ -136,7 +122,7 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     }
   }, [user, profile, authLoading])
 
-  // Use React.useMemo with error handling
+  // Simple approach - directly use the translations without try-catch
   const quickActions = React.useMemo(() => {
     return getQuickActions(t, locale)
   }, [t, locale])
