@@ -101,8 +101,24 @@ export function HomePageContent({ locale }: HomePageContentProps) {
       // Only fetch stats if user is admin or premium
       if (profile.role === "admin" || profile.is_premium) {
         try {
+          // Add caching for stats
+          const cacheKey = `stats_${user.id}`
+          const cachedStats = sessionStorage.getItem(cacheKey)
+          const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`)
+
+          // Use cached stats if less than 5 minutes old
+          if (cachedStats && cacheTimestamp) {
+            const isRecentCache = Date.now() - parseInt(cacheTimestamp) < 5 * 60 * 1000
+            if (isRecentCache) {
+              setStats(JSON.parse(cachedStats))
+              setLoading(false)
+              return
+            }
+          }
+
+          // Optimize queries - use Promise.allSettled instead of Promise.all
           const [contractsResult, partiesResult, promotersResult, activeContractsResult] =
-            await Promise.all([
+            await Promise.allSettled([
               supabase.from("contracts").select("*", { count: "exact", head: true }),
               supabase.from("parties").select("*", { count: "exact", head: true }),
               supabase.from("promoters").select("*", { count: "exact", head: true }),
@@ -113,13 +129,24 @@ export function HomePageContent({ locale }: HomePageContentProps) {
             ])
 
           if (isMounted) {
-            setStats({
-              contracts: contractsResult.count || 0,
-              parties: partiesResult.count || 0,
-              promoters: promotersResult.count || 0,
-              activeContracts: activeContractsResult.count || 0,
-            })
+            const newStats = {
+              contracts:
+                contractsResult.status === "fulfilled" ? contractsResult.value.count || 0 : 0,
+              parties: partiesResult.status === "fulfilled" ? partiesResult.value.count || 0 : 0,
+              promoters:
+                promotersResult.status === "fulfilled" ? promotersResult.value.count || 0 : 0,
+              activeContracts:
+                activeContractsResult.status === "fulfilled"
+                  ? activeContractsResult.value.count || 0
+                  : 0,
+            }
+
+            setStats(newStats)
             setStatsError(null)
+
+            // Cache the stats
+            sessionStorage.setItem(cacheKey, JSON.stringify(newStats))
+            sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
           }
         } catch (error) {
           console.error("Error fetching stats:", error)
@@ -134,12 +161,16 @@ export function HomePageContent({ locale }: HomePageContentProps) {
       }
     }
 
-    if (!authLoading) {
-      fetchStats()
-    }
+    // Add debouncing to prevent multiple calls
+    const timeoutId = setTimeout(() => {
+      if (!authLoading) {
+        fetchStats()
+      }
+    }, 100)
 
     return () => {
       isMounted = false
+      clearTimeout(timeoutId)
     }
   }, [user, profile, authLoading])
 
@@ -147,6 +178,23 @@ export function HomePageContent({ locale }: HomePageContentProps) {
   const quickActions = React.useMemo(() => {
     return getQuickActions(t, locale, !!user)
   }, [t, locale, user])
+
+  // Add skeleton loading component
+  const StatsSkeleton = () => (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-4 animate-pulse rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-8 w-16 animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
 
   if (authLoading) {
     return (
@@ -195,46 +243,54 @@ export function HomePageContent({ locale }: HomePageContentProps) {
           ))}
         </div>
 
-        {/* Stats Section - Only show if user has access */}
+        {/* Stats Section - Show loading state */}
         {user && profile && (profile.role === "admin" || profile.is_premium) && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? "..." : stats.contracts}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Parties</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? "..." : stats.parties}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Promoters</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? "..." : stats.promoters}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? "..." : stats.activeContracts}</div>
-              </CardContent>
-            </Card>
-          </div>
+          <>
+            {loading ? (
+              <StatsSkeleton />
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{loading ? "..." : stats.contracts}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Parties</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{loading ? "..." : stats.parties}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Promoters</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{loading ? "..." : stats.promoters}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {loading ? "..." : stats.activeContracts}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         )}
 
         {statsError && (

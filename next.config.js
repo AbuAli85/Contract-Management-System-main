@@ -4,11 +4,25 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Disable strict mode to avoid double effects
-  swcMinify: true,
-  experimental: {
-    optimizePackageImports: ["lucide-react"],
+  // Enable compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
+
+  // Enable experimental features for better performance
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
+  },
+
+  // Add image optimization
+  images: {
+    formats: ["image/webp", "image/avif"],
+  },
+
+  // Enable SWC minification
+  swcMinify: true,
+
+  reactStrictMode: false, // Disable strict mode to avoid double effects
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -42,12 +56,6 @@ const nextConfig = {
         ],
       },
     ]
-  },
-  // Optimize image loading
-  images: {
-    domains: ["localhost"],
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
@@ -19,25 +19,29 @@ export default function AuthStatus() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (user) {
-      // Fetch more user details (role, created_at, last_sign_in_at, email_confirmed_at)
-      setUserDetails({
-        role: user.role || "user",
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        email_confirmed_at: user.email_confirmed_at,
-      })
-    } else {
-      setUserDetails(null)
+  // Memoize user details to prevent unnecessary re-renders
+  const memoizedUserDetails = useMemo(() => {
+    if (!user) return null
+
+    return {
+      role: user.role || "user",
+      created_at: user.created_at,
+      last_sign_in_at: user.last_sign_in_at,
+      email_confirmed_at: user.email_confirmed_at,
     }
   }, [user])
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    setUserDetails(memoizedUserDetails)
+  }, [memoizedUserDetails])
+
+  const handleLogout = useCallback(async () => {
+    // Clear all caches on logout
+    sessionStorage.clear()
     await supabase.auth.signOut()
     router.push("/")
     router.refresh()
-  }
+  }, [router])
 
   // Show loading state until component is mounted to prevent hydration mismatch
   if (!mounted || loading) {

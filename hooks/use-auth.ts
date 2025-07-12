@@ -67,6 +67,7 @@ export function useAuth() {
     setState((prev) => ({ ...prev, isHydrated: true }))
 
     let isMounted = true
+    let authSubscription: any
 
     const getSession = async () => {
       try {
@@ -75,7 +76,23 @@ export function useAuth() {
         } = await supabase.auth.getSession()
 
         if (session?.user) {
-          // Change user_id to id - this is likely the issue
+          // Add caching to prevent repeated queries
+          const cacheKey = `profile_${session.user.id}`
+          const cachedProfile = sessionStorage.getItem(cacheKey)
+
+          if (cachedProfile) {
+            const profile = JSON.parse(cachedProfile)
+            setState((prev) => ({
+              ...prev,
+              user: session.user,
+              profile,
+              loading: false,
+              error: null,
+            }))
+            return { user: session.user, profile }
+          }
+
+          // Only query if not in cache
           let { data: profile, error } = await supabase
             .from("profiles")
             .select(
@@ -95,8 +112,8 @@ export function useAuth() {
             .eq("id", session.user.id)
             .single()
 
-          // If profile doesn't exist, create it
           if (error && error.code === "PGRST116") {
+            // Profile doesn't exist, create it
             const { data: newProfile, error: createError } = await supabase
               .from("profiles")
               .insert([
@@ -106,66 +123,29 @@ export function useAuth() {
                   full_name: session.user.user_metadata?.full_name || null,
                   avatar_url: session.user.user_metadata?.avatar_url || null,
                   role: "user",
-                  // Don't set is_premium - it has a default of false
-                  // Don't set is_active - it has a default of true
                   status: "active",
                 },
               ])
               .select()
               .single()
 
-            if (createError) {
-              console.error("Profile creation error:", createError)
-              // Continue with user but no profile
-              setState((prev) => ({
-                ...prev,
-                user: session.user,
-                profile: null,
-                loading: false,
-                error: "Profile creation failed but user authenticated",
-              }))
-            } else {
+            if (!createError) {
               profile = newProfile
-              setState((prev) => ({
-                ...prev,
-                user: session.user,
-                profile: profile || null,
-                loading: false,
-                error: null,
-              }))
             }
-          } else if (error) {
-            // Handle cases where error might be null or malformed
-            const errorInfo = {
-              message: error?.message || "Unknown error",
-              details: error?.details || "No details available",
-              hint: error?.hint || "No hint available",
-              code: error?.code || "Unknown code",
-              fullError: JSON.stringify(error, null, 2),
-            }
-
-            console.error("Profile fetch error details:", errorInfo)
-
-            // Set a meaningful error message
-            setState((prev) => ({
-              ...prev,
-              user: session.user,
-              profile: null,
-              loading: false,
-              error: `Profile fetch failed: ${errorInfo.message}`,
-            }))
-            return { user: session.user, profile: null } // Return early to prevent duplicate setState
-          } else {
-            // Profile exists and loaded successfully
-            setState((prev) => ({
-              ...prev,
-              user: session.user,
-              profile: profile || null,
-              loading: false,
-              error: null,
-            }))
           }
 
+          // Cache the profile
+          if (profile) {
+            sessionStorage.setItem(cacheKey, JSON.stringify(profile))
+          }
+
+          setState((prev) => ({
+            ...prev,
+            user: session.user,
+            profile,
+            loading: false,
+            error: null,
+          }))
           return { user: session.user, profile }
         }
 
@@ -188,18 +168,33 @@ export function useAuth() {
       }
     }
 
-    getSession()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Optimize auth state change listener
+    authSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
 
-      console.log("Auth state change:", event, !!session)
+      // Clear cache on logout
+      if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem(`profile_${session?.user?.id}`)
+      }
 
       if (session?.user) {
-        const { data: profile, error: profileError } = await supabase
+        // Use cached profile if available
+        const cacheKey = `profile_${session.user.id}`
+        const cachedProfile = sessionStorage.getItem(cacheKey)
+
+        if (cachedProfile) {
+          setState((prev) => ({
+            ...prev,
+            user: session.user,
+            profile: JSON.parse(cachedProfile),
+            loading: false,
+            error: null,
+          }))
+          return
+        }
+
+        // Only fetch if not cached
+        const { data: profile } = await supabase
           .from("profiles")
           .select(
             `
@@ -218,14 +213,14 @@ export function useAuth() {
           .eq("id", session.user.id)
           .single()
 
-        if (profileError && profileError.code !== "PGRST116") {
-          console.error("Profile fetch error:", profileError)
+        if (profile) {
+          sessionStorage.setItem(cacheKey, JSON.stringify(profile))
         }
 
         setState((prev) => ({
           ...prev,
           user: session.user,
-          profile: profile || null,
+          profile,
           loading: false,
           error: null,
         }))
@@ -240,9 +235,11 @@ export function useAuth() {
       }
     })
 
+    getSession()
+
     return () => {
       isMounted = false
-      subscription.unsubscribe()
+      authSubscription?.subscription?.unsubscribe()
     }
   }, [])
 
