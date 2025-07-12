@@ -6,13 +6,43 @@ import { supabase } from "@/lib/supabase"
 
 interface Profile {
   id: string
-  user_id: string
+  // Remove user_id - it doesn't exist in your database
   full_name: string | null
-  email: string
-  role: "admin" | "user"
-  is_premium: boolean
-  created_at: string
-  updated_at: string
+  email: string | null
+  role: string | null
+  is_premium: boolean | null
+  created_at: string | null
+  // Add other fields that exist in your database
+  status: string | null
+  avatar_url: string | null
+  org_id: string | null
+  last_login: string | null
+  permissions: string[] | null
+  plan: string | null
+  is_active: boolean | null
+  email_verified_at: string | null
+  phone: string | null
+  phone_verified_at: string | null
+  last_sign_in_at: string | null
+  sign_in_count: number | null
+  failed_attempts: number | null
+  locked_at: string | null
+  metadata: any | null
+  password_changed_at: string | null
+  password_history: any | null
+  security_questions: any | null
+  recovery_email: string | null
+  recovery_phone: string | null
+  login_ip_whitelist: string[] | null
+  two_factor_backup_email: string | null
+  account_locked_until: string | null
+  last_password_reset_at: string | null
+  terms_accepted_at: string | null
+  privacy_accepted_at: string | null
+  marketing_consent: boolean | null
+  timezone: string | null
+  locale: string | null
+  theme: string | null
 }
 
 interface AuthState {
@@ -48,8 +78,21 @@ export function useAuth() {
           // Change user_id to id - this is likely the issue
           let { data: profile, error } = await supabase
             .from("profiles")
-            .select("*")
-            .eq("id", session.user.id) // Changed from "user_id" to "id"
+            .select(
+              `
+              id,
+              full_name,
+              email,
+              role,
+              is_premium,
+              created_at,
+              avatar_url,
+              status,
+              is_active,
+              plan
+            `
+            )
+            .eq("id", session.user.id)
             .single()
 
           // If profile doesn't exist, create it
@@ -58,10 +101,14 @@ export function useAuth() {
               .from("profiles")
               .insert([
                 {
-                  id: session.user.id, // Changed from user_id to id
+                  id: session.user.id,
                   email: session.user.email,
-                  full_name: session.user.user_metadata?.full_name || "",
-                  avatar_url: session.user.user_metadata?.avatar_url || "",
+                  full_name: session.user.user_metadata?.full_name || null,
+                  avatar_url: session.user.user_metadata?.avatar_url || null,
+                  role: "user",
+                  // Don't set is_premium - it has a default of false
+                  // Don't set is_active - it has a default of true
+                  status: "active",
                 },
               ])
               .select()
@@ -73,7 +120,13 @@ export function useAuth() {
               profile = newProfile
             }
           } else if (error) {
-            console.error("Profile fetch error:", error)
+            console.error("Profile fetch error details:", {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code,
+              fullError: error,
+            })
           }
 
           setState((prev) => ({
@@ -118,8 +171,21 @@ export function useAuth() {
       if (session?.user) {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
-          .eq("id", session.user.id) // Changed from "user_id" to "id"
+          .select(
+            `
+            id,
+            full_name,
+            email,
+            role,
+            is_premium,
+            created_at,
+            avatar_url,
+            status,
+            is_active,
+            plan
+          `
+          )
+          .eq("id", session.user.id)
           .single()
 
         if (profileError && profileError.code !== "PGRST116") {
