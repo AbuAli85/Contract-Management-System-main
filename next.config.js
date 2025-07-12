@@ -11,12 +11,13 @@ const nextConfig = {
 
   // Enable experimental features for better performance
   experimental: {
+    appDir: true,
     optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
   },
 
-  // Add image optimization
   images: {
     formats: ["image/webp", "image/avif"],
+    domains: ["localhost"],
   },
 
   // Enable SWC minification
@@ -56,6 +57,12 @@ const nextConfig = {
         ],
       },
     ]
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
   },
 }
 
