@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 
@@ -61,6 +61,11 @@ export function useAuth() {
     error: null,
     isHydrated: false,
   })
+
+  // Add computed property for isAuthenticated
+  const isAuthenticated = useMemo(() => {
+    return !state.loading && !!state.user && state.isHydrated
+  }, [state.loading, state.user, state.isHydrated])
 
   useEffect(() => {
     // Mark as hydrated on client side
@@ -264,7 +269,11 @@ export function useAuth() {
   }
 
   return {
-    ...state,
-    signOut,
+    user: state.user,
+    profile: state.profile,
+    loading: state.loading,
+    error: state.error,
+    isHydrated: state.isHydrated,
+    isAuthenticated, // Make sure this is included
   }
 }
