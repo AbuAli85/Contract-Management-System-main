@@ -38,61 +38,58 @@ export function useAuth() {
 
     let isMounted = true
 
-    async function getSession() {
+    const getSession = async () => {
       try {
         const {
           data: { session },
-          error,
         } = await supabase.auth.getSession()
 
-        if (error) {
-          console.error("Auth session error:", error)
-          if (isMounted) {
-            setState((prev) => ({
-              ...prev,
-              error: error.message,
-              loading: false,
-            }))
-          }
-          return
-        }
-
-        if (session?.user && isMounted) {
-          const { data: profile, error: profileError } = await supabase
+        if (session?.user) {
+          // Try to fetch profile first
+          let { data: profile, error } = await supabase
             .from("profiles")
             .select("*")
             .eq("user_id", session.user.id)
             .single()
 
-          if (profileError && profileError.code !== "PGRST116") {
-            console.error("Profile fetch error:", profileError)
+          // If profile doesn't exist, create it
+          if (error && error.code === "PGRST116") {
+            const { data: newProfile, error: createError } = await supabase
+              .from("profiles")
+              .insert([
+                {
+                  user_id: session.user.id,
+                  email: session.user.email,
+                  full_name: session.user.user_metadata?.full_name || "",
+                  avatar_url: session.user.user_metadata?.avatar_url || "",
+                },
+              ])
+              .select()
+              .single()
+
+            if (createError) {
+              console.error("Profile creation error:", createError)
+            } else {
+              profile = newProfile
+            }
+          } else if (error) {
+            console.error("Profile fetch error:", error)
           }
 
-          setState((prev) => ({
-            ...prev,
-            user: session.user,
-            profile: profile || null,
-            loading: false,
-            error: null,
-          }))
-        } else if (isMounted) {
-          setState((prev) => ({
-            ...prev,
-            user: null,
-            profile: null,
-            loading: false,
-            error: null,
-          }))
+          setUser(session.user)
+          setProfile(profile)
+          setLoading(false)
+          return { user: session.user, profile }
         }
+
+        setUser(null)
+        setProfile(null)
+        setLoading(false)
+        return { user: null, profile: null }
       } catch (error) {
-        console.error("Auth initialization error:", error)
-        if (isMounted) {
-          setState((prev) => ({
-            ...prev,
-            error: "Authentication initialization failed",
-            loading: false,
-          }))
-        }
+        console.error("Session error:", error)
+        setLoading(false)
+        return { user: null, profile: null }
       }
     }
 
