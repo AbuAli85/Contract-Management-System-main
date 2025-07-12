@@ -1,55 +1,52 @@
-import "./globals.css"
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter, Lexend } from "next/font/google"
-import { MainNav } from "@/components/main-nav"
+import { Inter } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
-import { notFound } from "next/navigation"
+import { getMessages } from "next-intl/server"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 import { ClientProviders } from "@/components/client-providers"
-import { cn } from "@/lib/utils"
+import "./globals.css"
 
-const fontInter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-})
+const inter = Inter({ subsets: ["latin"] })
 
-const fontLexend = Lexend({
-  subsets: ["latin"],
-  variable: "--font-lexend",
-  weight: ["400", "500", "600", "700"],
-})
-
-export const metadata: Metadata = {
-  title: "Bilingual Contract Generator",
-  description: "Generate and manage bilingual contracts efficiently.",
-  generator: "v0.dev",
+export const metadata = {
+  title: "Contract Management System",
+  description: "A modern contract management system",
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+interface RootLayoutProps {
+  children: React.ReactNode
+  params: { locale: string }
+}
+
+export default async function RootLayout({ children, params: { locale } }: RootLayoutProps) {
+  // Validate locale - but don't use notFound() here
+  const supportedLocales = ["en", "ar"]
+  const validLocale = supportedLocales.includes(locale) ? locale : "en"
+
   let messages
-  let locale = "en"
   try {
-    messages = (await import(`../i18n/messages/${locale}.json`)).default
+    messages = await getMessages({ locale: validLocale })
   } catch (error) {
-    notFound()
+    // Fallback to English if locale messages can't be loaded
+    messages = await getMessages({ locale: "en" })
   }
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body
-        suppressHydrationWarning={true}
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontInter.variable,
-          fontLexend.variable
-        )}
-      >
-        <ClientProviders>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <MainNav />
-            {children}
-          </NextIntlClientProvider>
-        </ClientProviders>
+    <html lang={validLocale} suppressHydrationWarning>
+      <body className={inter.className}>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ClientProviders>
+              {children}
+              <Toaster />
+            </ClientProviders>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )
