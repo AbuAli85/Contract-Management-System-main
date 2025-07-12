@@ -116,26 +116,56 @@ export function useAuth() {
 
             if (createError) {
               console.error("Profile creation error:", createError)
+              // Continue with user but no profile
+              setState((prev) => ({
+                ...prev,
+                user: session.user,
+                profile: null,
+                loading: false,
+                error: "Profile creation failed but user authenticated",
+              }))
             } else {
               profile = newProfile
+              setState((prev) => ({
+                ...prev,
+                user: session.user,
+                profile: profile || null,
+                loading: false,
+                error: null,
+              }))
             }
           } else if (error) {
-            console.error("Profile fetch error details:", {
-              message: error.message,
-              details: error.details,
-              hint: error.hint,
-              code: error.code,
-              fullError: error,
-            })
+            // Handle cases where error might be null or malformed
+            const errorInfo = {
+              message: error?.message || "Unknown error",
+              details: error?.details || "No details available",
+              hint: error?.hint || "No hint available",
+              code: error?.code || "Unknown code",
+              fullError: JSON.stringify(error, null, 2),
+            }
+
+            console.error("Profile fetch error details:", errorInfo)
+
+            // Set a meaningful error message
+            setState((prev) => ({
+              ...prev,
+              user: session.user,
+              profile: null,
+              loading: false,
+              error: `Profile fetch failed: ${errorInfo.message}`,
+            }))
+            return { user: session.user, profile: null } // Return early to prevent duplicate setState
+          } else {
+            // Profile exists and loaded successfully
+            setState((prev) => ({
+              ...prev,
+              user: session.user,
+              profile: profile || null,
+              loading: false,
+              error: null,
+            }))
           }
 
-          setState((prev) => ({
-            ...prev,
-            user: session.user,
-            profile: profile || null,
-            loading: false,
-            error: null,
-          }))
           return { user: session.user, profile }
         }
 

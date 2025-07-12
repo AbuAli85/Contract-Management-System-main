@@ -4,7 +4,7 @@ import React from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp, LogIn } from "lucide-react"
+import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp } from "lucide-react" // Removed LogIn from the import
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -166,23 +166,6 @@ export function HomePageContent({ locale }: HomePageContentProps) {
         <div className="text-center">
           <h1 className="mb-2 text-4xl font-bold">{t("welcome")}</h1>
           <p className="mb-8 text-xl text-muted-foreground">{t("subtitle")}</p>
-
-          {!user && (
-            <div className="mb-8">
-              <Card className="mx-auto max-w-md">
-                <CardContent className="p-6 text-center">
-                  <LogIn className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-semibold">Get Started</h3>
-                  <p className="mb-4 text-muted-foreground">
-                    Sign in to access all features and manage your contracts.
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link href={`/${locale}/auth/signin`}>Sign In to Continue</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
 
         {/* Quick Actions */}
