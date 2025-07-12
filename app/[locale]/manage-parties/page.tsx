@@ -74,6 +74,7 @@ import { format, parseISO, differenceInDays } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 interface PartyWithContractCount extends Party {
   contract_count?: number
@@ -676,733 +677,739 @@ export default function ManagePartiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
-      <div className="mx-auto max-w-screen-xl">
-        <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-              Manage Parties
-            </h1>
-            {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing || isLoading}
-            >
-              <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
-              Refresh
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
-              </Link>
-            </Button>
-            <Button
-              onClick={handleAddNew}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <PlusCircleIcon className="mr-2 h-5 w-5" />
-              Add New Party
-            </Button>
-          </div>
-        </div>
-
-        {/* Statistics Dashboard */}
-        {showStats && (
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                      {stats.total}
-                    </p>
-                  </div>
-                  <Building2 className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-600 dark:text-green-400">Active</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                      {stats.active}
-                    </p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                      Expiring
-                    </p>
-                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                      {stats.expiring_documents}
-                    </p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-yellow-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
-                    <p className="text-2xl font-bold text-red-900 dark:text-red-100">
-                      {stats.expired_documents}
-                    </p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                      Contracts
-                    </p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                      {stats.total_contracts}
-                    </p>
-                  </div>
-                  <Briefcase className="h-8 w-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Enhanced Search and Filter Section */}
-        <Card className="mb-6 bg-card shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg">Search & Filter</CardTitle>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentView(currentView === "table" ? "grid" : "table")}
-                >
-                  {currentView === "table" ? (
-                    <>
-                      <Grid3x3 className="mr-2 h-4 w-4" />
-                      Grid View
-                    </>
-                  ) : (
-                    <>
-                      <List className="mr-2 h-4 w-4" />
-                      Table View
-                    </>
-                  )}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
-                  <Activity className="mr-2 h-4 w-4" />
-                  {showStats ? "Hide" : "Show"} Stats
-                </Button>
-              </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
+        <div className="mx-auto max-w-screen-xl">
+          <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+                Manage Parties
+              </h1>
+              {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
-              {/* Search Input */}
-              <div className="sm:col-span-2">
-                <Label htmlFor="search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="search"
-                    placeholder="Search by name, CRN, role, or contact..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pr-10"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Search className="h-4 w-4 text-slate-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Suspended">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Type Filter */}
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Employer">Employer</SelectItem>
-                  <SelectItem value="Client">Client</SelectItem>
-                  <SelectItem value="Generic">Generic</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Document Filter */}
-              <Select value={documentFilter} onValueChange={setDocumentFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Documents" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Documents</SelectItem>
-                  <SelectItem value="valid">Valid</SelectItem>
-                  <SelectItem value="expiring">Expiring Soon</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Sort By */}
-              <Select value={sortBy} onValueChange={(value: typeof sortBy) => setSortBy(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="cr_expiry">CR Expiry</SelectItem>
-                  <SelectItem value="license_expiry">License Expiry</SelectItem>
-                  <SelectItem value="contracts">Contract Count</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Sort Order */}
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                className="justify-start"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing || isLoading}
               >
-                {sortOrder === "asc" ? (
-                  <ChevronUp className="mr-2 h-4 w-4" />
-                ) : (
-                  <ChevronDown className="mr-2 h-4 w-4" />
-                )}
-                {sortOrder === "asc" ? "Ascending" : "Descending"}
+                <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
+                Refresh
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/">
+                  <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
+                </Link>
+              </Button>
+              <Button
+                onClick={handleAddNew}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <PlusCircleIcon className="mr-2 h-5 w-5" />
+                Add New Party
               </Button>
             </div>
+          </div>
 
-            {/* Bulk Actions */}
-            {selectedParties.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-primary/10 p-3">
-                <span className="text-sm font-medium">
-                  {selectedParties.length} party(ies) selected
-                </span>
-                <div className="ml-auto flex gap-2">
+          {/* Statistics Dashboard */}
+          {showStats && (
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
+                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                        {stats.total}
+                      </p>
+                    </div>
+                    <Building2 className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        Active
+                      </p>
+                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                        {stats.active}
+                      </p>
+                    </div>
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                        Expiring
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+                        {stats.expiring_documents}
+                      </p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-yellow-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
+                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+                        {stats.expired_documents}
+                      </p>
+                    </div>
+                    <XCircle className="h-8 w-8 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                        Contracts
+                      </p>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        {stats.total_contracts}
+                      </p>
+                    </div>
+                    <Briefcase className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Enhanced Search and Filter Section */}
+          <Card className="mb-6 bg-card shadow-lg">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Search & Filter</CardTitle>
+                </div>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleExportCSV}
-                    disabled={isExporting}
+                    onClick={() => setCurrentView(currentView === "table" ? "grid" : "table")}
                   >
-                    {isExporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {currentView === "table" ? (
+                      <>
+                        <Grid3x3 className="mr-2 h-4 w-4" />
+                        Grid View
+                      </>
                     ) : (
-                      <Download className="mr-2 h-4 w-4" />
+                      <>
+                        <List className="mr-2 h-4 w-4" />
+                        Table View
+                      </>
                     )}
-                    Export Selected
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    disabled={bulkActionLoading}
-                  >
-                    {bulkActionLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="mr-2 h-4 w-4" />
-                    )}
-                    Delete Selected
+                  <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
+                    <Activity className="mr-2 h-4 w-4" />
+                    {showStats ? "Hide" : "Show"} Stats
                   </Button>
                 </div>
               </div>
-            )}
-
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredParties.length} of {parties.length} parties
-            </div>
-          </CardContent>
-        </Card>
-
-        {filteredParties.length === 0 ? (
-          <Card className="bg-card py-12 text-center shadow-md">
-            <CardHeader>
-              <BuildingIcon className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-              <CardTitle className="text-2xl">No Parties Found</CardTitle>
             </CardHeader>
-            <CardContent>
-              <CardDescription className="text-lg">
-                {parties.length === 0
-                  ? "Get started by adding your first party. Click the 'Add New Party' button above."
-                  : "No parties match your current filters. Try adjusting your search criteria."}
-              </CardDescription>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
+                {/* Search Input */}
+                <div className="sm:col-span-2">
+                  <Label htmlFor="search" className="sr-only">
+                    Search
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="search"
+                      placeholder="Search by name, CRN, role, or contact..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-10"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <Search className="h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Type Filter */}
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Employer">Employer</SelectItem>
+                    <SelectItem value="Client">Client</SelectItem>
+                    <SelectItem value="Generic">Generic</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Document Filter */}
+                <Select value={documentFilter} onValueChange={setDocumentFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Documents" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Documents</SelectItem>
+                    <SelectItem value="valid">Valid</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Sort By */}
+                <Select value={sortBy} onValueChange={(value: typeof sortBy) => setSortBy(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="cr_expiry">CR Expiry</SelectItem>
+                    <SelectItem value="license_expiry">License Expiry</SelectItem>
+                    <SelectItem value="contracts">Contract Count</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Sort Order */}
+                <Button
+                  variant="outline"
+                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  className="justify-start"
+                >
+                  {sortOrder === "asc" ? (
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                  )}
+                  {sortOrder === "asc" ? "Ascending" : "Descending"}
+                </Button>
+              </div>
+
+              {/* Bulk Actions */}
+              {selectedParties.length > 0 && (
+                <div className="flex items-center gap-2 rounded-lg bg-primary/10 p-3">
+                  <span className="text-sm font-medium">
+                    {selectedParties.length} party(ies) selected
+                  </span>
+                  <div className="ml-auto flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                      )}
+                      Export Selected
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      Delete Selected
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredParties.length} of {parties.length} parties
+              </div>
             </CardContent>
           </Card>
-        ) : currentView === "table" ? (
-          <Card className="bg-card shadow-lg">
-            <CardHeader className="border-b">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">Party Directory</CardTitle>
-                  <CardDescription>
-                    View, add, or edit party details, documents, and contract status. Showing{" "}
-                    {filteredParties.length} of {parties.length} parties.
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportCSV}
-                    disabled={isExporting || filteredParties.length === 0}
-                  >
-                    {isExporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
-                    Export All
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-slate-100 dark:bg-slate-800">
-                    <TableRow>
-                      <TableHead className="w-12 px-4 py-3">
-                        <Checkbox
-                          checked={
-                            selectedParties.length === filteredParties.length &&
-                            filteredParties.length > 0
-                          }
-                          onCheckedChange={toggleSelectAll}
-                          aria-label="Select all parties"
-                        />
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">
-                        Party Info
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        Type & Status
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        CR Status
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        License Status
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        Contact Info
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                        Contracts
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody className="divide-y">
-                    {filteredParties.map((party) => {
-                      const crStatus = getDocumentStatus(party.cr_expiry_date)
-                      const licenseStatus = getDocumentStatus(party.license_expiry_date)
-                      const isSelected = selectedParties.includes(party.id)
 
-                      return (
-                        <TableRow
-                          key={party.id}
-                          className={cn(
-                            "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50",
-                            isSelected && "bg-blue-50 dark:bg-blue-950/20"
-                          )}
-                        >
-                          <TableCell className="px-4 py-3">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleSelectParty(party.id)}
-                              aria-label={`Select ${party.name_en}`}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex-shrink-0">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-sm font-semibold text-white">
-                                  {party.name_en.charAt(0).toUpperCase()}
+          {filteredParties.length === 0 ? (
+            <Card className="bg-card py-12 text-center shadow-md">
+              <CardHeader>
+                <BuildingIcon className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
+                <CardTitle className="text-2xl">No Parties Found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-lg">
+                  {parties.length === 0
+                    ? "Get started by adding your first party. Click the 'Add New Party' button above."
+                    : "No parties match your current filters. Try adjusting your search criteria."}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          ) : currentView === "table" ? (
+            <Card className="bg-card shadow-lg">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Party Directory</CardTitle>
+                    <CardDescription>
+                      View, add, or edit party details, documents, and contract status. Showing{" "}
+                      {filteredParties.length} of {parties.length} parties.
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      disabled={isExporting || filteredParties.length === 0}
+                    >
+                      {isExporting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                      )}
+                      Export All
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-slate-100 dark:bg-slate-800">
+                      <TableRow>
+                        <TableHead className="w-12 px-4 py-3">
+                          <Checkbox
+                            checked={
+                              selectedParties.length === filteredParties.length &&
+                              filteredParties.length > 0
+                            }
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Select all parties"
+                          />
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">
+                          Party Info
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          Type & Status
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          CR Status
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          License Status
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          Contact Info
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                          Contracts
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                          Actions
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y">
+                      {filteredParties.map((party) => {
+                        const crStatus = getDocumentStatus(party.cr_expiry_date)
+                        const licenseStatus = getDocumentStatus(party.license_expiry_date)
+                        const isSelected = selectedParties.includes(party.id)
+
+                        return (
+                          <TableRow
+                            key={party.id}
+                            className={cn(
+                              "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                              isSelected && "bg-blue-50 dark:bg-blue-950/20"
+                            )}
+                          >
+                            <TableCell className="px-4 py-3">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSelectParty(party.id)}
+                                aria-label={`Select ${party.name_en}`}
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-sm font-semibold text-white">
+                                    {party.name_en.charAt(0).toUpperCase()}
+                                  </div>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate font-medium text-slate-900 dark:text-slate-100">
+                                    {party.name_en}
+                                  </div>
+                                  <div className="truncate text-sm text-muted-foreground" dir="rtl">
+                                    {party.name_ar}
+                                  </div>
+                                  <div className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">
+                                    CRN: {party.crn}
+                                  </div>
+                                  {party.role && (
+                                    <div className="truncate text-xs text-slate-400 dark:text-slate-500">
+                                      Role: {party.role}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="truncate font-medium text-slate-900 dark:text-slate-100">
-                                  {party.name_en}
-                                </div>
-                                <div className="truncate text-sm text-muted-foreground" dir="rtl">
-                                  {party.name_ar}
-                                </div>
-                                <div className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">
-                                  CRN: {party.crn}
-                                </div>
-                                {party.role && (
-                                  <div className="truncate text-xs text-slate-400 dark:text-slate-500">
-                                    Role: {party.role}
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center">
+                              <div className="flex flex-col items-center gap-2">
+                                {getTypeBadge(party.type)}
+                                {getStatusBadge(party.status)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex flex-col items-center">
+                                      <crStatus.Icon className={`h-5 w-5 ${crStatus.colorClass}`} />
+                                      <span className={`mt-1 text-xs ${crStatus.colorClass}`}>
+                                        {crStatus.text}
+                                      </span>
+                                      {party.days_until_cr_expiry !== undefined &&
+                                        party.days_until_cr_expiry <= 30 && (
+                                          <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                            {party.days_until_cr_expiry}d left
+                                          </span>
+                                        )}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{crStatus.tooltip}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex flex-col items-center">
+                                      <licenseStatus.Icon
+                                        className={`h-5 w-5 ${licenseStatus.colorClass}`}
+                                      />
+                                      <span className={`mt-1 text-xs ${licenseStatus.colorClass}`}>
+                                        {licenseStatus.text}
+                                      </span>
+                                      {party.days_until_license_expiry !== undefined &&
+                                        party.days_until_license_expiry <= 30 && (
+                                          <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                            {party.days_until_license_expiry}d left
+                                          </span>
+                                        )}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{licenseStatus.tooltip}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <div className="flex flex-col gap-1 text-xs">
+                                {party.contact_person && (
+                                  <div className="flex items-center gap-1">
+                                    <Users className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate">{party.contact_person}</span>
+                                  </div>
+                                )}
+                                {party.contact_email && (
+                                  <div className="flex items-center gap-1">
+                                    <Mail className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate">{party.contact_email}</span>
+                                  </div>
+                                )}
+                                {party.contact_phone && (
+                                  <div className="flex items-center gap-1">
+                                    <Phone className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate">{party.contact_phone}</span>
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-center">
-                            <div className="flex flex-col items-center gap-2">
-                              {getTypeBadge(party.type)}
-                              {getStatusBadge(party.status)}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-center">
-                            <TooltipProvider delayDuration={100}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex flex-col items-center">
-                                    <crStatus.Icon className={`h-5 w-5 ${crStatus.colorClass}`} />
-                                    <span className={`mt-1 text-xs ${crStatus.colorClass}`}>
-                                      {crStatus.text}
-                                    </span>
-                                    {party.days_until_cr_expiry !== undefined &&
-                                      party.days_until_cr_expiry <= 30 && (
-                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
-                                          {party.days_until_cr_expiry}d left
-                                        </span>
-                                      )}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{crStatus.tooltip}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-center">
-                            <TooltipProvider delayDuration={100}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex flex-col items-center">
-                                    <licenseStatus.Icon
-                                      className={`h-5 w-5 ${licenseStatus.colorClass}`}
-                                    />
-                                    <span className={`mt-1 text-xs ${licenseStatus.colorClass}`}>
-                                      {licenseStatus.text}
-                                    </span>
-                                    {party.days_until_license_expiry !== undefined &&
-                                      party.days_until_license_expiry <= 30 && (
-                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
-                                          {party.days_until_license_expiry}d left
-                                        </span>
-                                      )}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{licenseStatus.tooltip}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex flex-col gap-1 text-xs">
-                              {party.contact_person && (
-                                <div className="flex items-center gap-1">
-                                  <Users className="h-3 w-3 text-muted-foreground" />
-                                  <span className="truncate">{party.contact_person}</span>
-                                </div>
-                              )}
-                              {party.contact_email && (
-                                <div className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3 text-muted-foreground" />
-                                  <span className="truncate">{party.contact_email}</span>
-                                </div>
-                              )}
-                              {party.contact_phone && (
-                                <div className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3 text-muted-foreground" />
-                                  <span className="truncate">{party.contact_phone}</span>
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-center">
-                            <div className="flex flex-col items-center gap-1">
-                              <Badge
-                                variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
-                                className={
-                                  (party.contract_count || 0) > 0
-                                    ? "border-green-300 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                                    : "border-slate-300 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                                }
-                              >
-                                <Briefcase className="mr-1.5 h-3.5 w-3.5" />
-                                {party.contract_count || 0}
-                              </Badge>
-                              {(party.contract_count || 0) > 0 && (
-                                <span className="text-xs text-green-600 dark:text-green-400">
-                                  Active
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <Badge
+                                  variant={
+                                    (party.contract_count || 0) > 0 ? "default" : "secondary"
+                                  }
+                                  className={
+                                    (party.contract_count || 0) > 0
+                                      ? "border-green-300 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                      : "border-slate-300 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                  }
+                                >
+                                  <Briefcase className="mr-1.5 h-3.5 w-3.5" />
+                                  {party.contract_count || 0}
+                                </Badge>
+                                {(party.contract_count || 0) > 0 && (
+                                  <span className="text-xs text-green-600 dark:text-green-400">
+                                    Active
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  disabled={!party.id}
+                                >
+                                  <Link href={party.id ? `/manage-parties/${party.id}` : "#"}>
+                                    <Eye className="mr-1 h-3.5 w-3.5" /> View
+                                  </Link>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(party)}
+                                  className="text-xs"
+                                >
+                                  <EditIcon className="mr-1 h-3.5 w-3.5" /> Edit
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleEdit(party)}>
+                                      <EditIcon className="mr-2 h-4 w-4" />
+                                      Edit Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/manage-parties/${party.id}`}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View Profile
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => {
+                                        setSelectedParties([party.id])
+                                        handleBulkDelete()
+                                      }}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            /* Grid View */
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredParties.map((party) => {
+                const crStatus = getDocumentStatus(party.cr_expiry_date)
+                const licenseStatus = getDocumentStatus(party.license_expiry_date)
+                const isSelected = selectedParties.includes(party.id)
+
+                return (
+                  <Card
+                    key={party.id}
+                    className={cn(
+                      "relative transition-shadow duration-200 hover:shadow-lg",
+                      isSelected && "ring-2 ring-primary ring-offset-2"
+                    )}
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 font-semibold text-white">
+                            {party.name_en.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                              {party.name_en}
+                            </h3>
+                            <p className="truncate text-sm text-muted-foreground" dir="rtl">
+                              {party.name_ar}
+                            </p>
+                            <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                              CRN: {party.crn}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectParty(party.id)}
+                            aria-label={`Select ${party.name_en}`}
+                          />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(party)}>
+                                <EditIcon className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/manage-parties/${party.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Profile
+                                </Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Type and Status */}
+                      <div className="flex items-center justify-between">
+                        {getTypeBadge(party.type)}
+                        {getStatusBadge(party.status)}
+                      </div>
+
+                      {/* Document Status */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="mb-1 text-xs text-muted-foreground">CR Status</div>
+                          <div className="flex flex-col items-center">
+                            <crStatus.Icon className={`h-6 w-6 ${crStatus.colorClass}`} />
+                            <span className={`text-xs ${crStatus.colorClass} mt-1`}>
+                              {crStatus.text}
+                            </span>
+                            {party.days_until_cr_expiry !== undefined &&
+                              party.days_until_cr_expiry <= 30 && (
+                                <span className="text-xs font-medium text-amber-600">
+                                  {party.days_until_cr_expiry}d left
                                 </span>
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                asChild
-                                variant="outline"
-                                size="sm"
-                                className="text-xs"
-                                disabled={!party.id}
-                              >
-                                <Link href={party.id ? `/manage-parties/${party.id}` : "#"}>
-                                  <Eye className="mr-1 h-3.5 w-3.5" /> View
-                                </Link>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(party)}
-                                className="text-xs"
-                              >
-                                <EditIcon className="mr-1 h-3.5 w-3.5" /> Edit
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleEdit(party)}>
-                                    <EditIcon className="mr-2 h-4 w-4" />
-                                    Edit Details
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <Link href={`/manage-parties/${party.id}`}>
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      View Profile
-                                    </Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => {
-                                      setSelectedParties([party.id])
-                                      handleBulkDelete()
-                                    }}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          /* Grid View */
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredParties.map((party) => {
-              const crStatus = getDocumentStatus(party.cr_expiry_date)
-              const licenseStatus = getDocumentStatus(party.license_expiry_date)
-              const isSelected = selectedParties.includes(party.id)
-
-              return (
-                <Card
-                  key={party.id}
-                  className={cn(
-                    "relative transition-shadow duration-200 hover:shadow-lg",
-                    isSelected && "ring-2 ring-primary ring-offset-2"
-                  )}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 font-semibold text-white">
-                          {party.name_en.charAt(0).toUpperCase()}
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                            {party.name_en}
-                          </h3>
-                          <p className="truncate text-sm text-muted-foreground" dir="rtl">
-                            {party.name_ar}
-                          </p>
-                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                            CRN: {party.crn}
-                          </p>
+                        <div className="text-center">
+                          <div className="mb-1 text-xs text-muted-foreground">License</div>
+                          <div className="flex flex-col items-center">
+                            <licenseStatus.Icon className={`h-6 w-6 ${licenseStatus.colorClass}`} />
+                            <span className={`text-xs ${licenseStatus.colorClass} mt-1`}>
+                              {licenseStatus.text}
+                            </span>
+                            {party.days_until_license_expiry !== undefined &&
+                              party.days_until_license_expiry <= 30 && (
+                                <span className="text-xs font-medium text-amber-600">
+                                  {party.days_until_license_expiry}d left
+                                </span>
+                              )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelectParty(party.id)}
-                          aria-label={`Select ${party.name_en}`}
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(party)}>
-                              <EditIcon className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/manage-parties/${party.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Profile
-                              </Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Type and Status */}
-                    <div className="flex items-center justify-between">
-                      {getTypeBadge(party.type)}
-                      {getStatusBadge(party.status)}
-                    </div>
 
-                    {/* Document Status */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="mb-1 text-xs text-muted-foreground">CR Status</div>
-                        <div className="flex flex-col items-center">
-                          <crStatus.Icon className={`h-6 w-6 ${crStatus.colorClass}`} />
-                          <span className={`text-xs ${crStatus.colorClass} mt-1`}>
-                            {crStatus.text}
-                          </span>
-                          {party.days_until_cr_expiry !== undefined &&
-                            party.days_until_cr_expiry <= 30 && (
-                              <span className="text-xs font-medium text-amber-600">
-                                {party.days_until_cr_expiry}d left
-                              </span>
+                      {/* Contact Information */}
+                      {(party.contact_person || party.contact_email || party.contact_phone) && (
+                        <div className="space-y-2">
+                          <div className="text-xs text-muted-foreground">Contact Info</div>
+                          <div className="space-y-1">
+                            {party.contact_person && (
+                              <div className="flex items-center gap-2 text-xs">
+                                <Users className="h-3 w-3 text-muted-foreground" />
+                                <span className="truncate">{party.contact_person}</span>
+                              </div>
                             )}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="mb-1 text-xs text-muted-foreground">License</div>
-                        <div className="flex flex-col items-center">
-                          <licenseStatus.Icon className={`h-6 w-6 ${licenseStatus.colorClass}`} />
-                          <span className={`text-xs ${licenseStatus.colorClass} mt-1`}>
-                            {licenseStatus.text}
-                          </span>
-                          {party.days_until_license_expiry !== undefined &&
-                            party.days_until_license_expiry <= 30 && (
-                              <span className="text-xs font-medium text-amber-600">
-                                {party.days_until_license_expiry}d left
-                              </span>
+                            {party.contact_email && (
+                              <div className="flex items-center gap-2 text-xs">
+                                <Mail className="h-3 w-3 text-muted-foreground" />
+                                <span className="truncate">{party.contact_email}</span>
+                              </div>
                             )}
+                            {party.contact_phone && (
+                              <div className="flex items-center gap-2 text-xs">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                <span className="truncate">{party.contact_phone}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      )}
+
+                      {/* Contract Status */}
+                      <div className="text-center">
+                        <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
+                        <Badge
+                          variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
+                          className="text-sm"
+                        >
+                          <Briefcase className="mr-1.5 h-4 w-4" />
+                          {party.contract_count || 0}
+                        </Badge>
                       </div>
-                    </div>
 
-                    {/* Contact Information */}
-                    {(party.contact_person || party.contact_email || party.contact_phone) && (
-                      <div className="space-y-2">
-                        <div className="text-xs text-muted-foreground">Contact Info</div>
-                        <div className="space-y-1">
-                          {party.contact_person && (
-                            <div className="flex items-center gap-2 text-xs">
-                              <Users className="h-3 w-3 text-muted-foreground" />
-                              <span className="truncate">{party.contact_person}</span>
-                            </div>
-                          )}
-                          {party.contact_email && (
-                            <div className="flex items-center gap-2 text-xs">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              <span className="truncate">{party.contact_email}</span>
-                            </div>
-                          )}
-                          {party.contact_phone && (
-                            <div className="flex items-center gap-2 text-xs">
-                              <Phone className="h-3 w-3 text-muted-foreground" />
-                              <span className="truncate">{party.contact_phone}</span>
-                            </div>
-                          )}
-                        </div>
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2">
+                        <Button asChild variant="outline" size="sm" className="flex-1">
+                          <Link href={`/manage-parties/${party.id}`}>
+                            <Eye className="mr-1 h-4 w-4" /> View
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(party)}
+                          className="flex-1"
+                        >
+                          <EditIcon className="mr-1 h-4 w-4" /> Edit
+                        </Button>
                       </div>
-                    )}
-
-                    {/* Contract Status */}
-                    <div className="text-center">
-                      <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
-                      <Badge
-                        variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
-                        className="text-sm"
-                      >
-                        <Briefcase className="mr-1.5 h-4 w-4" />
-                        {party.contract_count || 0}
-                      </Badge>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/manage-parties/${party.id}`}>
-                          <Eye className="mr-1 h-4 w-4" /> View
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(party)}
-                        className="flex-1"
-                      >
-                        <EditIcon className="mr-1 h-4 w-4" /> Edit
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }

@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import { ContractGeneratorForm } from "@/components/contract-generator-form"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 // Enhanced utilities for contract insights
 import {
@@ -318,192 +319,194 @@ export default function GenerateContractPage() {
   const [showInsights, setShowInsights] = useState(true)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mx-auto max-w-6xl space-y-6"
-    >
-      {/* Header */}
-      <div className="space-y-4 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h1 className="font-heading text-3xl font-bold md:text-4xl">Create New Contract</h1>
-          <p className="mt-2 text-lg text-muted-foreground">
-            Generate professional bilingual contracts with enhanced validation and insights
-          </p>
-        </motion.div>
-
-        {/* Form Type Selector */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex justify-center"
-        >
-          <Tabs value={useEnhancedForm ? "enhanced" : "standard"} className="w-full max-w-md">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger
-                value="standard"
-                onClick={() => setUseEnhancedForm(false)}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                Standard
-              </TabsTrigger>
-              <TabsTrigger
-                value="enhanced"
-                onClick={() => setUseEnhancedForm(true)}
-                className="flex items-center gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Enhanced
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </motion.div>
-
-        {/* Feature Comparison */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2"
-        >
-          <Card
-            className={`relative transition-all ${!useEnhancedForm ? "ring-2 ring-primary" : ""}`}
-          >
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" />
-                Standard Form
-                {!useEnhancedForm && <Badge variant="default">Active</Badge>}
-              </CardTitle>
-              <CardDescription>
-                Enhanced with advanced validation and business rules
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <ul className="space-y-1 text-muted-foreground">
-                <li>✓ Enhanced schema validation</li>
-                <li>✓ Business rule enforcement</li>
-                <li>✓ Smart field requirements</li>
-                <li>✓ Date validation & constraints</li>
-                <li>✓ Comprehensive error handling</li>
-                <li>✓ Ready for production use</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`relative transition-all ${useEnhancedForm ? "ring-2 ring-primary" : ""}`}
-          >
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="h-5 w-5 text-muted-foreground" />
-                Enhanced Form
-                {useEnhancedForm && <Badge variant="default">Active</Badge>}
-              </CardTitle>
-              <CardDescription>
-                Advanced interface with sectioned workflow (In Development)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Sectioned form with progress tracking</li>
-                <li>• Real-time contract insights</li>
-                <li>• Smart auto-completion</li>
-                <li>• Salary recommendations</li>
-                <li>• Advanced analytics</li>
-                <li>• Coming soon...</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Insights and Form Sections Overview */}
-      {showInsights && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 gap-6 lg:grid-cols-3"
-        >
-          <ContractInsights />
-          <FormSectionsOverview />
-          <ContractTypesOverview />
-        </motion.div>
-      )}
-
-      {/* Form Container */}
+    <ProtectedRoute>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="rounded-lg bg-card shadow-xl"
+        transition={{ duration: 0.5 }}
+        className="mx-auto max-w-6xl space-y-6"
       >
-        {useEnhancedForm ? (
-          <div className="p-6 md:p-8">
-            <Alert className="mb-6">
-              <Sparkles className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Enhanced Form Coming Soon!</strong> This advanced interface with sectioned
-                workflow, real-time insights, and smart validations is currently in development. Use
-                the standard form below for contract generation.
-              </AlertDescription>
-            </Alert>
-            <ContractGeneratorForm />
-          </div>
-        ) : (
-          <div className="p-6 md:p-8">
-            <ContractGeneratorForm />
-          </div>
-        )}
-      </motion.div>
-
-      {/* Help Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="space-y-4 text-center"
-      >
-        <Card className="bg-muted/50">
-          <CardContent className="pt-6">
-            <div className="mb-3 flex items-center justify-center gap-2">
-              <Settings className="h-5 w-5 text-muted-foreground" />
-              <h3 className="font-semibold">Enhanced Validation & Insights</h3>
-            </div>
-            <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
-              Our contract generation system now includes enhanced schema validation with
-              comprehensive business rules, improved error handling, and smart field requirements.
-              Choose from {Object.keys(CONTRACT_TYPE_CONFIGS).length} different contract types, each
-              with unique templates, placeholders, and validation rules. The form automatically
-              validates dates, party relationships, and ensures all critical information is captured
-              correctly.
+        {/* Header */}
+        <div className="space-y-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <h1 className="font-heading text-3xl font-bold md:text-4xl">Create New Contract</h1>
+            <p className="mt-2 text-lg text-muted-foreground">
+              Generate professional bilingual contracts with enhanced validation and insights
             </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Badge variant="outline">Enhanced Schema</Badge>
-              <Badge variant="outline">Business Rules</Badge>
-              <Badge variant="outline">
-                {Object.keys(CONTRACT_TYPE_CONFIGS).length} Contract Types
-              </Badge>
-              <Badge variant="outline">Smart Validation</Badge>
-              <Badge variant="outline">Error Prevention</Badge>
-              <Badge variant="outline">Oman Compliance</Badge>
+          </motion.div>
+
+          {/* Form Type Selector */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex justify-center"
+          >
+            <Tabs value={useEnhancedForm ? "enhanced" : "standard"} className="w-full max-w-md">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger
+                  value="standard"
+                  onClick={() => setUseEnhancedForm(false)}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Standard
+                </TabsTrigger>
+                <TabsTrigger
+                  value="enhanced"
+                  onClick={() => setUseEnhancedForm(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Enhanced
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </motion.div>
+
+          {/* Feature Comparison */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2"
+          >
+            <Card
+              className={`relative transition-all ${!useEnhancedForm ? "ring-2 ring-primary" : ""}`}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Standard Form
+                  {!useEnhancedForm && <Badge variant="default">Active</Badge>}
+                </CardTitle>
+                <CardDescription>
+                  Enhanced with advanced validation and business rules
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>✓ Enhanced schema validation</li>
+                  <li>✓ Business rule enforcement</li>
+                  <li>✓ Smart field requirements</li>
+                  <li>✓ Date validation & constraints</li>
+                  <li>✓ Comprehensive error handling</li>
+                  <li>✓ Ready for production use</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card
+              className={`relative transition-all ${useEnhancedForm ? "ring-2 ring-primary" : ""}`}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="h-5 w-5 text-muted-foreground" />
+                  Enhanced Form
+                  {useEnhancedForm && <Badge variant="default">Active</Badge>}
+                </CardTitle>
+                <CardDescription>
+                  Advanced interface with sectioned workflow (In Development)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>• Sectioned form with progress tracking</li>
+                  <li>• Real-time contract insights</li>
+                  <li>• Smart auto-completion</li>
+                  <li>• Salary recommendations</li>
+                  <li>• Advanced analytics</li>
+                  <li>• Coming soon...</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Insights and Form Sections Overview */}
+        {showInsights && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+          >
+            <ContractInsights />
+            <FormSectionsOverview />
+            <ContractTypesOverview />
+          </motion.div>
+        )}
+
+        {/* Form Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="rounded-lg bg-card shadow-xl"
+        >
+          {useEnhancedForm ? (
+            <div className="p-6 md:p-8">
+              <Alert className="mb-6">
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Enhanced Form Coming Soon!</strong> This advanced interface with sectioned
+                  workflow, real-time insights, and smart validations is currently in development.
+                  Use the standard form below for contract generation.
+                </AlertDescription>
+              </Alert>
+              <ContractGeneratorForm />
             </div>
-            <div className="mt-4">
-              <Button variant="outline" size="sm" onClick={() => setShowInsights(!showInsights)}>
-                {showInsights ? "Hide" : "Show"} Contract Insights
-              </Button>
+          ) : (
+            <div className="p-6 md:p-8">
+              <ContractGeneratorForm />
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </motion.div>
+
+        {/* Help Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-4 text-center"
+        >
+          <Card className="bg-muted/50">
+            <CardContent className="pt-6">
+              <div className="mb-3 flex items-center justify-center gap-2">
+                <Settings className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-semibold">Enhanced Validation & Insights</h3>
+              </div>
+              <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+                Our contract generation system now includes enhanced schema validation with
+                comprehensive business rules, improved error handling, and smart field requirements.
+                Choose from {Object.keys(CONTRACT_TYPE_CONFIGS).length} different contract types,
+                each with unique templates, placeholders, and validation rules. The form
+                automatically validates dates, party relationships, and ensures all critical
+                information is captured correctly.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Badge variant="outline">Enhanced Schema</Badge>
+                <Badge variant="outline">Business Rules</Badge>
+                <Badge variant="outline">
+                  {Object.keys(CONTRACT_TYPE_CONFIGS).length} Contract Types
+                </Badge>
+                <Badge variant="outline">Smart Validation</Badge>
+                <Badge variant="outline">Error Prevention</Badge>
+                <Badge variant="outline">Oman Compliance</Badge>
+              </div>
+              <div className="mt-4">
+                <Button variant="outline" size="sm" onClick={() => setShowInsights(!showInsights)}>
+                  {showInsights ? "Hide" : "Show"} Contract Insights
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </ProtectedRoute>
   )
 }

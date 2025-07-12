@@ -1,16 +1,17 @@
 import { HomePageContent } from "@/components/home-page-content"
+import { MainNav } from "@/components/navigation/MainNav"
 
-interface ContractPageProps {
-  params: Promise<{ locale: string; id: string }>
+interface PageProps {
+  params: Promise<{ locale: string }>
 }
 
-export default async function ContractPage({ params }: ContractPageProps) {
-  const { locale, id } = await params
+export default async function Page({ params }: PageProps) {
+  const { locale } = await params
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
+      <MainNav />
       <HomePageContent locale={locale} />
-      {/* Component content */}
     </div>
   )
 }
