@@ -31,7 +31,7 @@ A full-stack Next.js application for managing and generating bilingual (Arabic/E
 
 ### Project Structure
 
-```
+\`\`\`
 extra-contracts-yy/
 ├── app/                    # Next.js App Router pages
 │   ├── [locale]/          # Internationalized routes
@@ -44,7 +44,7 @@ extra-contracts-yy/
 ├── lib/                  # Utilities, schemas, Supabase clients
 ├── scripts/              # SQL migrations, seeding, webhook monitors
 └── types/                # TypeScript type definitions
-```
+\`\`\`
 
 ## 🛠️ Setup & Installation
 
@@ -57,19 +57,19 @@ extra-contracts-yy/
 
 ### 1. Clone and Install
 
-```bash
+\`\`\`bash
 git clone <repository-url>
 cd extra-contracts-yy
 pnpm install
-```
+\`\`\`
 
 ### 2. Environment Configuration
 
 Copy the example environment file and configure your variables:
 
-```bash
+\`\`\`bash
 cp env.example .env.local
-```
+\`\`\`
 
 #### Required Environment Variables
 
@@ -93,22 +93,22 @@ cp env.example .env.local
 
 Run the SQL migration scripts in order:
 
-```bash
+\`\`\`bash
 # Execute scripts in /scripts directory
 # 001_create_promoters_table.sql
 # 002_alter_parties_add_type.sql
 # ... (continue with all numbered scripts)
-```
+\`\`\`
 
 ### 4. Generate TypeScript Types
 
-```bash
+\`\`\`bash
 npx supabase gen types typescript --project-id <YOUR_PROJECT_REF> --schema public > types/supabase.ts
-```
+\`\`\`
 
 ### 5. Development
 
-```bash
+\`\`\`bash
 # Start development server
 pnpm dev
 
@@ -120,7 +120,7 @@ pnpm test
 
 # Build for production
 pnpm build
-```
+\`\`\`
 
 ## 📖 Usage Guide
 
@@ -158,7 +158,7 @@ pnpm build
 
 ### Contract Endpoints
 
-```typescript
+\`\`\`typescript
 // Create contract
 POST /api/contracts
 {
@@ -179,23 +179,23 @@ PUT /api/contracts/[id]
 
 // Delete contract
 DELETE /api/contracts/[id]
-```
+\`\`\`
 
 ### Webhook Endpoints
 
-```typescript
+\`\`\`typescript
 // Trigger webhook
 POST /api/trigger-webhook
 
 // Test webhook
 POST /api/test-webhook
-```
+\`\`\`
 
 ## 🧪 Testing
 
 ### Running Tests
 
-```bash
+\`\`\`bash
 # Run all tests
 pnpm test
 
@@ -204,7 +204,7 @@ pnpm test:watch
 
 # Run tests with coverage
 pnpm test:coverage
-```
+\`\`\`
 
 ### Test Structure
 
@@ -216,7 +216,7 @@ pnpm test:coverage
 
 The application uses Supabase real-time subscriptions for live updates:
 
-```typescript
+\`\`\`typescript
 // Example: Real-time contracts
 import { useRealtimeContracts } from "@/hooks/use-realtime-contracts"
 
@@ -231,7 +231,7 @@ export default function ContractList() {
     </div>
   )
 }
-```
+\`\`\`
 
 Available real-time hooks:
 - `useRealtimeContracts()` - Contract updates
@@ -250,7 +250,7 @@ Available real-time hooks:
 
 Ensure all required environment variables are set in your production environment:
 
-```bash
+\`\`\`bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -259,7 +259,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # Make.com
 MAKE_WEBHOOK_URL=your_webhook_url
 MAKE_WEBHOOK_SECRET=your_webhook_secret
-```
+\`\`\`
 
 ## 🔒 Security
 

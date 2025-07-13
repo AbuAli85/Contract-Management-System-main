@@ -70,4 +70,4 @@ DROP POLICY IF EXISTS "Allow authenticated users to delete parties" ON public.pa
 CREATE POLICY "Allow authenticated users to delete parties"
 ON public.parties
 FOR DELETE
-USING (auth.role() = 'authenticated'); 
+USING (auth.role() = 'authenticated');

@@ -5,4 +5,4 @@ CREATE TABLE party_files (
   file_name TEXT,
   file_url TEXT,
   uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
-); 
+);

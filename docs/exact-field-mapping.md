@@ -7,14 +7,14 @@ Based on the webhook response structure, here are the **EXACT** field names to u
 ### Image URL Fields (These are likely causing validation errors)
 
 **For ID Card Image:**
-```
+\`\`\`
 {{promoter_id_card_url}}
-```
+\`\`\`
 
 **For Passport Image:**
-```
+\`\`\`
 {{promoter_passport_url}}
-```
+\`\`\`
 
 ### All Available Fields from Webhook Response
 
@@ -62,32 +62,32 @@ Replace the failing fields with:
 Use these working Supabase URLs to test:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
+\`\`\`
 https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg
-```
+\`\`\`
 
 ### Step 3: Add Fallbacks (if fields might be empty)
-```
+\`\`\`
 {{ifempty(promoter_id_card_url; "")}}
 {{ifempty(promoter_passport_url; "")}}
-```
+\`\`\`
 
 ## Why These Field Names?
 
 The webhook response structure shows these fields are returned at the root level:
-```json
+\`\`\`json
 {
   "promoter_id_card_url": "https://...",
   "promoter_passport_url": "https://...",
   "promoter_name_en": "...",
   ...
 }
-```
+\`\`\`
 
 **No Iterator needed** - these fields are directly accessible from the webhook response.
 

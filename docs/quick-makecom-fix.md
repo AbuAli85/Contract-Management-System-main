@@ -7,15 +7,15 @@
 
 ### **Option 1: Simple Title (Recommended)**
 Copy and paste this into your Google Docs "Title" field:
-```
+\`\`\`
 {{1.contract_number}}-{{1.promoter_name_en}}.pdf
-```
+\`\`\`
 
 ### **Option 2: Advanced Title (with cleaning)**
 If you want extra cleaning, use this:
-```
+\`\`\`
 {{lower(1.contract_number).replace(/[^a-z0-9_-]/g, "").replace(/ /g, "_")}}-{{lower(1.promoter_name_en).replace(/[^a-z0-9_-]/g, "").replace(/ /g, "_")}}.pdf
-```
+\`\`\`
 
 ## 📋 **Step-by-Step Instructions**
 

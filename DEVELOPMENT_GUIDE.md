@@ -13,37 +13,37 @@ This guide will help you set up and run both the frontend and backend automatica
 ### Option 1: Automated Setup (Recommended)
 
 **Windows PowerShell:**
-```powershell
+\`\`\`powershell
 .\dev-start.ps1
-```
+\`\`\`
 
 **Windows Command Prompt:**
-```cmd
+\`\`\`cmd
 start-dev.bat
-```
+\`\`\`
 
 ### Option 2: Manual Setup
 
 1. **Install dependencies:**
-   ```bash
+   \`\`\`bash
    pnpm install
-   ```
+   \`\`\`
 
 2. **Setup environment:**
-   ```bash
+   \`\`\`bash
    cp env.example .env.local
    # Edit .env.local with your actual values
-   ```
+   \`\`\`
 
 3. **Setup database:**
-   ```bash
+   \`\`\`bash
    pnpm run db:setup
-   ```
+   \`\`\`
 
 4. **Start development server:**
-   ```bash
+   \`\`\`bash
    pnpm run dev
-   ```
+   \`\`\`
 
 ## 🛠️ Available Scripts
 
@@ -129,7 +129,7 @@ When running locally:
 
 Key environment variables in `.env.local`:
 
-```bash
+\`\`\`bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
@@ -142,28 +142,28 @@ SLACK_WEBHOOK_URL=your_slack_webhook_url
 # Google Drive (via Make.com)
 GOOGLE_CREDENTIALS_JSON=your_credentials
 GOOGLE_DOCS_TEMPLATE_ID=your_template_id
-```
+\`\`\`
 
 ### Database Setup
 
 The application automatically sets up database tables when you run:
-```bash
+\`\`\`bash
 pnpm run db:setup
-```
+\`\`\`
 
 ## 🧪 Testing
 
 ### Unit Tests
-```bash
+\`\`\`bash
 pnpm run test           # Run once
 pnpm run test:watch     # Watch mode
-```
+\`\`\`
 
 ### Integration Tests
-```bash
+\`\`\`bash
 pnpm run webhook:test   # Test webhooks
 pnpm run db:test        # Test database
-```
+\`\`\`
 
 ### Manual Testing
 - Visit http://localhost:3000/en/dashboard/settings
@@ -173,9 +173,9 @@ pnpm run db:test        # Test database
 ## 📝 Development Workflow
 
 1. **Start Development:**
-   ```bash
+   \`\`\`bash
    pnpm run dev:all
-   ```
+   \`\`\`
 
 2. **Make Changes:**
    - Frontend: Edit files in `app/`, `components/`, `hooks/`
@@ -188,41 +188,41 @@ pnpm run db:test        # Test database
    - Database: Run `pnpm run db:setup` if schema changed
 
 4. **Commit Changes:**
-   ```bash
+   \`\`\`bash
    pnpm run lint:fix      # Fix any linting issues
    pnpm run test          # Ensure tests pass
    git add .
    git commit -m "Your changes"
-   ```
+   \`\`\`
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
 **Port 3000 already in use:**
-```bash
+\`\`\`bash
 # Find and kill the process
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
-```
+\`\`\`
 
 **Environment variables not loading:**
-```bash
+\`\`\`bash
 # Restart the development server
 # Make sure .env.local exists and has correct values
-```
+\`\`\`
 
 **Database connection issues:**
-```bash
+\`\`\`bash
 pnpm run db:test
 # Check your Supabase credentials
-```
+\`\`\`
 
 **Webhook testing fails:**
-```bash
+\`\`\`bash
 pnpm run webhook:test
 # Check your Make.com webhook URLs
-```
+\`\`\`
 
 ### Getting Help
 

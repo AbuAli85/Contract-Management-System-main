@@ -22,16 +22,16 @@ This authentication system provides a complete, production-ready solution with:
 5. Paste and click **Run**
 
 #### Option B: Using Supabase CLI
-```bash
+\`\`\`bash
 # If you have Supabase CLI installed
 supabase db push
-```
+\`\`\`
 
 ### 2. Environment Variables
 
 Copy `.env.example` to `.env.local` and update:
 
-```env
+\`\`\`env
 # Required
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -44,7 +44,7 @@ NEXT_PUBLIC_APP_NAME="Contract Management System"
 # Security (generate random strings)
 CSRF_SECRET=generate_random_32_char_string
 JWT_SECRET=generate_random_32_char_string
-```
+\`\`\`
 
 ### 3. OAuth Setup (Optional)
 
@@ -67,18 +67,18 @@ JWT_SECRET=generate_random_32_char_string
 In Supabase Dashboard > Authentication > Email Templates:
 
 #### Confirmation Email
-```html
+\`\`\`html
 <h2>Confirm your email</h2>
 <p>Follow this link to confirm your email:</p>
 <p><a href="{{ .ConfirmationURL }}">Confirm your email address</a></p>
-```
+\`\`\`
 
 #### Password Reset
-```html
+\`\`\`html
 <h2>Reset your password</h2>
 <p>Follow this link to reset your password:</p>
 <p><a href="{{ .ConfirmationURL }}">Reset Password</a></p>
-```
+\`\`\`
 
 ### 5. Create First Admin User
 
@@ -86,11 +86,11 @@ In Supabase Dashboard > Authentication > Email Templates:
 2. Verify email
 3. Run this SQL in Supabase to make the user an admin:
 
-```sql
+\`\`\`sql
 UPDATE profiles 
 SET role = 'admin' 
 WHERE email = 'your-email@example.com';
-```
+\`\`\`
 
 ## Features Usage
 

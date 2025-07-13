@@ -1,9 +1,9 @@
 # 🔧 URGENT: Google Docs Template Missing Image Placeholders
 
 ## Current Error Analysis
-```
+\`\`\`
 [400] Invalid requests[12].replaceImage: The object with ID ID_CARD_IMAGE could not be found.
-```
+\`\`\`
 
 ## Root Cause
 The Google Docs template is **missing image placeholders** with the Alt text `ID_CARD_IMAGE` (and likely `PASSPORT_IMAGE`).
@@ -53,7 +53,7 @@ If you want to create a simple test template:
 1. Create a new Google Doc
 2. Add this content:
 
-```
+\`\`\`
 CONTRACT DOCUMENT
 
 Promoter Name: {{promoter_name_en}}
@@ -69,7 +69,7 @@ Contract Details:
 - Start Date: {{start_date}}
 - End Date: {{end_date}}
 - Job Title: {{job_title}}
-```
+\`\`\`
 
 3. Insert two placeholder images with correct Alt text
 4. Use this template in your Make.com scenario

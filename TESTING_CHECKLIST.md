@@ -3,9 +3,9 @@
 ## Prerequisites
 
 1. Make sure the development server is running:
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 2. Open your browser to: http://localhost:3001
 3. Open the browser console (F12) to check for errors
 
@@ -159,7 +159,7 @@
 
 You can paste this in the browser console to quickly open all pages:
 
-```javascript
+\`\`\`javascript
 const pages = [
   "/en/dashboard",
   "/en/contracts",
@@ -178,13 +178,13 @@ pages.forEach((page, index) => {
     window.open(`http://localhost:3001${page}`, "_blank")
   }, index * 2000) // Opens each page with 2 second delay
 })
-```
+\`\`\`
 
 ## Recording Issues
 
 Create a list of issues found:
 
-```markdown
+\`\`\`markdown
 ## Issues Found
 
 ### Page: [Page Name]
@@ -193,7 +193,7 @@ Create a list of issues found:
 - **Error**: Copy any console errors
 - **Steps to Reproduce**: How to see the issue
 - **Priority**: High/Medium/Low
-```
+\`\`\`
 
 ## Success Criteria
 

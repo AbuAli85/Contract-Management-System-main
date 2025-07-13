@@ -1,9 +1,9 @@
 # IMMEDIATE FIX: Google Docs Template Image Placeholders
 
 ## 🚨 **Current Error**
-```
+\`\`\`
 [400] Invalid requests[12].replaceImage: The object with ID ID_CARD_IMAGE could not be found.
-```
+\`\`\`
 
 ## 🎯 **Root Cause**
 - Your Google Docs template doesn't have image placeholders with IDs: `ID_CARD_IMAGE` and `PASSPORT_IMAGE`
@@ -99,14 +99,14 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 **Update your Google Drive upload modules (4 & 5):**
 
 **Add this to both Module 4 and Module 5 mappers:**
-```json
+\`\`\`json
 "permissions": [
   {
     "role": "reader",
     "type": "anyone"
   }
 ]
-```
+\`\`\`
 
 ### **Step 3: Add Images Back to Make.com**
 

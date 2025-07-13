@@ -17,7 +17,7 @@
 **File**: `app/api/webhook/makecom/route.ts`
 
 **Key Changes**:
-```typescript
+\`\`\`typescript
 // Before (causing errors)
 promoter_id_card_url: promoter_id_card_url || null,
 promoter_name_en: promoter_name_en || "",
@@ -26,7 +26,7 @@ promoter_name_en: promoter_name_en || "",
 promoter_id_card_url: (promoter_id_card_url || "").toString(),
 promoter_name_en: (promoter_name_en || "").toString().trim().replace(/\s+/g, ' '),
 contract_number: (contract_number || "").toString().replace(/[^\w-]/g, ''),
-```
+\`\`\`
 
 **Benefits**:
 - ✅ **No null values** → Prevents .split() errors
@@ -39,16 +39,16 @@ contract_number: (contract_number || "").toString().replace(/[^\w-]/g, ''),
 ### 1. Filter Updates
 
 **Replace this filter logic:**
-```
+\`\`\`
 Status code "Equal to" [empty condition]
-```
+\`\`\`
 
 **With this:**
-```
+\`\`\`
 Field: promoter_passport_url
 Operator: not equal
 Value: ""
-```
+\`\`\`
 
 ### 2. Google Docs Template Updates
 
@@ -61,7 +61,7 @@ Value: ""
 | `{{1.field.replaceAll('.', '')}}` | `{{1.field.replace(/\./g, '')}}` |
 
 **Safe Template Example:**
-```
+\`\`\`
 Contract Number: {{1.contract_number}}
 Promoter: {{1.promoter_name_en}}
 Client: {{1.first_party_name_en}}
@@ -70,7 +70,7 @@ Position: {{1.job_title}}
 Start Date: {{1.start_date}}
 End Date: {{1.end_date}}
 Contract Value: ${{1.contract_value}}
-```
+\`\`\`
 
 ## 🧪 Testing Results
 
@@ -97,9 +97,9 @@ Contract Value: ${{1.contract_value}}
 ### ⚠️ Action Required
 
 1. **Update Make.com Filters**
-   ```
+   \`\`\`
    promoter_passport_url "not equal" ""
-   ```
+   \`\`\`
 
 2. **Update Google Docs Template**
    - Replace `replaceAll()` with `replace()` + regex
@@ -114,14 +114,14 @@ Contract Value: ${{1.contract_value}}
 ## 📊 Expected Workflow
 
 ### Before Fix:
-```
+\`\`\`
 Webhook → null values → Filter error → Scenario fails
-```
+\`\`\`
 
 ### After Fix:
-```
+\`\`\`
 Webhook → clean strings → Filter evaluates → Template processes → PDF generated
-```
+\`\`\`
 
 ## 🔍 Troubleshooting
 
@@ -143,7 +143,7 @@ Webhook → clean strings → Filter evaluates → Template processes → PDF ge
 ## 📞 Quick Verification
 
 ### Test Webhook Response:
-```bash
+\`\`\`bash
 curl -X POST https://your-domain.com/api/webhook/makecom \
   -H "Content-Type: application/json" \
   -d '{
@@ -152,10 +152,10 @@ curl -X POST https://your-domain.com/api/webhook/makecom \
     "first_party_name_en": "Test Company",
     "second_party_name_en": "Test Employer"
   }'
-```
+\`\`\`
 
 ### Expected Response:
-```json
+\`\`\`json
 {
   "success": true,
   "contract_number": "TEST-001",
@@ -170,7 +170,7 @@ curl -X POST https://your-domain.com/api/webhook/makecom \
     "passport": false
   }
 }
-```
+\`\`\`
 
 ## 🎉 Summary
 

@@ -14,9 +14,9 @@ This system provides automated contract generation using Make.com (formerly Inte
 5. **Webhook Integration** (`app/api/webhook/makecom/route.ts`)
 
 ### Workflow
-```
+\`\`\`
 Contract Creation → Database Storage → Make.com Webhook → Google Docs → PDF Generation → Storage → Database Update
-```
+\`\`\`
 
 ## 🔧 Setup Instructions
 
@@ -24,14 +24,14 @@ Contract Creation → Database Storage → Make.com Webhook → Google Docs → 
 
 Add these to your `.env.local`:
 
-```bash
+\`\`\`bash
 # Make.com Integration
 MAKECOM_WEBHOOK_URL=https://hook.make.com/your-webhook-id
 MAKECOM_API_KEY=your-makecom-api-key
 
 # Google Drive/Docs (configured in Make.com)
 GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
-```
+\`\`\`
 
 ### 2. Google Docs Template Setup
 
@@ -64,7 +64,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 - `{{work_location}}` - Primary work location
 
 **Example Google Docs Template:**
-```
+\`\`\`
 EMPLOYMENT CONTRACT
 
 Contract Number: {{contract_number}}
@@ -85,12 +85,12 @@ START DATE: {{start_date}}
 WORK LOCATION: {{work_location}}
 
 [Contract terms and conditions...]
-```
+\`\`\`
 
 ### 3. Make.com Scenario Setup
 
 #### Module 1: Webhook Trigger
-```json
+\`\`\`json
 {
   "webhook": {
     "type": "custom",
@@ -98,10 +98,10 @@ WORK LOCATION: {{work_location}}
     "method": "POST"
   }
 }
-```
+\`\`\`
 
 #### Module 2: HTTP Request (Get Contract Data)
-```json
+\`\`\`json
 {
   "http": {
     "url": "https://your-domain.com/api/contracts/{{webhook.contract_number}}",
@@ -111,10 +111,10 @@ WORK LOCATION: {{work_location}}
     }
   }
 }
-```
+\`\`\`
 
 #### Module 3: Google Docs (Create from Template)
-```json
+\`\`\`json
 {
   "google_docs": {
     "operation": "create_document_from_template",
@@ -129,10 +129,10 @@ WORK LOCATION: {{work_location}}
     }
   }
 }
-```
+\`\`\`
 
 #### Module 4: Google Docs (Export as PDF)
-```json
+\`\`\`json
 {
   "google_docs": {
     "operation": "export_document",
@@ -140,10 +140,10 @@ WORK LOCATION: {{work_location}}
     "format": "pdf"
   }
 }
-```
+\`\`\`
 
 #### Module 5: Supabase (Upload PDF)
-```json
+\`\`\`json
 {
   "supabase": {
     "operation": "upload_file",
@@ -152,10 +152,10 @@ WORK LOCATION: {{work_location}}
     "file_name": "{{http.contract_number}}.pdf"
   }
 }
-```
+\`\`\`
 
 #### Module 6: HTTP Request (Update Contract)
-```json
+\`\`\`json
 {
   "http": {
     "url": "https://your-domain.com/api/contracts/{{http.contract_id}}",
@@ -169,7 +169,7 @@ WORK LOCATION: {{work_location}}
     }
   }
 }
-```
+\`\`\`
 
 ## 📝 Adding New Contract Types
 
@@ -177,7 +177,7 @@ WORK LOCATION: {{work_location}}
 
 Add to `lib/makecom-template-config.ts`:
 
-```typescript
+\`\`\`typescript
 "your-new-contract": {
   id: "your-new-contract",
   name: "Your New Contract Type",
@@ -210,13 +210,13 @@ Add to `lib/makecom-template-config.ts`:
     outputFormat: 'pdf'
   }
 }
-```
+\`\`\`
 
 ### 2. Add to Enhanced Config
 
 Update `lib/contract-type-config.ts`:
 
-```typescript
+\`\`\`typescript
 "your-new-contract-makecom": {
   id: "your-new-contract-makecom",
   name: "Your New Contract (Make.com Automated)",
@@ -226,7 +226,7 @@ Update `lib/contract-type-config.ts`:
   makecomTemplateId: "your-new-contract",
   makecomIntegration: true
 }
-```
+\`\`\`
 
 ### 3. Create Google Docs Template
 
@@ -247,7 +247,7 @@ Update `lib/contract-type-config.ts`:
 ## 🔧 Make.com Functions Reference
 
 ### Safe Template Functions
-```javascript
+\`\`\`javascript
 // Text replacement (compatible with Make.com)
 {{field.replace(/ /g, "_")}}           // Replace spaces with underscores
 {{field.replace(/[^a-zA-Z0-9]/g, "")}} // Remove special characters
@@ -264,7 +264,7 @@ Update `lib/contract-type-config.ts`:
 
 // Conditional logic
 {{if(condition, true_value, false_value)}}
-```
+\`\`\`
 
 ### Avoid These Functions
 ❌ `replaceAll()` - Not supported in Make.com
@@ -299,7 +299,7 @@ Update `lib/contract-type-config.ts`:
 
 ### API Usage
 
-```javascript
+\`\`\`javascript
 // Generate contract with Make.com
 const response = await fetch('/api/contracts/makecom/generate', {
   method: 'POST',
@@ -318,7 +318,7 @@ const response = await fetch('/api/contracts/makecom/generate', {
     triggerMakecom: true
   })
 })
-```
+\`\`\`
 
 ## 🐛 Troubleshooting
 
@@ -347,14 +347,14 @@ const response = await fetch('/api/contracts/makecom/generate', {
 ### Debugging Steps
 
 1. **Check API Response**
-   ```bash
+   \`\`\`bash
    curl -X GET "https://your-domain.com/api/contracts/makecom/generate?action=types"
-   ```
+   \`\`\`
 
 2. **Test Template Configuration**
-   ```bash
+   \`\`\`bash
    curl -X GET "https://your-domain.com/api/contracts/makecom/generate?action=template&type=oman-unlimited-makecom"
-   ```
+   \`\`\`
 
 3. **Validate Contract Data**
    - Use the validation functions in the API

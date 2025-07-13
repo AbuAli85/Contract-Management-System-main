@@ -21,30 +21,30 @@ Updated `app/api/webhook/makecom/route.ts` to ensure:
 Based on your screenshots, you need to update your Make.com filters:
 
 #### Current Filter (causing errors):
-```
+\`\`\`
 Status code "Equal to" [undefined/empty condition]
-```
+\`\`\`
 
 #### Recommended Filter Logic:
 
 **For "Passport Download Success" Filter:**
-```
+\`\`\`
 Condition 1: promoter_passport_url "not equal" ""
 AND
 Condition 2: length(promoter_passport_url) "greater" 0
-```
+\`\`\`
 
 **For "ID Card Download Success" Filter:**
-```
+\`\`\`
 Condition 1: promoter_id_card_url "not equal" ""
 AND 
 Condition 2: length(promoter_id_card_url) "greater" 0
-```
+\`\`\`
 
 #### Alternative Simple Filter:
-```
+\`\`\`
 promoter_passport_url "contains" "http"
-```
+\`\`\`
 This will only pass when there's an actual URL.
 
 ## Step-by-Step Fix in Make.com
@@ -92,18 +92,18 @@ This will only pass when there's an actual URL.
 
 ### 1. Test with No Images
 Send this payload to test empty image handling:
-```json
+\`\`\`json
 {
   "contract_number": "TEST-001",
   "promoter_name_en": "Test User",
   "first_party_name_en": "Test Company",
   "second_party_name_en": "Test Employer"
 }
-```
+\`\`\`
 
 ### 2. Test with Images
 Send this payload to test image processing:
-```json
+\`\`\`json
 {
   "contract_number": "TEST-002", 
   "promoter_name_en": "Test User",
@@ -112,7 +112,7 @@ Send this payload to test image processing:
   "first_party_name_en": "Test Company",
   "second_party_name_en": "Test Employer"
 }
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -125,7 +125,7 @@ Send this payload to test image processing:
 
 ### Quick Diagnosis Commands:
 
-```bash
+\`\`\`bash
 # Test the webhook locally
 cd "c:\Users\HP\Documents\GitHub\extra-contracts-yy-main"
 node scripts/test-fixed-filter-response.js
@@ -134,7 +134,7 @@ node scripts/test-fixed-filter-response.js
 curl -X POST http://localhost:3000/api/webhook/makecom \
   -H "Content-Type: application/json" \
   -d '{"contract_number":"TEST-001","promoter_name_en":"Test"}'
-```
+\`\`\`
 
 ## Summary
 

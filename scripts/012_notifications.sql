@@ -4,4 +4,4 @@ CREATE TABLE notifications (
   message TEXT,
   read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
-); 
+);

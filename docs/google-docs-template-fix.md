@@ -20,14 +20,14 @@ I've updated the webhook to provide cleaner, template-safe data:
 #### Replace `replaceAll()` with `replace()` + Global Regex
 
 **Instead of:**
-```javascript
+\`\`\`javascript
 {{1.promoter_name_en.replaceAll(" ", "_")}}
-```
+\`\`\`
 
 **Use:**
-```javascript
+\`\`\`javascript
 {{1.promoter_name_en.replace(/ /g, "_")}}
-```
+\`\`\`
 
 #### Common Template Function Replacements:
 
@@ -41,7 +41,7 @@ I've updated the webhook to provide cleaner, template-safe data:
 ### 3. Safe Template Patterns
 
 #### For Names and Text Fields:
-```javascript
+\`\`\`javascript
 // Safe text formatting
 {{1.promoter_name_en.replace(/[^a-zA-Z0-9\s]/g, "").trim()}}
 
@@ -50,16 +50,16 @@ I've updated the webhook to provide cleaner, template-safe data:
 
 // Format dates
 {{1.start_date.replace(/-/g, "/")}}
-```
+\`\`\`
 
 #### For Numbers and Values:
-```javascript
+\`\`\`javascript
 // Safe number formatting
 {{parseFloat(1.contract_value).toFixed(2)}}
 
 // Format currency
 {{parseFloat(1.contract_value).toLocaleString()}}
-```
+\`\`\`
 
 ### 4. Step-by-Step Google Docs Fix
 
@@ -69,17 +69,17 @@ I've updated the webhook to provide cleaner, template-safe data:
 
 #### Step 2: Update Template Mappings
 **Find mappings like:**
-```
+\`\`\`
 {{1.promoter_name_en.replaceAll(" ", "_")}}
-```
+\`\`\`
 
 **Replace with:**
-```
+\`\`\`
 {{1.promoter_name_en.replace(/ /g, "_")}}
-```
+\`\`\`
 
 #### Step 3: Common Field Mappings
-```javascript
+\`\`\`javascript
 // Promoter name (safe)
 {{1.promoter_name_en.trim()}}
 
@@ -98,13 +98,13 @@ I've updated the webhook to provide cleaner, template-safe data:
 
 // Contract value (formatted)
 {{parseFloat(1.contract_value).toFixed(2)}}
-```
+\`\`\`
 
 ### 5. Template Variable Reference
 
 The webhook now provides these clean, template-ready fields:
 
-```javascript
+\`\`\`javascript
 // Text fields (trimmed, safe)
 1.contract_number         // "CNT-2024-001"
 1.promoter_name_en       // "John Doe"
@@ -131,13 +131,13 @@ The webhook now provides these clean, template-ready fields:
 // Status fields
 1.status                 // "active"
 1.is_current            // "true"
-```
+\`\`\`
 
 ### 6. Testing the Fix
 
 #### Test Template:
 Create a simple Google Doc template with:
-```
+\`\`\`
 Contract Number: {{1.contract_number}}
 Promoter: {{1.promoter_name_en}}
 Client: {{1.first_party_name_en}}
@@ -146,10 +146,10 @@ Job Title: {{1.job_title}}
 Start Date: {{1.start_date}}
 End Date: {{1.end_date}}
 Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
-```
+\`\`\`
 
 #### Test Payload:
-```json
+\`\`\`json
 {
   "contract_number": "TEST-001",
   "promoter_name_en": "John Doe",
@@ -160,7 +160,7 @@ Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
   "end_date": "2024-12-31",
   "contract_value": 75000
 }
-```
+\`\`\`
 
 ### 7. Troubleshooting
 
@@ -172,13 +172,13 @@ Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
    - `includes()` → Use `indexOf() !== -1`
 
 2. **Use simpler templates first:**
-   ```javascript
+   \`\`\`javascript
    // Start simple
    {{1.promoter_name_en}}
    
    // Then add formatting if needed
    {{1.promoter_name_en.trim()}}
-   ```
+   \`\`\`
 
 3. **Check Google Docs template permissions:**
    - Ensure the template is accessible

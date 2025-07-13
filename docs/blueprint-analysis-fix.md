@@ -3,7 +3,7 @@
 ## Current Blueprint Analysis
 
 ### Module 6 (Google Docs) - Current Configuration:
-```json
+\`\`\`json
 "imageReplacement": [
     {
         "imageObjectId": "ID_CARD_IMAGE",
@@ -14,7 +14,7 @@
         "url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop&auto=format"
     }
 ]
-```
+\`\`\`
 
 ## The Problem
 You're using **hardcoded image URLs** which work, but the Google Docs template doesn't have image placeholders with Alt text `ID_CARD_IMAGE` and `PASSPORT_IMAGE`.
@@ -37,7 +37,7 @@ You're using **hardcoded image URLs** which work, but the Google Docs template d
 **Update Module 6 to use dynamic image URLs:**
 
 **Change from hardcoded URLs to:**
-```json
+\`\`\`json
 "imageReplacement": [
     {
         "imageObjectId": "ID_CARD_IMAGE",
@@ -48,13 +48,13 @@ You're using **hardcoded image URLs** which work, but the Google Docs template d
         "url": "{{1.promoter_passport_url}}"
     }
 ]
-```
+\`\`\`
 
 ## Updated Blueprint Configuration
 
 Here's the corrected Module 6 configuration:
 
-```json
+\`\`\`json
 {
     "id": 6,
     "module": "google-docs:createADocumentFromTemplate",
@@ -79,7 +79,7 @@ Here's the corrected Module 6 configuration:
         "folderId": "1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP"
     }
 }
-```
+\`\`\`
 
 ## Why This Happens
 
@@ -105,9 +105,9 @@ Here's the corrected Module 6 configuration:
 ### Option C: Hybrid Approach (Best)
 1. Add image placeholders to template (Option A)
 2. Use dynamic URLs with fallbacks:
-   ```
+   \`\`\`
    {{ifempty(1.promoter_id_card_url; "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop&auto=format")}}
-   ```
+   \`\`\`
 
 ## Expected Results
 

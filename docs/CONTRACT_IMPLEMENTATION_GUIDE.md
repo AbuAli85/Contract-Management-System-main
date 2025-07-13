@@ -4,7 +4,7 @@
 
 ### Using the Enhanced Form
 
-```tsx
+\`\`\`tsx
 import EnhancedContractGeneratorForm from '@/components/enhanced-contract-generator-form'
 
 // Basic usage
@@ -23,11 +23,11 @@ import EnhancedContractGeneratorForm from '@/components/enhanced-contract-genera
   contract={existingContract}
   onFormSubmit={() => setIsEditing(false)}
 />
-```
+\`\`\`
 
 ### Using Contract Utilities
 
-```tsx
+\`\`\`tsx
 import { 
   analyzeContractDuration, 
   validateContractData,
@@ -48,7 +48,7 @@ if (!validation.isValid) {
 // Export contracts to CSV
 const csvData = exportContractsToCSV(contracts)
 downloadCSV(csvData, 'contracts-export.csv')
-```
+\`\`\`
 
 ## 🔧 Configuration
 
@@ -56,7 +56,7 @@ downloadCSV(csvData, 'contracts-export.csv')
 
 To add new validation rules, update `lib/schema-generator.ts`:
 
-```typescript
+\`\`\`typescript
 export const contractGeneratorSchema = z
   .object({
     // Add new fields
@@ -69,13 +69,13 @@ export const contractGeneratorSchema = z
     message: "Custom validation message",
     path: ["custom_field"],
   })
-```
+\`\`\`
 
 ### Form Sections
 
 To modify form sections, update the `CONTRACT_FORM_SECTIONS` array:
 
-```typescript
+\`\`\`typescript
 export const CONTRACT_FORM_SECTIONS: FormSection[] = [
   {
     id: "custom_section",
@@ -85,7 +85,7 @@ export const CONTRACT_FORM_SECTIONS: FormSection[] = [
     fields: ["custom_field"]
   }
 ]
-```
+\`\`\`
 
 ## 🎯 Feature Flags
 
@@ -93,17 +93,17 @@ export const CONTRACT_FORM_SECTIONS: FormSection[] = [
 
 In your page component:
 
-```tsx
+\`\`\`tsx
 const [useEnhancedForm, setUseEnhancedForm] = useState(
   process.env.NEXT_PUBLIC_USE_ENHANCED_FORM === 'true'
 )
-```
+\`\`\`
 
 ### Environment Variables
 
 Add to your `.env.local`:
 
-```bash
+\`\`\`bash
 # Feature flags
 NEXT_PUBLIC_USE_ENHANCED_FORM=true
 NEXT_PUBLIC_SHOW_ADVANCED_FIELDS=false
@@ -112,13 +112,13 @@ NEXT_PUBLIC_SHOW_ADVANCED_FIELDS=false
 NEXT_PUBLIC_DEFAULT_CURRENCY=AED
 NEXT_PUBLIC_MAX_CONTRACT_DURATION_YEARS=5
 NEXT_PUBLIC_DEFAULT_PROBATION_MONTHS=3
-```
+\`\`\`
 
 ## 🧪 Testing
 
 ### Form Validation Testing
 
-```typescript
+\`\`\`typescript
 import { contractGeneratorSchema } from '@/lib/schema-generator'
 
 describe('Contract Form Validation', () => {
@@ -149,11 +149,11 @@ describe('Contract Form Validation', () => {
     expect(result.success).toBe(false)
   })
 })
-```
+\`\`\`
 
 ### Component Testing
 
-```tsx
+\`\`\`tsx
 import { render, screen, fireEvent } from '@testing-library/react'
 import EnhancedContractGeneratorForm from '@/components/enhanced-contract-generator-form'
 
@@ -172,31 +172,31 @@ describe('Enhanced Contract Form', () => {
     expect(screen.getByText(/% Complete/)).toBeInTheDocument()
   })
 })
-```
+\`\`\`
 
 ## 🔍 Debugging
 
 ### Common Issues
 
 1. **Schema Validation Errors**
-   ```typescript
+   \`\`\`typescript
    // Enable debug mode
    const result = contractGeneratorSchema.safeParse(data)
    if (!result.success) {
      console.log('Validation errors:', result.error.issues)
    }
-   ```
+   \`\`\`
 
 2. **Form State Issues**
-   ```typescript
+   \`\`\`typescript
    // Debug form state
    console.log('Form values:', form.getValues())
    console.log('Form errors:', form.formState.errors)
    console.log('Form dirty fields:', form.formState.dirtyFields)
-   ```
+   \`\`\`
 
 3. **API Integration**
-   ```typescript
+   \`\`\`typescript
    // Add request/response logging
    const saveContract = async (data) => {
      console.log('Sending contract data:', data)
@@ -206,7 +206,7 @@ describe('Enhanced Contract Form', () => {
      })
      console.log('API response:', await response.json())
    }
-   ```
+   \`\`\`
 
 ## 📱 Mobile Optimization
 
@@ -230,7 +230,7 @@ The enhanced form is optimized for:
 
 All form inputs are validated both client-side and server-side:
 
-```typescript
+\`\`\`typescript
 // Client-side validation (Zod schema)
 const validation = contractGeneratorSchema.safeParse(formData)
 
@@ -248,26 +248,26 @@ export async function POST(request: NextRequest) {
   
   // Process valid data...
 }
-```
+\`\`\`
 
 ### Data Sanitization
 
 Sensitive data is handled securely:
 
-```typescript
+\`\`\`typescript
 // Auto-filled sensitive data is validated
 const sanitizedData = {
   ...formData,
   id_card_number: sanitizeIdNumber(formData.id_card_number),
   email: sanitizeEmail(formData.email),
 }
-```
+\`\`\`
 
 ## 📊 Analytics Integration
 
 ### Form Completion Tracking
 
-```typescript
+\`\`\`typescript
 // Track form progress
 const trackFormProgress = (sectionId: string, completeness: number) => {
   analytics.track('contract_form_progress', {
@@ -285,11 +285,11 @@ const trackFormSubmission = (success: boolean, errors?: string[]) => {
     submission_time: Date.now() - formStartTime
   })
 }
-```
+\`\`\`
 
 ### Performance Monitoring
 
-```typescript
+\`\`\`typescript
 // Monitor form load times
 const formLoadStart = performance.now()
 
@@ -297,7 +297,7 @@ useEffect(() => {
   const loadTime = performance.now() - formLoadStart
   analytics.track('contract_form_load_time', { duration: loadTime })
 }, [])
-```
+\`\`\`
 
 ## 🎨 Customization
 
@@ -305,7 +305,7 @@ useEffect(() => {
 
 The form uses Tailwind CSS classes and can be customized:
 
-```tsx
+\`\`\`tsx
 // Custom theme colors
 const customTheme = {
   primary: 'bg-blue-600 hover:bg-blue-700',
@@ -318,13 +318,13 @@ const customTheme = {
   className="custom-form-styles"
   theme={customTheme}
 />
-```
+\`\`\`
 
 ### Field Customization
 
 Add custom field components:
 
-```tsx
+\`\`\`tsx
 // Custom field component
 const CustomSalaryField = ({ field, form }) => (
   <FormItem>
@@ -336,6 +336,6 @@ const CustomSalaryField = ({ field, form }) => (
     <FormMessage />
   </FormItem>
 )
-```
+\`\`\`
 
 This guide provides practical examples for implementing and customizing the enhanced contract generation system. For more detailed documentation, refer to the comprehensive analysis document.

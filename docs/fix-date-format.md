@@ -13,7 +13,7 @@ Dates are being formatted as `yyyy-mm-dd` but need to be `dd-mm-yyyy`
 In your Google Docs module, you have these date formatting fields:
 
 **Current (incorrect):**
-```json
+\`\`\`json
 {
     "text": "contract_start_date",
     "replaceText": "{{formatDate(1.start_date; \"DD-MM-YYYY\")}}"
@@ -22,7 +22,7 @@ In your Google Docs module, you have these date formatting fields:
     "text": "contract_end_date", 
     "replaceText": "{{formatDate(1.end_date; \"DD-MM-YYYY\")}}"
 }
-```
+\`\`\`
 
 **This is actually CORRECT!** The format `"DD-MM-YYYY"` should produce `04-07-2025`.
 
@@ -63,7 +63,7 @@ If dates come from your webhook as strings, ensure they're recognizable:
 
 Your Module 6 should have:
 
-```json
+\`\`\`json
 "requests": [
     {
         "text": "contract_start_date",
@@ -74,18 +74,18 @@ Your Module 6 should have:
         "replaceText": "{{formatDate(1.end_date; \"DD-MM-YYYY\")}}"
     }
 ]
-```
+\`\`\`
 
 ## Alternative: Parse Date First
 
 If the current format isn't working, try:
 
-```json
+\`\`\`json
 {
     "text": "contract_start_date",
     "replaceText": "{{formatDate(parseDate(1.start_date; \"YYYY-MM-DD\"); \"DD-MM-YYYY\")}}"
 }
-```
+\`\`\`
 
 ## Expected Results
 

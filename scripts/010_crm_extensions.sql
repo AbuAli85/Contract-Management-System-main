@@ -25,4 +25,4 @@ CREATE TABLE party_activities (
 );
 
 -- Assign parties to users
-ALTER TABLE parties ADD COLUMN owner_id UUID REFERENCES auth.users(id); 
+ALTER TABLE parties ADD COLUMN owner_id UUID REFERENCES auth.users(id);

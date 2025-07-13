@@ -8,9 +8,9 @@
 ## The Last Step: Add Image Placeholders
 
 ### Error Explanation
-```
+\`\`\`
 The object with ID ID_CARD_IMAGE could not be found
-```
+\`\`\`
 
 **Translation:** Your Google Docs template doesn't have image placeholders with the required Alt text.
 
@@ -56,7 +56,7 @@ Run Make.com scenario - should now work end-to-end!
 
 If you want a quick test, create a new Google Doc with this structure:
 
-```
+\`\`\`
 EMPLOYMENT CONTRACT
 
 Contract Number: {{contract_number}}
@@ -78,7 +78,7 @@ End Date: {{end_date}}
 Position: {{job_title}}
 Location: {{work_location}}
 Email: {{email}}
-```
+\`\`\`
 
 Then:
 1. Insert 2 placeholder images

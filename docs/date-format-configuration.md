@@ -9,7 +9,7 @@
 ### Current Configuration Check
 In your Google Docs module (Module 6), locate these text replacement entries:
 
-```json
+\`\`\`json
 {
     "text": "contract_start_date",
     "replaceText": "{{formatDate(1.start_date; \"DD-MM-YYYY\")}}"
@@ -18,7 +18,7 @@ In your Google Docs module (Module 6), locate these text replacement entries:
     "text": "contract_end_date",
     "replaceText": "{{formatDate(1.end_date; \"DD-MM-YYYY\")}}"
 }
-```
+\`\`\`
 
 ### ✅ Correct Format String
 The format `"DD-MM-YYYY"` should produce: `04-07-2025`
@@ -26,19 +26,19 @@ The format `"DD-MM-YYYY"` should produce: `04-07-2025`
 ### 🔧 If Not Working, Try These Alternatives:
 
 **Option 1: Explicit parsing**
-```json
+\`\`\`json
 "replaceText": "{{formatDate(parseDate(1.start_date; \"YYYY-MM-DD\"); \"DD-MM-YYYY\")}}"
-```
+\`\`\`
 
 **Option 2: Different format codes**
-```json
+\`\`\`json
 "replaceText": "{{formatDate(1.start_date; \"dd-MM-yyyy\")}}"
-```
+\`\`\`
 
 **Option 3: Manual string manipulation**
-```json
+\`\`\`json
 "replaceText": "{{substring(1.start_date; 8; 2)}}-{{substring(1.start_date; 5; 2)}}-{{substring(1.start_date; 0; 4)}}"
-```
+\`\`\`
 
 ## Quick Fix Steps
 
@@ -49,10 +49,10 @@ The format `"DD-MM-YYYY"` should produce: `04-07-2025`
 
 ### Step 2: Update Date Format
 Replace the date formatting with:
-```
+\`\`\`
 contract_start_date: {{formatDate(1.start_date; "DD-MM-YYYY")}}
 contract_end_date: {{formatDate(1.end_date; "DD-MM-YYYY")}}
-```
+\`\`\`
 
 ### Step 3: Test the Changes
 1. Save the module
@@ -63,18 +63,18 @@ contract_end_date: {{formatDate(1.end_date; "DD-MM-YYYY")}}
 ## Expected Input/Output
 
 **Webhook Input:**
-```json
+\`\`\`json
 {
     "start_date": "2025-07-04",
     "end_date": "2027-07-04"
 }
-```
+\`\`\`
 
 **Document Output:**
-```
+\`\`\`
 Contract Start Date: 04-07-2025
 Contract End Date: 04-07-2027
-```
+\`\`\`
 
 ## Troubleshooting
 

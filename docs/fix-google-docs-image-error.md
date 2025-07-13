@@ -1,10 +1,10 @@
 # 🔧 URGENT: Google Docs Image Retrieval Error Fix
 
 ## Current Error Analysis
-```
+\`\`\`
 [400] Invalid requests[12].replaceImage: There was a problem retrieving the image. 
 The provided image should be publicly accessible, within size limit, and in supported formats.
-```
+\`\`\`
 
 ## Root Cause
 Google Docs API cannot access the Supabase image URLs. This could be due to:
@@ -26,23 +26,23 @@ Google Docs API cannot access the Supabase image URLs. This could be due to:
 
 **Step 2: Update bucket policy**
 Add this RLS policy for public read access:
-```sql
+\`\`\`sql
 CREATE POLICY "Public read access" ON storage.objects FOR SELECT USING (bucket_id = 'promoter-documents');
-```
+\`\`\`
 
 ### Solution 2: Test with Alternative Image URLs
 
 Replace the Supabase URLs with these **guaranteed working** Google-accessible URLs:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
+\`\`\`
 https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop
-```
+\`\`\`
 
 ### Solution 3: Use Google Drive Images Instead
 

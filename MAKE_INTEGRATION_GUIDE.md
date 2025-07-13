@@ -18,7 +18,7 @@ The system uses Make.com (formerly Integromat) to automatically generate contrac
 
 Add these to your `.env.local` file:
 
-```env
+\`\`\`env
 # Make.com Integration
 MAKE_WEBHOOK_URL=https://hook.eu1.make.com/YOUR_WEBHOOK_ID
 MAKE_API_KEY=your_make_api_key_here
@@ -31,16 +31,16 @@ NEXT_PUBLIC_MAKE_FREELANCE_SCENARIO_ID=scenario_id_4
 
 # Your app URL (for callbacks)
 NEXT_PUBLIC_APP_URL=https://your-app.com
-```
+\`\`\`
 
 ### 2. Database Setup
 
 Run the migration to add necessary tables and fields:
 
-```sql
+\`\`\`sql
 -- In Supabase SQL Editor, run:
 -- scripts/migrations/004_contract_enhancements.sql
-```
+\`\`\`
 
 ### 3. Make.com Scenario Setup
 
@@ -56,7 +56,7 @@ For each contract template, create a Make.com scenario:
 
 #### Webhook Data Structure:
 
-```json
+\`\`\`json
 {
   "contractId": "uuid",
   "templateId": "standard-employment",
@@ -89,24 +89,24 @@ For each contract template, create a Make.com scenario:
   },
   "callbackUrl": "https://your-app.com/api/webhooks/make/callback"
 }
-```
+\`\`\`
 
 #### Callback Structure:
 
-```json
+\`\`\`json
 {
   "contractId": "uuid",
   "status": "completed",
   "documentUrl": "https://storage.example.com/contracts/CNT-202401-0001.pdf",
   "processId": "make_process_id"
 }
-```
+\`\`\`
 
 ### 4. Document Templates
 
 Create document templates in Google Docs or Microsoft Word with placeholders:
 
-```
+\`\`\`
 CONTRACT AGREEMENT
 
 This agreement is made between {{firstParty.name_en}} (First Party)
@@ -119,18 +119,18 @@ Duration: {{startDate}} to {{endDate}}
 Value: {{contractValue}}
 
 [Rest of contract terms...]
-```
+\`\`\`
 
 ### 5. Testing the Integration
 
 1. **Test Webhook Connection**:
 
-   ```bash
+   \`\`\`bash
    curl -X POST YOUR_MAKE_WEBHOOK_URL \
      -H "Content-Type: application/json" \
      -H "X-API-Key: your_api_key" \
      -d '{"test": true}'
-   ```
+   \`\`\`
 
 2. **Create Test Contract**:
    - Go to `/generate-contract`
@@ -139,11 +139,11 @@ Value: {{contractValue}}
    - Submit the form
 
 3. **Check Webhook Logs**:
-   ```sql
+   \`\`\`sql
    SELECT * FROM webhook_logs
    WHERE source = 'make.com'
    ORDER BY created_at DESC;
-   ```
+   \`\`\`
 
 ### 6. Error Handling
 
@@ -167,7 +167,7 @@ Monitor the integration health:
 
 1. **Check Recent Webhooks**:
 
-   ```sql
+   \`\`\`sql
    SELECT
      date_trunc('hour', created_at) as hour,
      COUNT(*) as total,
@@ -178,28 +178,28 @@ Monitor the integration health:
      AND created_at > NOW() - INTERVAL '24 hours'
    GROUP BY hour
    ORDER BY hour DESC;
-   ```
+   \`\`\`
 
 2. **Failed Document Generations**:
-   ```sql
+   \`\`\`sql
    SELECT c.*, w.error
    FROM contracts c
    JOIN webhook_logs w ON w.contract_id = c.id
    WHERE w.status = 'failed'
      AND c.document_url IS NULL
    ORDER BY c.created_at DESC;
-   ```
+   \`\`\`
 
 ### 9. Manual Document Generation
 
 If automatic generation fails, you can trigger it manually:
 
-```typescript
+\`\`\`typescript
 import { generateContractDocument } from "@/app/actions/contracts"
 
 // In your component or API route
 await generateContractDocument(contractId, templateId)
-```
+\`\`\`
 
 ### 10. Troubleshooting
 

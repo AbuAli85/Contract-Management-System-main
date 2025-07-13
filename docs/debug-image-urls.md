@@ -49,11 +49,11 @@ Since both Google Drive and Supabase URLs aren't working, we need to find the ro
 
 **Look at your webhook code in `app/api/webhook/makecom/route.ts`:**
 
-```typescript
+\`\`\`typescript
 // What field names are you sending?
 promoter_id_card_url: (promoter_id_card_url || "").toString(),
 promoter_passport_url: (promoter_passport_url || "").toString(),
-```
+\`\`\`
 
 **Make sure the field names match exactly in Make.com**
 
@@ -62,7 +62,7 @@ promoter_passport_url: (promoter_passport_url || "").toString(),
 ### **Solution 1: Fix Supabase Public Access**
 
 **In Supabase Dashboard:**
-```sql
+\`\`\`sql
 -- Make storage bucket public
 UPDATE storage.buckets 
 SET public = true 
@@ -70,7 +70,7 @@ WHERE name = 'your-bucket-name';
 
 -- Check current policies
 SELECT * FROM storage.policies WHERE bucket_id = 'your-bucket-name';
-```
+\`\`\`
 
 ### **Solution 2: Use Different Image Hosting**
 
@@ -99,14 +99,14 @@ SELECT * FROM storage.policies WHERE bucket_id = 'your-bucket-name';
 **Great! You provided the actual URLs. Let's test these:**
 
 **ID Card URL:** 
-```
+\`\`\`
 https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449305348_HAFIZ_MUHAMMAD_BILAL_ID.png
-```
+\`\`\`
 
 **Passport URL:**
-```
+\`\`\`
 https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449604204_Hafiz_Bilal_Passport.png
-```
+\`\`\`
 
 ## 🧪 **IMMEDIATE TESTS**
 

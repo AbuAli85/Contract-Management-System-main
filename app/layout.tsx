@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "Contract Management System",
   description: "A modern contract management system",
+    generator: 'v0.dev'
 }
 
 interface RootLayoutProps {

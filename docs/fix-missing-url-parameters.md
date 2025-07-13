@@ -1,11 +1,11 @@
 # 🔧 URGENT FIX: Missing URL Parameter Values
 
 ## Exact Error Analysis
-```
+\`\`\`
 Validation failed for 2 parameter(s).
 Missing value of required parameter 'url'.
 Missing value of required parameter 'url'.
-```
+\`\`\`
 
 **Root Cause:** The Google Docs module is receiving EMPTY or NULL values for the image URL fields.
 
@@ -15,27 +15,27 @@ Missing value of required parameter 'url'.
 In your Google Docs module, replace the current image fields with fallback logic:
 
 **ID_CARD_IMAGE field:**
-```
+\`\`\`
 {{ifempty(promoter_id_card_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg")}}
-```
+\`\`\`
 
 **PASSPORT_IMAGE field:**
-```
+\`\`\`
 {{ifempty(promoter_passport_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg")}}
-```
+\`\`\`
 
 ### Solution 2: Use Hardcoded URLs (Quick Test)
 Temporarily use these working URLs to confirm the module works:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
+\`\`\`
 https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg
-```
+\`\`\`
 
 ### Solution 3: Check Field Mapping
 Verify you're using the correct field names:
@@ -87,13 +87,13 @@ Verify you're using the correct field names:
 If the webhook isn't sending image URLs, we may need to update it. Let me check if the test payload includes images:
 
 **Expected webhook payload should include:**
-```json
+\`\`\`json
 {
   "promoter_id_card_url": "https://supabase-url...",
   "promoter_passport_url": "https://supabase-url...",
   ...
 }
-```
+\`\`\`
 
 ## Quick Fix Summary
 
@@ -104,10 +104,10 @@ If the webhook isn't sending image URLs, we may need to update it. Let me check 
 4. If still fails, check Google Docs template has image placeholders
 
 **Final working configuration:**
-```
+\`\`\`
 ID_CARD_IMAGE: {{ifempty(promoter_id_card_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg")}}
 
 PASSPORT_IMAGE: {{ifempty(promoter_passport_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg")}}
-```
+\`\`\`
 
 This approach ensures the URLs are never empty and always provide valid image links.

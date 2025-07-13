@@ -61,11 +61,11 @@ The field mapping for image URLs is incorrect. The Google Docs module can't find
 **Look at your webhook code to see exact field names:**
 
 **In `app/api/webhook/makecom/route.ts`, check:**
-```typescript
+\`\`\`typescript
 // What are the exact field names?
 promoter_id_card_url: (promoter_id_card_url || "").toString(),
 promoter_passport_url: (promoter_passport_url || "").toString(),
-```
+\`\`\`
 
 **Make sure these match your Make.com mapping exactly.**
 

@@ -3,4 +3,4 @@ create table profiles (
   full_name text,
   role text default 'user',
   created_at timestamp with time zone default timezone('utc'::text, now())
-); 
+);

@@ -43,19 +43,19 @@ You'll need to set up these connections in Make.com:
 
 Add to your `.env.local`:
 
-```env
+\`\`\`env
 # Make.com Webhook URL (from your scenario)
 MAKE_CONTRACT_WEBHOOK_URL=https://hook.eu2.make.com/YOUR_WEBHOOK_ID
-```
+\`\`\`
 
 ### 4. Database Setup
 
 Run the migration to add required columns:
 
-```sql
+\`\`\`sql
 -- In Supabase SQL Editor
 -- Run: scripts/update-contracts-table-for-make.sql
-```
+\`\`\`
 
 ### 5. Google Docs Template
 
@@ -83,14 +83,14 @@ For images, add placeholders:
 
 Create this folder structure in Google Drive:
 
-```
+\`\`\`
 contracts/
 ├── templates/
 │   └── Promoter Contract1 (your template)
 ├── extra_contracts/
 │   └── 2025/
 └── documents/ (for uploaded images)
-```
+\`\`\`
 
 ## Usage
 
@@ -106,7 +106,7 @@ contracts/
 
 ### Generate Contract via API
 
-```typescript
+\`\`\`typescript
 // POST /api/contracts/generate/{contractId}
 const response = await fetch(`/api/contracts/generate/${contractId}`, {
   method: "POST",
@@ -118,11 +118,11 @@ const response = await fetch(`/api/contracts/generate/${contractId}`, {
 
 const result = await response.json()
 // { success: true, pdf_url: "...", contract_id: "..." }
-```
+\`\`\`
 
 ### Add Generate Button to Contract Page
 
-```tsx
+\`\`\`tsx
 import { ContractGenerateButton } from "@/components/contract-generate-button"
 
 ;<ContractGenerateButton
@@ -131,13 +131,13 @@ import { ContractGenerateButton } from "@/components/contract-generate-button"
   hasDocument={!!contract.pdf_url}
   onSuccess={() => router.refresh()}
 />
-```
+\`\`\`
 
 ## Webhook Payload Structure
 
 The system sends this payload to Make.com:
 
-```json
+\`\`\`json
 {
   "contract_id": "uuid",
   "contract_number": "CNT-202501-0001",
@@ -158,13 +158,13 @@ The system sends this payload to Make.com:
   "promoter_id_card_url": "https://...",
   "promoter_passport_url": "https://..."
 }
-```
+\`\`\`
 
 ## Response Structure
 
 Make.com responds with:
 
-```json
+\`\`\`json
 {
   "success": true,
   "pdf_url": "https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/CNT-202501-0001-John Doe.pdf",
@@ -174,7 +174,7 @@ Make.com responds with:
     "passport": true
   }
 }
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -206,7 +206,7 @@ Make.com responds with:
 
 1. **Test Webhook Manually**:
 
-```bash
+\`\`\`bash
 curl -X POST YOUR_MAKE_WEBHOOK_URL \
   -H "Content-Type: application/json" \
   -d '{
@@ -214,7 +214,7 @@ curl -X POST YOUR_MAKE_WEBHOOK_URL \
     "first_party_name_en": "Test Company",
     ...
   }'
-```
+\`\`\`
 
 2. **Check Make.com History**:
 
@@ -224,11 +224,11 @@ curl -X POST YOUR_MAKE_WEBHOOK_URL \
 
 3. **Verify in Supabase**:
 
-```sql
+\`\`\`sql
 SELECT contract_number, pdf_url, status, document_generated_at
 FROM contracts
 WHERE contract_number = 'YOUR_CONTRACT_NUMBER';
-```
+\`\`\`
 
 ## Security Considerations
 
@@ -241,7 +241,7 @@ WHERE contract_number = 'YOUR_CONTRACT_NUMBER';
 
 Monitor the integration:
 
-```sql
+\`\`\`sql
 -- Recent document generations
 SELECT
   contract_number,
@@ -261,4 +261,4 @@ FROM contracts
 WHERE status = 'draft'
   AND created_at < NOW() - INTERVAL '1 hour'
 ORDER BY created_at DESC;
-```
+\`\`\`

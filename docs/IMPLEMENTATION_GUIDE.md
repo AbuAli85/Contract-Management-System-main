@@ -111,7 +111,7 @@ This document outlines the comprehensive enhancement and implementation of the C
 ## Usage Examples
 
 ### Contract Management
-```tsx
+\`\`\`tsx
 // Enhanced contract listing with bulk operations
 <ContractsManagement
   initialContracts={contracts}
@@ -119,34 +119,34 @@ This document outlines the comprehensive enhancement and implementation of the C
   summaryStats={stats}
   searchParams={searchParams}
 />
-```
+\`\`\`
 
 ### Status Display
-```tsx
+\`\`\`tsx
 // Modern status badge with error details
 <EnhancedStatusBadge
   status={contract.status}
   errorDetails={contract.error_details}
 />
-```
+\`\`\`
 
 ### Analytics View
-```tsx
+\`\`\`tsx
 // Comprehensive analytics dashboard
 <ContractsAnalytics 
   contracts={contracts}
   summaryStats={summaryStats}
 />
-```
+\`\`\`
 
 ## Configuration
 
 ### Environment Variables
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
+\`\`\`
 
 ### Database Setup
 Ensure your Supabase database has the following tables with correct schema:

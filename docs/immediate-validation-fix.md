@@ -11,21 +11,21 @@ The 2 failing parameters are almost certainly the **image URL fields**. Here's t
 In your Make.com scenario, go to the Google Docs module and look for these fields:
 
 **Current (probably wrong):**
-```
+\`\`\`
 ID_CARD_IMAGE: {{14.value.promoter_id_card_url}}
 PASSPORT_IMAGE: {{14.value.promoter_passport_url}}
-```
+\`\`\`
 
 **Correct mapping:**
-```
+\`\`\`
 ID_CARD_IMAGE: {{promoter_id_card_url}}
 PASSPORT_IMAGE: {{promoter_passport_url}}
-```
+\`\`\`
 
 ### Step 2: Why This Fix Works
 
 Based on the webhook code analysis, the response structure is:
-```json
+\`\`\`json
 {
   "promoter_id_card_url": "https://supabase-url...",
   "promoter_passport_url": "https://supabase-url...",
@@ -33,7 +33,7 @@ Based on the webhook code analysis, the response structure is:
   "promoter_name_en": "John Doe",
   ...
 }
-```
+\`\`\`
 
 **The fields are at the ROOT level, not nested under an iterator.**
 

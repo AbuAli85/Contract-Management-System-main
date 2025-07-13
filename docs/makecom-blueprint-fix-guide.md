@@ -9,14 +9,14 @@
 ## ✅ **Solution Applied**
 
 ### **Original (Broken) Code:**
-```javascript
+\`\`\`javascript
 "name": "{{replaceAll(replaceAll(lower(1.contract_number); \"[^a-z0-9_-]\"; \"\"); ; \"_\")}}-{{replaceAll(replaceAll(lower(1.promoter_name_en); \"[^a-z0-9_-]\"; \"\"); ; \"_\")}}.pdf"
-```
+\`\`\`
 
 ### **Fixed Code:**
-```javascript
+\`\`\`javascript
 "name": "{{lower(1.contract_number).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}-{{lower(1.promoter_name_en).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}.pdf"
-```
+\`\`\`
 
 ## 🔄 **What Changed**
 

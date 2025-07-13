@@ -21,28 +21,28 @@
 ## 🔧 IMMEDIATE FIX
 
 ### Problem in Module 22:
-```json
+\`\`\`json
 "images_processed": {
     "id_card": {{if(exists(4.id); "true"; "false")}},
     "passport": {{if(exists(5.id); "true"; "false")}}
 }
-```
+\`\`\`
 
 ### ✅ SOLUTION - Replace with:
-```json
+\`\`\`json
 "images_processed": {
     "id_card": {{if(4.id; true; false)}},
     "passport": {{if(5.id; true; false)}}
 }
-```
+\`\`\`
 
 ### Or Even Simpler:
-```json
+\`\`\`json
 "images_processed": {
     "id_card": true,
     "passport": true
 }
-```
+\`\`\`
 
 ## 🚀 STEPS TO COMPLETE SUCCESS
 
@@ -50,7 +50,7 @@
 1. Click on Module 22 (Webhook Response)
 2. In the "Body" field, replace the current JSON with:
 
-```json
+\`\`\`json
 {
     "success": true,
     "pdf_url": "https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{20.file_name}}",
@@ -60,7 +60,7 @@
         "passport": true
     }
 }
-```
+\`\`\`
 
 ### Step 2: Test the Complete Scenario
 - Run the scenario once more

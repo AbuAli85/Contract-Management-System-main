@@ -23,26 +23,26 @@ Google Drive images are not publicly accessible to the Google Docs API.
 ### **Quick Fix - Update Image URLs in Google Docs Module**
 
 **Current URLs:**
-```
+\`\`\`
 https://drive.google.com/uc?id={{4.id}}
 https://drive.google.com/uc?id={{5.id}}
-```
+\`\`\`
 
 **Fixed URLs (with export parameter):**
-```
+\`\`\`
 https://drive.google.com/uc?export=view&id={{4.id}}
 https://drive.google.com/uc?export=view&id={{5.id}}
-```
+\`\`\`
 
 ## ✅ **SOLUTION 2: Conditional Image Replacement (Safer)**
 
 If images often fail, use conditional logic to only include images when they exist:
 
 **Safe Image URLs:**
-```
+\`\`\`
 {{if(4.id != ""; "https://drive.google.com/uc?export=view&id=" + 4.id; "")}}
 {{if(5.id != ""; "https://drive.google.com/uc?export=view&id=" + 5.id; "")}}
-```
+\`\`\`
 
 ## ✅ **SOLUTION 3: Skip Images Entirely (Fastest)**
 

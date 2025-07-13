@@ -6,9 +6,9 @@
 
 1. **Start your development server**:
 
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 2. **Open the test navigation page**:
    http://localhost:3001/en/test-navigation
@@ -52,7 +52,7 @@
 
 Open your browser console (F12) and run this script:
 
-```javascript
+\`\`\`javascript
 // Test all routes quickly
 const testRoutes = async () => {
   const routes = [
@@ -77,7 +77,7 @@ const testRoutes = async () => {
 }
 
 testRoutes()
-```
+\`\`\`
 
 ## What to Look For
 

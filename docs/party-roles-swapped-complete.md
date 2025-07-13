@@ -20,7 +20,7 @@
 ## What This Means for Your Contracts
 
 ### Contract Structure Now:
-```
+\`\`\`
 FIRST PARTY (EMPLOYER):
 Name: [Employer Company]
 CRN: [Employer CRN]
@@ -32,7 +32,7 @@ CRN: [Client CRN]
 PROMOTER:
 Name: [Promoter Name]
 Working for the Employer to serve the Client
-```
+\`\`\`
 
 ### Make.com Data Flow:
 - `{{1.first_party_name_en}}` = Employer Company Name
@@ -65,20 +65,20 @@ Ensure this makes sense for your business:
 ## Sample Input/Output
 
 ### Webhook Input:
-```json
+\`\`\`json
 {
     "first_party_name_en": "ABC Marketing Agency",
     "second_party_name_en": "XYZ Electronics Store",
     "promoter_name_en": "John Doe"
 }
-```
+\`\`\`
 
 ### Generated Contract:
-```
+\`\`\`
 FIRST PARTY (EMPLOYER): ABC Marketing Agency
 SECOND PARTY (CLIENT): XYZ Electronics Store
 PROMOTER: John Doe (works for ABC to promote XYZ)
-```
+\`\`\`
 
 ## ✅ Status: COMPLETE
 The backend webhook has been updated to swap party roles as requested. The change is ready for testing!

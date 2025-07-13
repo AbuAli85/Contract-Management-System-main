@@ -101,14 +101,14 @@ This document outlines the comprehensive enhancements made to the contract gener
 ## 🔧 Component Architecture
 
 ### Core Components
-```
+\`\`\`
 components/
 ├── enhanced-form-helpers.tsx    # Progress tracking and suggestions
 ├── floating-action-menu.tsx     # Quick action menu
 ├── professional-loading.tsx     # Loading states
 ├── success-notification.tsx     # Success feedback
 └── ui/                         # Reusable UI components
-```
+\`\`\`
 
 ### Custom Hooks
 - `useLoadingManager()`: Loading state management

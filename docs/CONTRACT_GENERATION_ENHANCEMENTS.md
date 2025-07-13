@@ -79,7 +79,7 @@ This document outlines the comprehensive enhancements made to the contract gener
 
 ### Schema Structure
 
-```typescript
+\`\`\`typescript
 // Enhanced validation schema
 export const contractGeneratorSchema = z.object({
   // Required core fields
@@ -106,11 +106,11 @@ export const contractGeneratorSchema = z.object({
   probation_period_months: z.number().int().min(0).max(12).optional(),
 })
 .refine(/* business rule validations */)
-```
+\`\`\`
 
 ### Form Sections Configuration
 
-```typescript
+\`\`\`typescript
 export const CONTRACT_FORM_SECTIONS = [
   {
     id: "parties",
@@ -120,7 +120,7 @@ export const CONTRACT_FORM_SECTIONS = [
   },
   // ... other sections
 ]
-```
+\`\`\`
 
 ### Component Architecture
 
@@ -133,7 +133,7 @@ export const CONTRACT_FORM_SECTIONS = [
 
 ### Using the Enhanced Form
 
-```tsx
+\`\`\`tsx
 import EnhancedContractGeneratorForm from '@/components/enhanced-contract-generator-form'
 
 // For new contracts
@@ -147,7 +147,7 @@ import EnhancedContractGeneratorForm from '@/components/enhanced-contract-genera
   contract={existingContract}
   onFormSubmit={() => handleUpdate()}
 />
-```
+\`\`\`
 
 ### Backward Compatibility
 

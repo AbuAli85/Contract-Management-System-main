@@ -6,4 +6,4 @@ CREATE TABLE audit_logs (
   entity_id INTEGER,
   details TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
-); 
+);

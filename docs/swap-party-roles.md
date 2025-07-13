@@ -18,24 +18,24 @@
 **File:** `app/api/webhook/makecom/route.ts`
 
 **Previous Logic:**
-```json
+\`\`\`json
 {
     "first_party_name_en": "Client Company",
     "first_party_name_ar": "شركة العميل", 
     "second_party_name_en": "Employer Company",
     "second_party_name_ar": "شركة صاحب العمل"
 }
-```
+\`\`\`
 
 **New Logic (Implemented):**
-```json
+\`\`\`json
 {
     "first_party_name_en": "Employer Company",
     "first_party_name_ar": "شركة صاحب العمل",
     "second_party_name_en": "Client Company", 
     "second_party_name_ar": "شركة العميل"
 }
-```
+\`\`\`
 
 ### 2. Make.com Compatibility ✅
 Your existing Make.com scenario will automatically work with the new data structure:
@@ -48,7 +48,7 @@ Your existing Make.com scenario will automatically work with the new data struct
 
 ### 3. Expected Contract Structure ✅
 
-```
+\`\`\`
 CONTRACT BETWEEN:
 
 FIRST PARTY (EMPLOYER):
@@ -67,7 +67,7 @@ FOR THE SERVICES OF:
 Promoter: HAFIZ MUHAMMAD BILAL
 Job Title: Sales Promoter
 Work Location: Dubai Mall
-```
+\`\`\`
 
 ### 4. Business Logic Verification ✅
 
@@ -118,20 +118,20 @@ Update your template to reflect the new roles:
 ## 🧪 Testing Steps
 
 1. **Send Test Webhook:**
-   ```bash
+   \`\`\`bash
    curl -X POST https://your-domain.com/api/webhook/makecom \
    -H "Content-Type: application/json" \
    -d '{"contract_number": "PAC-05072025-182"}'
-   ```
+   \`\`\`
 
 2. **Verify Response Structure:**
-   ```json
+   \`\`\`json
    {
      "first_party_name_en": "Employer Company Name",
      "second_party_name_en": "Client Company Name",
      "promoter_name_en": "Promoter Name"
    }
-   ```
+   \`\`\`
 
 3. **Test Make.com Scenario:**
    - Run scenario with test data

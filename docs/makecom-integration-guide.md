@@ -49,7 +49,7 @@ The blueprint file `Integration Webhooks, HTTP - FULLY FUNCTIONAL.blueprint (1).
 12. **Webhook Response** - Returns success response
 
 ### Required Input Fields:
-```json
+\`\`\`json
 {
   "contract_number": "string",
   "promoter_name_en": "string",
@@ -66,10 +66,10 @@ The blueprint file `Integration Webhooks, HTTP - FULLY FUNCTIONAL.blueprint (1).
   "start_date": "date",
   "end_date": "date"
 }
-```
+\`\`\`
 
 ### Expected Response Format:
-```json
+\`\`\`json
 {
   "success": true,
   "pdf_url": "string|null",
@@ -79,30 +79,30 @@ The blueprint file `Integration Webhooks, HTTP - FULLY FUNCTIONAL.blueprint (1).
     "passport": "boolean"
   }
 }
-```
+\`\`\`
 
 ## Deployment Instructions
 
 ### 1. Database Migration
 Run the migration script on your Supabase/PostgreSQL database:
-```bash
+\`\`\`bash
 psql -h [hostname] -U [username] -d [database] -f scripts/014_add_webhook_integration_fields.sql
-```
+\`\`\`
 
 ### 2. Environment Variables
 Ensure these environment variables are configured:
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
+\`\`\`
 
 ### 3. Deploy Application
 Deploy to your preferred platform (Vercel, Netlify, etc.):
-```bash
+\`\`\`bash
 npm run build
 # Deploy using your platform's CLI or web interface
-```
+\`\`\`
 
 ### 4. Configure Make.com
 1. Import the blueprint file into Make.com
@@ -115,11 +115,11 @@ npm run build
 ### Local Testing
 1. Start development server: `npm run dev`
 2. Run test scripts:
-   ```bash
+   \`\`\`bash
    node scripts/test-webhook-format.js
    node scripts/test-webhook-integration.js
    node scripts/integration-status-report.js
-   ```
+   \`\`\`
 
 ### Production Testing
 1. Test webhook endpoint: `POST https://your-domain.com/api/webhook/makecom`
@@ -129,7 +129,7 @@ npm run build
 
 ## File Structure
 
-```
+\`\`\`
 app/api/webhook/makecom/
   └── route.ts                 # Webhook endpoint implementation
 
@@ -141,7 +141,7 @@ scripts/
 
 types/
   └── supabase.ts              # Updated TypeScript types
-```
+\`\`\`
 
 ## Error Handling
 
@@ -211,7 +211,7 @@ For technical support or questions about this integration:
 ### Solution Implemented ✅
 Updated webhook response format to guarantee all string fields are proper strings:
 
-```typescript
+\`\`\`typescript
 // Before (causing .split() errors):
 contract_number: contract_number,           // Could be null/undefined
 promoter_name_en: promoter_name_en,        // Could be null/undefined
@@ -221,7 +221,7 @@ pdf_url: newContract.pdf_url || null,      // Explicitly null
 contract_number: contract_number || "",     // Always string
 promoter_name_en: promoter_name_en || "",   // Always string  
 pdf_url: newContract.pdf_url || "",         // Always string
-```
+\`\`\`
 
 ### Fields Guaranteed as Strings
 All these fields now return empty string ("") instead of null/undefined:

@@ -52,7 +52,7 @@ Updated imports in affected files:
 
 ### Current Clean Structure
 
-```
+\`\`\`
 /app/[locale]/
   ├── login/          # Single login page
   ├── dashboard/      # Dashboard pages
@@ -65,7 +65,7 @@ Updated imports in affected files:
   ├── auth-form.tsx   # Single auth form
   ├── contract-generator-form.tsx  # Main contract form
   └── StatusBadge.tsx # Single status badge
-```
+\`\`\`
 
 ## 5. Performance Improvements
 

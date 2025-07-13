@@ -17,7 +17,7 @@ This document provides comprehensive guidance for developers working on the Extr
 
 ### Project Structure
 
-```
+\`\`\`
 extra-contracts-yy/
 ├── app/                    # Next.js App Router
 │   ├── [locale]/          # Internationalized routes
@@ -31,7 +31,7 @@ extra-contracts-yy/
 ├── scripts/              # Database migrations and utilities
 ├── types/                # TypeScript type definitions
 └── docs/                 # Documentation
-```
+\`\`\`
 
 ## 📝 Coding Standards
 
@@ -42,7 +42,7 @@ extra-contracts-yy/
 - Use generic types for reusable components
 - Avoid `any` type - use proper typing or `unknown`
 
-```typescript
+\`\`\`typescript
 // Good
 interface User {
   id: string
@@ -52,7 +52,7 @@ interface User {
 
 // Bad
 const user: any = { id: 1, name: "John" }
-```
+\`\`\`
 
 ### React Components
 
@@ -61,7 +61,7 @@ const user: any = { id: 1, name: "John" }
 - Use proper prop types and interfaces
 - Implement error boundaries for critical components
 
-```typescript
+\`\`\`typescript
 interface ButtonProps {
   variant?: 'primary' | 'secondary'
   children: React.ReactNode
@@ -78,7 +78,7 @@ export function Button({ variant = 'primary', children, onClick }: ButtonProps) 
     </button>
   )
 }
-```
+\`\`\`
 
 ### File Naming
 
@@ -87,18 +87,18 @@ export function Button({ variant = 'primary', children, onClick }: ButtonProps) 
 - Use camelCase for functions and variables
 - Add `.test.ts` or `.test.tsx` for test files
 
-```
+\`\`\`
 components/
 ├── user-profile.tsx
 ├── UserProfile.test.tsx
 └── use-user-data.ts
-```
+\`\`\`
 
 ## 🔧 Development Workflow
 
 ### 1. Setting Up Development Environment
 
-```bash
+\`\`\`bash
 # Clone repository
 git clone <repository-url>
 cd extra-contracts-yy
@@ -112,7 +112,7 @@ cp env.example .env.local
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 ### 2. Database Migrations
 
@@ -123,10 +123,10 @@ When making database changes:
 3. Test the migration locally
 4. Update TypeScript types if needed
 
-```bash
+\`\`\`bash
 # Generate types after schema changes
 npx supabase gen types typescript --project-id <YOUR_PROJECT_REF> --schema public > types/supabase.ts
-```
+\`\`\`
 
 ### 3. API Development
 
@@ -138,7 +138,7 @@ npx supabase gen types typescript --project-id <YOUR_PROJECT_REF> --schema publi
 4. Add error handling
 5. Write tests
 
-```typescript
+\`\`\`typescript
 // app/api/users/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { validateCreateUserRequest } from "@/lib/validations/api"
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-```
+\`\`\`
 
 ### 4. Component Development
 
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
 4. Add loading states
 5. Write tests
 
-```typescript
+\`\`\`typescript
 // components/ui/data-table.tsx
 interface DataTableProps<T> {
   data: T[]
@@ -200,7 +200,7 @@ export function DataTable<T>({ data, columns, loading, error }: DataTableProps<T
     </Table>
   )
 }
-```
+\`\`\`
 
 ### 5. Testing
 
@@ -211,7 +211,7 @@ export function DataTable<T>({ data, columns, loading, error }: DataTableProps<T
 - Mock external dependencies
 - Test error cases
 
-```typescript
+\`\`\`typescript
 // components/Button.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Button } from './Button'
@@ -230,7 +230,7 @@ describe('Button', () => {
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
 })
-```
+\`\`\`
 
 #### Integration Tests
 
@@ -242,7 +242,7 @@ describe('Button', () => {
 
 #### Using Real-time Hooks
 
-```typescript
+\`\`\`typescript
 // hooks/use-realtime-contracts.ts
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -273,7 +273,7 @@ export function useRealtimeContracts() {
 
   return { contracts, loading, error }
 }
-```
+\`\`\`
 
 ## 🚀 Performance Optimization
 
@@ -283,13 +283,13 @@ export function useRealtimeContracts() {
 - Implement route-based code splitting
 - Lazy load non-critical components
 
-```typescript
+\`\`\`typescript
 // Lazy load heavy components
 const HeavyChart = dynamic(() => import('./HeavyChart'), {
   loading: () => <ChartSkeleton />,
   ssr: false
 })
-```
+\`\`\`
 
 ### 2. Database Optimization
 
@@ -356,13 +356,13 @@ const HeavyChart = dynamic(() => import('./HeavyChart'), {
 
 ### 2. Build Process
 
-```bash
+\`\`\`bash
 # Build for production
 pnpm build
 
 # Test production build
 pnpm start
-```
+\`\`\`
 
 ### 3. Monitoring
 
@@ -384,13 +384,13 @@ pnpm start
 
 Use conventional commit format:
 
-```
+\`\`\`
 type(scope): description
 
 feat(contracts): add contract generation API
 fix(auth): resolve login redirect issue
 docs(readme): update installation instructions
-```
+\`\`\`
 
 ### 3. Pull Request Process
 
@@ -413,14 +413,14 @@ docs(readme): update installation instructions
 
 ### 2. Logging
 
-```typescript
+\`\`\`typescript
 // Use structured logging
 console.log('API Request:', {
   method: 'POST',
   endpoint: '/api/contracts',
   data: requestBody
 })
-```
+\`\`\`
 
 ### 3. Error Handling
 
@@ -444,4 +444,4 @@ console.log('API Request:', {
 4. Update documentation
 5. Submit pull requests
 
-For questions or issues, please create an issue in the repository. 
+For questions or issues, please create an issue in the repository.

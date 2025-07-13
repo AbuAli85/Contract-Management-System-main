@@ -7,7 +7,7 @@
 
 ## The Exact Problem
 Your Make.com Module 6 has this configuration:
-```json
+\`\`\`json
 "imageReplacement": [
     {
         "imageObjectId": "ID_CARD_IMAGE",
@@ -18,7 +18,7 @@ Your Make.com Module 6 has this configuration:
         "url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop&auto=format"
     }
 ]
-```
+\`\`\`
 
 **The issue:** Google Docs template `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0` doesn't have image placeholders with Alt text `ID_CARD_IMAGE` and `PASSPORT_IMAGE`.
 
@@ -50,11 +50,11 @@ Your Make.com Module 6 has this configuration:
 **Upgrade to:** Dynamic URLs from webhook
 
 In Make.com Module 6, change image URLs to:
-```
+\`\`\`
 ID_CARD_IMAGE: {{ifempty(1.promoter_id_card_url; "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop&auto=format")}}
 
 PASSPORT_IMAGE: {{ifempty(1.promoter_passport_url; "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop&auto=format")}}
-```
+\`\`\`
 
 ## Why This is the Final Fix
 

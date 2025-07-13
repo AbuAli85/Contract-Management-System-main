@@ -9,7 +9,7 @@
 ### 1. Open Your Google Docs Template
 
 ### 2. Add First Image Placeholder (ID Card)
-```
+\`\`\`
 Step 1: Click where you want the ID card image
 Step 2: Insert → Image → Upload from computer (or Search the web)
 Step 3: Choose any temporary image
@@ -17,10 +17,10 @@ Step 4: Right-click the inserted image
 Step 5: Select "Alt text"
 Step 6: Enter exactly: ID_CARD_IMAGE
 Step 7: Click Apply
-```
+\`\`\`
 
 ### 3. Add Second Image Placeholder (Passport)
-```
+\`\`\`
 Step 1: Click where you want the passport image  
 Step 2: Insert → Image → Upload from computer (or Search the web)
 Step 3: Choose any temporary image
@@ -28,10 +28,10 @@ Step 4: Right-click the inserted image
 Step 5: Select "Alt text"
 Step 6: Enter exactly: PASSPORT_IMAGE
 Step 7: Click Apply
-```
+\`\`\`
 
 ### 4. Template Example Layout
-```
+\`\`\`
 CONTRACT AGREEMENT
 
 Promoter: {{promoter_name_en}}
@@ -48,7 +48,7 @@ Start Date: {{start_date}}
 End Date: {{end_date}}
 Position: {{job_title}}
 Location: {{work_location}}
-```
+\`\`\`
 
 ## Critical Requirements
 

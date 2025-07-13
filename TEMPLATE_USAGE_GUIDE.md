@@ -33,7 +33,7 @@ The new contract generation flow has two steps:
 
 Templates are stored in the `contract_templates` table with these fields:
 
-```typescript
+\`\`\`typescript
 {
   id: string                    // Unique identifier
   name: string                  // Display name
@@ -45,7 +45,7 @@ Templates are stored in the `contract_templates` table with these fields:
   metadata: object              // Additional settings
   is_active: boolean            // Enable/disable template
 }
-```
+\`\`\`
 
 ### 3. Field Mapping
 
@@ -91,7 +91,7 @@ Each template defines which fields are required:
 
 Update your existing contract generation page:
 
-```typescript
+\`\`\`typescript
 // In app/generate-contract/page.tsx
 import ContractGeneratorFormWithTemplate from "@/components/contract-generator-form-with-template"
 
@@ -102,21 +102,21 @@ export default function GenerateContractPage() {
     </div>
   )
 }
-```
+\`\`\`
 
 #### Option 2: Use New Route
 
 Access the template-based form at `/generate-contract-v2`:
 
-```typescript
+\`\`\`typescript
 // Already created at app/generate-contract-v2/page.tsx
-```
+\`\`\`
 
 ### 5. Adding New Templates
 
 #### Step 1: Add to Database
 
-```sql
+\`\`\`sql
 INSERT INTO contract_templates (
   id,
   name,
@@ -134,13 +134,13 @@ INSERT INTO contract_templates (
   'your_make_scenario_id',
   '{"confidentiality_period_default": "2 years"}'
 );
-```
+\`\`\`
 
 #### Step 2: Update Template Features
 
 In `contract-template-selector.tsx`, add features:
 
-```typescript
+\`\`\`typescript
 const templateFeatures = {
   // ... existing templates
   "nda-agreement": [
@@ -151,13 +151,13 @@ const templateFeatures = {
     "Legal remedies",
   ],
 }
-```
+\`\`\`
 
 #### Step 3: Update Form Schema
 
 In `contract-generator-form-with-template.tsx`, add field validation:
 
-```typescript
+\`\`\`typescript
 if (template?.fields.includes("confidentiality_period")) {
   templateFields.confidentiality_period = z.string().min(1, "Confidentiality period is required")
 }
@@ -165,7 +165,7 @@ if (template?.fields.includes("confidentiality_period")) {
 if (template?.fields.includes("scope_of_information")) {
   templateFields.scope_of_information = z.string().min(1, "Information scope is required")
 }
-```
+\`\`\`
 
 ### 6. Make.com Integration
 
@@ -182,34 +182,34 @@ Each template should have a corresponding Make.com scenario that:
 
 #### View Active Templates
 
-```sql
+\`\`\`sql
 SELECT * FROM contract_templates WHERE is_active = true;
-```
+\`\`\`
 
 #### Disable a Template
 
-```sql
+\`\`\`sql
 UPDATE contract_templates
 SET is_active = false
 WHERE id = 'template-id';
-```
+\`\`\`
 
 #### Update Template Fields
 
-```sql
+\`\`\`sql
 UPDATE contract_templates
 SET fields = '["first_party_id", "second_party_id", "new_field"]'
 WHERE id = 'template-id';
-```
+\`\`\`
 
 ### 8. Testing Templates
 
 1. **Create Test Template:**
 
-   ```sql
+   \`\`\`sql
    INSERT INTO contract_templates (id, name, description, category, fields)
    VALUES ('test-template', 'Test Template', 'For testing', 'test', '["first_party_id", "second_party_id"]');
-   ```
+   \`\`\`
 
 2. **Test Form Behavior:**
    - Go to `/generate-contract-v2`
@@ -268,7 +268,7 @@ WHERE id = 'template-id';
 
 ## Example Usage
 
-```typescript
+\`\`\`typescript
 // Using the template selector component
 import { ContractTemplateSelector } from "@/components/contract-template-selector"
 
@@ -285,7 +285,7 @@ function MyComponent() {
     />
   )
 }
-```
+\`\`\`
 
 ## Summary
 

@@ -36,14 +36,14 @@ Since your scenario works without images, the issue is that your Google Docs tem
 ### **Option A: Use Google Drive (Current Setup)**
 
 **Add to your Google Drive upload modules (4 & 5):**
-```json
+\`\`\`json
 "permissions": [
   {
     "role": "reader",
     "type": "anyone"
   }
 ]
-```
+\`\`\`
 
 **Image URLs in Google Docs module:**
 - **ID_CARD_IMAGE**: `https://drive.google.com/uc?export=view&id={{4.id}}`

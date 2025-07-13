@@ -44,7 +44,7 @@ Since we're using Supabase images directly, you can **optionally remove**:
 
 ## 📋 **Updated Workflow:**
 
-```
+\`\`\`
 1. Webhook (Module 1) → Receives contract data with Supabase image URLs
 2. Database Query (Module 2) → Gets contract details
 3. Iterator (Module 14) → Processes contract data
@@ -53,7 +53,7 @@ Since we're using Supabase images directly, you can **optionally remove**:
 6. Upload to Supabase (Module 20) → Stores final PDF
 7. Update Database (Module 21) → Updates contract status
 8. Webhook Response (Module 22) → Confirms completion
-```
+\`\`\`
 
 ## 🔧 **Supabase Requirements**
 
@@ -66,9 +66,9 @@ Since we're using Supabase images directly, you can **optionally remove**:
 4. **Test** image URLs in browser
 
 **Typical Supabase URL Format:**
-```
+\`\`\`
 https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file.jpg
-```
+\`\`\`
 
 ## 🧪 **Testing Steps**
 

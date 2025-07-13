@@ -1,10 +1,10 @@
 # ✅ COMPLETE FIX: Google Docs Image Retrieval Error
 
 ## Problem Solved
-```
+\`\`\`
 [400] Invalid requests[12].replaceImage: There was a problem retrieving the image. 
 The provided image should be publicly accessible, within size limit, and in supported formats.
-```
+\`\`\`
 
 ## Root Cause
 Google Docs API couldn't access the Supabase image URLs due to:
@@ -33,24 +33,24 @@ Google Docs API couldn't access the Supabase image URLs due to:
 If you need different images, use these guaranteed working options:
 
 **Option A: Placeholder images**
-```
+\`\`\`
 ID_CARD_IMAGE: https://via.placeholder.com/600x400/2563eb/ffffff?text=ID+CARD
 PASSPORT_IMAGE: https://via.placeholder.com/600x400/059669/ffffff?text=PASSPORT
-```
+\`\`\`
 
 **Option B: Professional stock images**
-```
+\`\`\`
 ID_CARD_IMAGE: https://images.unsplash.com/photo-1586281380614-aeaa8c787add?w=600&h=400&fit=crop
 PASSPORT_IMAGE: https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop
-```
+\`\`\`
 
 ### 3. Make.com Configuration (No Changes Needed)
 
 Keep using the same field mappings:
-```
+\`\`\`
 ID_CARD_IMAGE: {{promoter_id_card_url}}
 PASSPORT_IMAGE: {{promoter_passport_url}}
-```
+\`\`\`
 
 ## Immediate Testing Steps
 
@@ -63,14 +63,14 @@ PASSPORT_IMAGE: {{promoter_passport_url}}
 In your Google Docs module, temporarily use these hardcoded URLs:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop&auto=format
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
+\`\`\`
 https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop&auto=format
-```
+\`\`\`
 
 ### Option 3: Fix Supabase access (long-term solution)
 
@@ -81,10 +81,10 @@ https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=cro
    - Settings → Public bucket: ON
 
 2. **Add RLS policy:**
-   ```sql
+   \`\`\`sql
    CREATE POLICY "Public read access" ON storage.objects 
    FOR SELECT USING (bucket_id = 'promoter-documents');
-   ```
+   \`\`\`
 
 3. **Test URL accessibility:**
    - Copy a Supabase URL

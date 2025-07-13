@@ -175,13 +175,13 @@ Database service layer:
 - Lucide React icons
 
 ### **Dependencies Added**
-```json
+\`\`\`json
 {
   "date-fns": "latest",
   "lucide-react": "latest",
   "@radix-ui/react-*": "latest"
 }
-```
+\`\`\`
 
 ## 📱 **RESPONSIVE DESIGN**
 

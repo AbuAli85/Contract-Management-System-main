@@ -1,11 +1,11 @@
 # ✅ COMPLETE FIX: Missing URL Parameter Validation Errors
 
 ## Problem Solved
-```
+\`\`\`
 Validation failed for 2 parameter(s).
 Missing value of required parameter 'url'.
 Missing value of required parameter 'url'.
-```
+\`\`\`
 
 ## Root Cause Identified
 The webhook was returning **empty strings** for image URLs when no images were provided, causing Google Docs module validation to fail because it requires valid URLs.
@@ -16,43 +16,43 @@ The webhook was returning **empty strings** for image URLs when no images were p
 Updated the webhook (`app/api/webhook/makecom/route.ts`) to provide **fallback image URLs** instead of empty strings:
 
 **Before:**
-```typescript
+\`\`\`typescript
 promoter_id_card_url: (promoter_id_card_url || "").toString(),
 promoter_passport_url: (promoter_passport_url || "").toString(),
-```
+\`\`\`
 
 **After:**
-```typescript
+\`\`\`typescript
 promoter_id_card_url: promoter_id_card_url || "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg",
 promoter_passport_url: promoter_passport_url || "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg",
-```
+\`\`\`
 
 ### 2. Make.com Configuration
 Use these **exact field mappings** in your Google Docs module:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 {{promoter_id_card_url}}
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
+\`\`\`
 {{promoter_passport_url}}
-```
+\`\`\`
 
 ### 3. Alternative: Manual Fallback (if webhook fix isn't deployed yet)
 If you can't deploy the webhook fix immediately, use this in Make.com:
 
 **ID_CARD_IMAGE:**
-```
+\`\`\`
 {{ifempty(promoter_id_card_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg")}}
-```
+\`\`\`
 
 **PASSPORT_IMAGE:**
-```
-```
+\`\`\`
+\`\`\`
 {{ifempty(promoter_passport_url; "https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg")}}
-```
+\`\`\`
 
 ## Why This Fix Works
 

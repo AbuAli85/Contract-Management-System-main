@@ -27,14 +27,14 @@ If the script fails, you can manually check and fix the issues:
 
 1. **Check if the contracts table exists:**
 
-```sql
+\`\`\`sql
 SELECT * FROM information_schema.tables
 WHERE table_name = 'contracts';
-```
+\`\`\`
 
 2. **Check foreign key constraints:**
 
-```sql
+\`\`\`sql
 SELECT
     tc.constraint_name,
     tc.table_name,
@@ -51,11 +51,11 @@ FROM
       AND ccu.table_schema = tc.table_schema
 WHERE tc.constraint_type = 'FOREIGN KEY'
   AND tc.table_name='contracts';
-```
+\`\`\`
 
 3. **If foreign keys are missing, add them manually:**
 
-```sql
+\`\`\`sql
 -- Add foreign key for promoter_id
 ALTER TABLE contracts
 ADD CONSTRAINT contracts_promoter_id_fkey
@@ -76,7 +76,7 @@ ADD CONSTRAINT contracts_second_party_id_fkey
 FOREIGN KEY (second_party_id)
 REFERENCES parties(id)
 ON DELETE RESTRICT;
-```
+\`\`\`
 
 ## Application-Level Fix
 

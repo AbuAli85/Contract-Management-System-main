@@ -11,31 +11,31 @@
 
 **Change Made:**
 
-```typescript
+\`\`\`typescript
 // Before (incorrect - file was deleted)
 import GenerateContractForm from "@/components/generate-contract-form"
 
 // After (correct)
 import { ContractGeneratorForm } from "@/components/contract-generator-form"
-```
+\`\`\`
 
 **Also updated component usage:**
 
-```typescript
+\`\`\`typescript
 // Before
 <GenerateContractForm />
 
 // After
 <ContractGeneratorForm />
-```
+\`\`\`
 
 ## How to Test
 
 1. **Restart your development server**:
 
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 2. **Test these pages**:
    - http://localhost:3001/en/generate-contract

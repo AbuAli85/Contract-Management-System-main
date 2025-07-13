@@ -36,7 +36,7 @@ I have completed a comprehensive review and enhancement of the Generate Contract
 - ✅ **Optional Advanced Fields**: Salary, probation, notice periods, working hours
 
 **Validation Rules Added:**
-```typescript
+\`\`\`typescript
 // Enhanced date validation
 contract_start_date: z.date({
   required_error: "Contract start date is required.",
@@ -57,7 +57,7 @@ contract_start_date: z.date({
   message: "Contract duration must be between 1 day and 5 years.",
   path: ["contract_end_date"],
 })
-```
+\`\`\`
 
 ### 2. Enhanced Form Component (`components/enhanced-contract-generator-form.tsx`)
 
@@ -87,13 +87,13 @@ contract_start_date: z.date({
 - ✅ **Status Management**: Contract status badges and progress calculations
 
 **Example Usage:**
-```typescript
+\`\`\`typescript
 const analysis = analyzeContractDuration(startDate, endDate)
 // Returns: { duration: 365, category: "long-term", warnings: [...], recommendations: [...] }
 
 const compensation = analyzeContractCompensation(15000, 2000, "AED")
 // Returns: { totalMonthly: 17000, isCompetitive: true, marketComparison: "average" }
-```
+\`\`\`
 
 ### 4. Enhanced Page Interface (`app/[locale]/generate-contract/page.tsx`)
 

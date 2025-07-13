@@ -1,15 +1,15 @@
 # 🔧 URGENT FIX: Webhook Response Module Error
 
 ## Current Error
-```
+\`\`\`
 Failed to map 'body': Function 'if' finished with error! Function 'exists' not found
-```
+\`\`\`
 
 ## Root Cause
 The webhook response module (Module 22) is using an invalid `exists()` function in the JSON body.
 
 ## Current Problematic Code
-```json
+\`\`\`json
 {
     "success": true,
     "pdf_url": "https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{20.file_name}}",
@@ -19,12 +19,12 @@ The webhook response module (Module 22) is using an invalid `exists()` function 
         "passport": {{if(exists(5.id); "true"; "false")}}
     }
 }
-```
+\`\`\`
 
 ## FIXED Code
 Replace the webhook response body with:
 
-```json
+\`\`\`json
 {
     "success": true,
     "pdf_url": "https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{20.file_name}}",
@@ -34,12 +34,12 @@ Replace the webhook response body with:
         "passport": {{if(5.id; "true"; "false")}}
     }
 }
-```
+\`\`\`
 
 ## Alternative Simple Fix
 Even simpler approach:
 
-```json
+\`\`\`json
 {
     "success": true,
     "pdf_url": "https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{20.file_name}}",
@@ -49,7 +49,7 @@ Even simpler approach:
         "passport": true
     }
 }
-```
+\`\`\`
 
 ## How to Apply the Fix
 

@@ -41,31 +41,31 @@ To confirm the Google Docs template works:
 Based on what you see in the Iterator output, use the correct syntax:
 
 **Option A - Direct from Iterator:**
-```
+\`\`\`
 {{14.value.promoter_id_card_url}}
 {{14.value.promoter_passport_url}}
-```
+\`\`\`
 
 **Option B - If fields are nested:**
-```
+\`\`\`
 {{14.value.promoter.id_card_url}}
 {{14.value.promoter.passport_url}}
-```
+\`\`\`
 
 **Option C - If fields have different names:**
-```
+\`\`\`
 {{14.value.id_card_image_url}}
 {{14.value.passport_image_url}}
-```
+\`\`\`
 
 ## Common Validation Errors and Fixes
 
 ### Error 1: Empty or Null Fields
 **Cause:** Field mapping returns null/undefined
 **Fix:** Use fallback syntax:
-```
+\`\`\`
 {{ifempty(14.value.promoter_id_card_url; "")}}
-```
+\`\`\`
 
 ### Error 2: Invalid URL Format
 **Cause:** URL is malformed or not accessible
@@ -78,11 +78,11 @@ Based on what you see in the Iterator output, use the correct syntax:
 ## Quick Test Procedure
 
 1. **Test webhook response:**
-   ```bash
+   \`\`\`bash
    curl -X POST http://localhost:3000/api/webhook/makecom \
      -H "Content-Type: application/json" \
      -d '{"promoter_id": "test123"}'
-   ```
+   \`\`\`
 
 2. **Check for these fields in response:**
    - `promoter_id_card_url`

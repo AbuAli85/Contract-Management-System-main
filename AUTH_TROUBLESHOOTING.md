@@ -14,9 +14,9 @@ This error typically occurs when:
 
 ### 1. First, check your environment setup:
 
-```bash
+\`\`\`bash
 npm run debug-auth
-```
+\`\`\`
 
 This will:
 
@@ -27,9 +27,9 @@ This will:
 
 ### 2. Create test users:
 
-```bash
+\`\`\`bash
 npm run create-test-user
-```
+\`\`\`
 
 This creates two test accounts:
 
@@ -105,7 +105,7 @@ Open browser DevTools (F12) and check:
 
 Test the auth endpoint directly:
 
-```bash
+\`\`\`bash
 curl -X POST https://YOUR_PROJECT_ID.supabase.co/auth/v1/token?grant_type=password \
   -H "apikey: YOUR_ANON_KEY" \
   -H "Content-Type: application/json" \
@@ -113,7 +113,7 @@ curl -X POST https://YOUR_PROJECT_ID.supabase.co/auth/v1/token?grant_type=passwo
     "email": "user@example.com",
     "password": "User123!"
   }'
-```
+\`\`\`
 
 ### 8. Reset Everything
 
@@ -129,26 +129,26 @@ If nothing works, try a clean slate:
 
 Add this to your auth form to see exactly what's being sent:
 
-```typescript
+\`\`\`typescript
 console.log("Auth attempt:", {
   email: data.email.trim(),
   passwordLength: data.password.length,
   mode: isSignUp ? "signup" : "signin",
 })
-```
+\`\`\`
 
 ### 10. Check RLS Policies
 
 Ensure Row Level Security isn't blocking access:
 
-```sql
+\`\`\`sql
 -- Temporarily disable RLS for testing (NOT for production!)
 ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
 
 -- Or create a permissive policy
 CREATE POLICY "Enable all access for authenticated users" ON profiles
   FOR ALL USING (true);
-```
+\`\`\`
 
 ## Still Having Issues?
 

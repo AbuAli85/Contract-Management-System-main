@@ -110,7 +110,7 @@
 
 ### Immediate Deletion (Duplicates)
 
-```bash
+\`\`\`bash
 # Auth related
 rm app/login/page.tsx
 rm app/auth/signin/page.tsx
@@ -142,11 +142,11 @@ rm components/document-status-badge.tsx
 
 # Error components
 rm components/ManualErrorBoundary.tsx
-```
+\`\`\`
 
 ### Consider Deletion (Unused)
 
-```bash
+\`\`\`bash
 # Test files
 rm components/contract-generator-form.test.tsx
 
@@ -168,7 +168,7 @@ rm components/makecom-contract-templates.tsx
 rm app/not-authorized/page.tsx
 rm app/contracts/page.tsx
 rm app/dashboard/page.tsx
-```
+\`\`\`
 
 ## 8. Refactoring Recommendations
 

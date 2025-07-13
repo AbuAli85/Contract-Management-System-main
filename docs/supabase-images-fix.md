@@ -20,10 +20,10 @@ The Google Drive uploads (modules 4 & 5) create **private files**, but Google Do
 **Skip Google Drive completely** and use Supabase URLs directly in Google Docs:
 
 **Update Google Docs Image URLs to:**
-```
+\`\`\`
 {{1.promoter_id_card_url}}
 {{1.promoter_passport_url}}
-```
+\`\`\`
 
 **Requirements:**
 - Supabase images must be **publicly accessible**
@@ -34,14 +34,14 @@ The Google Drive uploads (modules 4 & 5) create **private files**, but Google Do
 **Make Google Drive uploads public** by updating modules 4 & 5:
 
 **Add to Module 4 & 5 mappers:**
-```json
+\`\`\`json
 "permissions": [
   {
     "role": "reader",
     "type": "anyone"
   }
 ]
-```
+\`\`\`
 
 ### **Option 3: Skip Image Downloads (Recommended for Testing)**
 
@@ -65,7 +65,7 @@ The Google Drive uploads (modules 4 & 5) create **private files**, but Google Do
 
 Ensure your Supabase storage bucket allows public access:
 
-```sql
+\`\`\`sql
 -- Check current policies
 SELECT * FROM storage.objects WHERE bucket_id = 'your-bucket-name';
 
@@ -73,7 +73,7 @@ SELECT * FROM storage.objects WHERE bucket_id = 'your-bucket-name';
 UPDATE storage.buckets 
 SET public = true 
 WHERE name = 'your-bucket-name';
-```
+\`\`\`
 
 ## 🔧 **Supabase Storage Configuration**
 
@@ -86,9 +86,9 @@ WHERE name = 'your-bucket-name';
 5. **Test** image URLs in browser
 
 ### **Typical Supabase Image URL Format:**
-```
+\`\`\`
 https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file.jpg
-```
+\`\`\`
 
 ## 📋 **Testing Steps**
 

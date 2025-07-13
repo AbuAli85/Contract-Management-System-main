@@ -15,7 +15,7 @@
 - ✅ **Form Sections Structure**: Organized validation into logical sections
 
 #### Business Rules Added:
-```typescript
+\`\`\`typescript
 // Different parties validation
 .refine((data) => data.first_party_id !== data.second_party_id, {
   message: "Party A (Client) and Party B (Employer) must be different organizations.",
@@ -40,7 +40,7 @@
   message: "Contract start date cannot be in the past.",
   path: ["contract_start_date"],
 })
-```
+\`\`\`
 
 ---
 
@@ -57,7 +57,7 @@
 - ✅ **Helper Functions**: Date formatting, age calculation, contract insights
 
 #### Key Functions:
-```typescript
+\`\`\`typescript
 // Contract duration analysis
 analyzeContractDuration(startDate, endDate) 
 // Returns: { duration, category, warnings, recommendations }
@@ -73,7 +73,7 @@ validateContractData(formData)
 // CSV export
 exportContractsToCSV(contracts)
 // Returns: formatted CSV string for download
-```
+\`\`\`
 
 ---
 
@@ -90,7 +90,7 @@ exportContractsToCSV(contracts)
 - ✅ **Responsive Design**: Mobile-optimized with improved animations
 
 #### Smart Components:
-```typescript
+\`\`\`typescript
 // Contract insights with progress tracking
 function ContractInsights() {
   // Shows completion percentage, recommendations, best practices
@@ -100,7 +100,7 @@ function ContractInsights() {
 function FormSectionsOverview() {
   // Visual grid of all form sections with completion status
 }
-```
+\`\`\`
 
 ---
 

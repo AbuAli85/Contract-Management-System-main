@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { makeIntegration } from "@/lib/make-integration"
 import { getTemplateById } from "@/lib/contract-templates"
 
+// Export the ContractInsert type
 export type ContractInsert = {
   first_party_id: string
   second_party_id: string
@@ -16,6 +17,13 @@ export type ContractInsert = {
   work_location?: string | null
   template_id?: string | null
   metadata?: Record<string, any>
+  status?: string
+  contract_name?: string
+  contract_type?: string
+  terms?: string
+  department?: string
+  currency?: string
+  duration?: string
 }
 
 export type ContractUpdate = Partial<ContractInsert>
@@ -80,18 +88,14 @@ export async function createContract(data: ContractInsert) {
       ...data,
       promoter_id: data.promoter_id || null, // Convert empty string to null
       contract_number: contractNumber,
-      status: "draft",
+      status: data.status || "draft",
       user_id: user.id, // Use user_id instead of created_by
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
 
     // Insert contract
-    const { data: contract, error } = await supabase
-      .from("contracts")
-      .insert(contractData)
-      .select()
-      .single()
+    const { data: contract, error } = await supabase.from("contracts").insert(contractData).select().single()
 
     if (error) {
       console.error("Contract creation error:", error)
@@ -112,11 +116,7 @@ export async function createContract(data: ContractInsert) {
         // Only fetch promoter if promoter_id is provided
         let promoter = null
         if (data.promoter_id) {
-          const promoterResult = await supabase
-            .from("promoters")
-            .select("*")
-            .eq("id", data.promoter_id)
-            .single()
+          const promoterResult = await supabase.from("promoters").select("*").eq("id", data.promoter_id).single()
           promoter = promoterResult.data
         }
 
@@ -130,7 +130,7 @@ export async function createContract(data: ContractInsert) {
               first: firstParty.data,
               second: secondParty.data,
             },
-            promoter
+            promoter,
           )
 
           if (!result.success) {
@@ -254,7 +254,7 @@ export async function generateContractDocument(contractId: string, templateId: s
       first_party:parties!contracts_first_party_id_fkey(*),
       second_party:parties!contracts_second_party_id_fkey(*),
       promoter:promoters(*)
-    `
+    `,
     )
     .eq("id", contractId)
     .single()
@@ -272,7 +272,7 @@ export async function generateContractDocument(contractId: string, templateId: s
       first: contract.first_party,
       second: contract.second_party,
     },
-    contract.promoter
+    contract.promoter,
   )
 
   if (!result.success) {
@@ -289,4 +289,34 @@ export async function generateContractDocument(contractId: string, templateId: s
     .eq("id", contractId)
 
   return result
+}
+
+export async function getContractById(contractId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("contracts")
+    .select(
+      `id,
+       created_at,
+       job_title,
+       contract_start_date,
+       contract_end_date,
+       status,
+       pdf_url,
+       contract_number,
+       contract_value,
+       email,
+       first_party_id,
+       second_party_id,
+       promoter_id,
+       first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
+       second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
+       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`,
+    )
+    .eq("id", contractId)
+    .single()
+
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error(`Contract with id ${contractId} not found.`)
+  return data
 }

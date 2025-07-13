@@ -46,7 +46,7 @@ A comprehensive contract management system built with Next.js 15, TypeScript, Su
 
 ## Project Structure
 
-```
+\`\`\`
 Contract-Management-System-main/
 ├── app/                    # Next.js app router pages
 │   ├── [locale]/          # Internationalized routes
@@ -58,7 +58,7 @@ Contract-Management-System-main/
 ├── types/                 # TypeScript type definitions
 ├── public/                # Static assets
 └── supabase/             # Database migrations
-```
+\`\`\`
 
 ## Setup Instructions
 
@@ -66,7 +66,7 @@ Contract-Management-System-main/
 
 Create a `.env.local` file with:
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -75,7 +75,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # Make.com Webhooks
 NEXT_PUBLIC_MAKE_WEBHOOK_URL=your_webhook_url
 MAKE_WEBHOOK_SECRET=your_webhook_secret
-```
+\`\`\`
 
 ### 2. Database Setup
 
@@ -91,7 +91,7 @@ MAKE_WEBHOOK_SECRET=your_webhook_secret
 
 ### 4. Running the Application
 
-```bash
+\`\`\`bash
 # Install dependencies
 npm install
 
@@ -103,7 +103,7 @@ npm run build
 
 # Start production server
 npm start
-```
+\`\`\`
 
 ## Key Components
 
