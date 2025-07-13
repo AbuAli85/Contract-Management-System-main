@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import createMiddleware from "next-intl/middleware"
 
 // List of supported locales
 const locales = ["en", "ar"]
@@ -101,15 +102,15 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: ["en", "ar"],
+
+  // Used when no locale matches
+  defaultLocale: "en",
+})
+
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  // Match only internationalized pathnames
+  matcher: ["/", "/(ar|en)/:path*"],
 }

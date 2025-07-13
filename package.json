@@ -2,27 +2,14 @@
   "name": "smartpro-hub-test",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "lint:fix": "next lint --fix",
     "prepare": "husky install || true",
     "start": "next start",
     "test": "jest",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write"
-    ]
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.3.1",
