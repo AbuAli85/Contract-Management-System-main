@@ -1,4 +1,4 @@
-import { Promoter } from "./types"
+import type { Promoter } from "./types"
 
 /**
  * Utility functions for working with promoter data
@@ -52,7 +52,7 @@ export function parsePromoterCSV(csvText: string): PromoterCSVRow[] {
 
       // Convert numeric fields
       if (["notify_days_before_id_expiry", "notify_days_before_passport_expiry"].includes(header)) {
-        entry[header] = value ? parseInt(value, 10) : null
+        entry[header] = value ? Number.parseInt(value, 10) : null
       } else {
         entry[header] = value || null
       }
@@ -111,7 +111,7 @@ export function exportPromoterCSV(promoters: Promoter[]): string {
       "", // updated_at not in Promoter interface
     ]
       .map((value) => `"${value}"`)
-      .join(",")
+      .join(","),
   )
 
   return [headers.join(","), ...rows].join("\n")
@@ -159,9 +159,7 @@ export function analyzePromoterData(promoters: PromoterCSVRow[]) {
 
     if (promoter.notify_days_before_passport_expiry) {
       analysis.notificationSettings.passportExpiry[promoter.notify_days_before_passport_expiry] =
-        (analysis.notificationSettings.passportExpiry[
-          promoter.notify_days_before_passport_expiry
-        ] || 0) + 1
+        (analysis.notificationSettings.passportExpiry[promoter.notify_days_before_passport_expiry] || 0) + 1
     }
 
     // Recent updates (last 30 days)
