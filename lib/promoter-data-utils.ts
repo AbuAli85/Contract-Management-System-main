@@ -178,9 +178,15 @@ export function analyzePromoterData(promoters: PromoterCSVRow[]) {
 }
 
 /**
- * Download CSV file
+ * Download CSV file (client-side only)
  */
 export function downloadPromoterCSV(promoters: Promoter[], filename = "promoters.csv") {
+  // Only run on client side
+  if (typeof window === "undefined") {
+    console.warn("downloadPromoterCSV can only be called on the client side")
+    return
+  }
+
   const csvContent = exportPromoterCSV(promoters)
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
   const link = document.createElement("a")
@@ -193,6 +199,7 @@ export function downloadPromoterCSV(promoters: Promoter[], filename = "promoters
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 }
 
@@ -243,4 +250,54 @@ export function validatePromoterData(promoter: PromoterCSVRow): {
     isValid: errors.length === 0,
     errors,
   }
+}
+
+/**
+ * Create sample CSV data for testing
+ */
+export function createSamplePromoterData(): PromoterCSVRow[] {
+  return [
+    {
+      id: "1",
+      name_en: "John Doe",
+      name_ar: "جون دو",
+      id_card_number: "123456789",
+      id_card_url: null,
+      passport_url: null,
+      employer_id: null,
+      outsourced_to_id: null,
+      job_title: "Sales Representative",
+      work_location: "Dubai",
+      status: "active",
+      contract_valid_until: "2024-12-31",
+      id_card_expiry_date: "2025-06-15",
+      passport_expiry_date: null,
+      notify_days_before_id_expiry: 30,
+      notify_days_before_passport_expiry: null,
+      notes: "Excellent performance",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "2",
+      name_en: "Jane Smith",
+      name_ar: "جين سميث",
+      id_card_number: "987654321",
+      id_card_url: null,
+      passport_url: null,
+      employer_id: null,
+      outsourced_to_id: null,
+      job_title: "Marketing Specialist",
+      work_location: "Abu Dhabi",
+      status: "active",
+      contract_valid_until: "2024-11-30",
+      id_card_expiry_date: "2025-03-20",
+      passport_expiry_date: "2026-01-10",
+      notify_days_before_id_expiry: 30,
+      notify_days_before_passport_expiry: 60,
+      notes: "New hire",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ]
 }
