@@ -1,72 +1,68 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-// Mock data for when Supabase is not configured
+// Mock data for when Supabase is not available
 const mockUsers = [
   {
     id: "1",
     email: "admin@example.com",
-    name: "Admin User",
+    full_name: "Admin User",
     role: "admin",
-    status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: "2",
     email: "user@example.com",
-    name: "Regular User",
+    full_name: "Regular User",
     role: "user",
-    status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ]
 
-function getSupabaseClient() {
+function createSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return null
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  try {
+    return createClient(supabaseUrl, supabaseKey)
+  } catch (error) {
+    console.error("Failed to create Supabase client:", error)
+    return null
+  }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient()
+    const supabase = createSupabaseClient()
 
     if (!supabase) {
-      // Return mock data when Supabase is not configured
       return NextResponse.json({
-        success: true,
-        data: mockUsers,
+        users: mockUsers,
         message: "Using mock data - Supabase not configured",
       })
     }
 
-    const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+    const { data: users, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 
     if (error) {
       console.error("Supabase error:", error)
       return NextResponse.json({
-        success: true,
-        data: mockUsers,
+        users: mockUsers,
         message: "Using mock data - Database error",
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      data: data || mockUsers,
-    })
+    return NextResponse.json({ users: users || [] })
   } catch (error) {
     console.error("API error:", error)
     return NextResponse.json({
-      success: true,
-      data: mockUsers,
+      users: mockUsers,
       message: "Using mock data - API error",
     })
   }
@@ -75,25 +71,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const supabase = getSupabaseClient()
+    const supabase = createSupabaseClient()
 
     if (!supabase) {
-      // Simulate creation with mock data
       const newUser = {
         id: Date.now().toString(),
         ...body,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-
       return NextResponse.json({
-        success: true,
-        data: newUser,
+        user: newUser,
         message: "Mock user created - Supabase not configured",
       })
     }
 
-    const { data, error } = await supabase.from("profiles").insert([body]).select().single()
+    const { data: user, error } = await supabase.from("profiles").insert([body]).select().single()
 
     if (error) {
       console.error("Supabase error:", error)
@@ -103,27 +96,16 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-
       return NextResponse.json({
-        success: true,
-        data: newUser,
+        user: newUser,
         message: "Mock user created - Database error",
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-    })
+    return NextResponse.json({ user })
   } catch (error) {
     console.error("API error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to create user",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
   }
 }
 
@@ -131,24 +113,16 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
     const { id, ...updateData } = body
-    const supabase = getSupabaseClient()
+    const supabase = createSupabaseClient()
 
     if (!supabase) {
-      // Simulate update with mock data
-      const updatedUser = {
-        id,
-        ...updateData,
-        updated_at: new Date().toISOString(),
-      }
-
       return NextResponse.json({
-        success: true,
-        data: updatedUser,
+        user: { id, ...updateData, updated_at: new Date().toISOString() },
         message: "Mock user updated - Supabase not configured",
       })
     }
 
-    const { data, error } = await supabase
+    const { data: user, error } = await supabase
       .from("profiles")
       .update({ ...updateData, updated_at: new Date().toISOString() })
       .eq("id", id)
@@ -157,32 +131,16 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error("Supabase error:", error)
-      const updatedUser = {
-        id,
-        ...updateData,
-        updated_at: new Date().toISOString(),
-      }
-
       return NextResponse.json({
-        success: true,
-        data: updatedUser,
+        user: { id, ...updateData, updated_at: new Date().toISOString() },
         message: "Mock user updated - Database error",
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-    })
+    return NextResponse.json({ user })
   } catch (error) {
     console.error("API error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to update user",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
   }
 }
 
@@ -192,20 +150,13 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id")
 
     if (!id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "User ID is required",
-        },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = createSupabaseClient()
 
     if (!supabase) {
       return NextResponse.json({
-        success: true,
         message: "Mock user deleted - Supabase not configured",
       })
     }
@@ -215,23 +166,13 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       console.error("Supabase error:", error)
       return NextResponse.json({
-        success: true,
         message: "Mock user deleted - Database error",
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "User deleted successfully",
-    })
+    return NextResponse.json({ message: "User deleted successfully" })
   } catch (error) {
     console.error("API error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to delete user",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
   }
 }
