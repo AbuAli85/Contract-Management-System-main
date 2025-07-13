@@ -129,129 +129,54 @@ export interface Database {
       parties: {
         Row: {
           id: string
-          name_en: string
-          name_ar: string
-          crn: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
-          status?: string | null
-          notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
+          name: string
+          email: string
+          type: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          name_en: string
-          name_ar: string
-          crn: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
-          status?: string | null
-          notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
+          name: string
+          email: string
+          type: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          name_en?: string
-          name_ar?: string
-          crn?: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
-          status?: string | null
-          notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
+          name?: string
+          email?: string
+          type?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
       promoters: {
         Row: {
           id: string
-          name_en: string
-          name_ar: string
-          id_card_number: string
-          id_card_url?: string | null
-          passport_url?: string | null
-          status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
-          notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
+          name: string
+          email: string
+          phone: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          name_en: string
-          name_ar: string
-          id_card_number: string
-          id_card_url?: string | null
-          passport_url?: string | null
-          status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
-          notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
+          name: string
+          email: string
+          phone: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          name_en?: string
-          name_ar?: string
-          id_card_number?: string
-          id_card_url?: string | null
-          passport_url?: string | null
-          status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
-          notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
+          name?: string
+          email?: string
+          phone?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -296,34 +221,25 @@ export interface Database {
           id: string
           type: string
           message: string
+          user_id: string
           created_at: string
           is_read: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
-          user_id?: string | null
-          read?: boolean | null
         }
         Insert: {
           id?: string
           type: string
           message: string
+          user_id: string
           created_at?: string
           is_read?: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
-          user_id?: string | null
-          read?: boolean | null
         }
         Update: {
           id?: string
           type?: string
           message?: string
+          user_id?: string
           created_at?: string
           is_read?: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
-          user_id?: string | null
-          read?: boolean | null
         }
         Relationships: []
       }
@@ -354,23 +270,22 @@ export interface Database {
           email: string
           role: string
           created_at: string
-          profile_data?: Json | null
+          updated_at: string
         }
         Insert: {
-          id?: string
+          id: string
           email: string
-          role: string
+          role?: string
           created_at?: string
-          profile_data?: Json | null
+          updated_at?: string
         }
         Update: {
           id?: string
           email?: string
           role?: string
           created_at?: string
-          profile_data?: Json | null
+          updated_at?: string
         }
-        Relationships: []
       }
       app_users: {
         Row: {
@@ -492,7 +407,106 @@ export interface Database {
         }
         Relationships: []
       }
-      // ... other tables
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role_id?: string
+          created_at?: string
+        }
+      }
+      user_permissions: {
+        Row: {
+          id: string
+          user_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          permission_id?: string
+          created_at?: string
+        }
+      }
+      roles: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          created_at?: string
+        }
+      }
+      permissions: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          created_at?: string
+        }
+      }
+      role_permissions: {
+        Row: {
+          id: string
+          role_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          role_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          role_id?: string
+          permission_id?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       // ... views
@@ -518,7 +532,6 @@ export interface Database {
 }
 
 // Helper types (optional, but can be useful)
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"]
+export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"]
 export type Enums<T extends keyof Database["public"]["Enums"]> = Database["public"]["Enums"][T]
 // ... more helpers if needed
