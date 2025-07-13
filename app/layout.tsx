@@ -1,35 +1,31 @@
+import type React from "react"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { ClientProviders } from "@/components/client-providers"
-import "./globals.css"
+import { Toaster as Sonner } from "@/components/ui/sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Contract Management System",
-  description: "A modern contract management system",
+  description: "A comprehensive contract management system",
     generator: 'v0.dev'
 }
 
-interface RootLayoutProps {
+export default function RootLayout({
+  children,
+}: {
   children: React.ReactNode
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+}) {
   return (
-    <html suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ClientProviders>
-            {children}
-            <Toaster />
-          </ClientProviders>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster />
+          <Sonner />
         </ThemeProvider>
       </body>
     </html>

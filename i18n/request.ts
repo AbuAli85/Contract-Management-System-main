@@ -1,14 +1,12 @@
 import { getRequestConfig } from "next-intl/server"
 
-const supportedLocales = ["en", "ar"]
+export default getRequestConfig(async ({ requestLocale }) => {
+  // This typically corresponds to the `[locale]` segment
+  let locale = await requestLocale
 
-export default getRequestConfig(async ({ locale }) => {
-  // Validate that the incoming locale is supported
-  if (!supportedLocales.includes(locale as string)) {
-    return {
-      locale: "en",
-      messages: (await import(`../public/locales/en.json`)).default,
-    }
+  // Ensure that a valid locale is used
+  if (!locale || !["en", "ar"].includes(locale)) {
+    locale = "en"
   }
 
   return {

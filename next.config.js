@@ -1,28 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // Updated from serverComponentsExternalPackages
-  },
-  serverExternalPackages: ["@supabase/supabase-js", "@supabase/ssr", "googleapis", "crypto"],
+  serverExternalPackages: ["@googleapis/drive"],
   images: {
-    domains: ["localhost"],
+    domains: [
+      "localhost",
+      "via.placeholder.com",
+      "images.unsplash.com",
+      "lh3.googleusercontent.com",
+      "avatars.githubusercontent.com",
+      "ui-avatars.com",
+    ],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "supabase.com",
+        hostname: "**",
       },
     ],
-    unoptimized: true, // Added from updates
   },
   eslint: {
-    ignoreDuringBuilds: true, // Added from updates
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true, // Added from updates
+    ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

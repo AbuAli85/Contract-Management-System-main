@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({ name, value: "", ...options })
         },
       },
-    }
+    },
   )
 
   // Get current session
@@ -69,11 +69,7 @@ export async function middleware(request: NextRequest) {
 
   // Check admin access
   if (isAdminRoute && session) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .single()
+    const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", session.user.id).single()
 
     if (profile?.role !== "admin") {
       return NextResponse.redirect(new URL(`/${locale}/unauthorized`, request.url))
@@ -94,9 +90,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if the pathname already has a locale
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  )
+  const pathnameHasLocale = locales.some((locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`)
 
   if (!pathnameHasLocale) {
     // Redirect to the same path with the default locale
@@ -109,7 +103,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip all internal paths (_next)
-    "/((?!_next|api|favicon.ico).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 }
