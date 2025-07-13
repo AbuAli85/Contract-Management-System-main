@@ -1,16 +1,22 @@
-import { z } from "zod"
+// Environment variables with fallbacks for build time
+export const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co"
+export const NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-role-key"
 
-const envSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-})
+// Validation function for runtime
+export function validateEnv() {
+  const requiredEnvVars = {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  }
 
-const env = envSchema.parse(process.env)
+  const missingVars = Object.entries(requiredEnvVars)
+    .filter(([_, value]) => !value || value.includes("placeholder"))
+    .map(([key]) => key)
 
-// Export individual variables for compatibility
-export const NEXT_PUBLIC_SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL || ""
-export const NEXT_PUBLIC_SUPABASE_ANON_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-export const SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || ""
+  if (missingVars.length > 0) {
+    console.warn(`Missing environment variables: ${missingVars.join(", ")}`)
+  }
 
-export default env
+  return missingVars.length === 0
+}
