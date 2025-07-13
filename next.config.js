@@ -4,11 +4,8 @@ const withNextIntl = createNextIntlPlugin()
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
+  experimental: {
+    typedRoutes: true,
   },
   serverExternalPackages: ["@supabase/supabase-js"],
   images: {
@@ -21,7 +18,16 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
-    unoptimized: true,
+    unoptimized: true, // Added from updates
+  },
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+  eslint: {
+    ignoreDuringBuilds: true, // Added from updates
+  },
+  typescript: {
+    ignoreBuildErrors: true, // Added from updates
   },
 }
 
