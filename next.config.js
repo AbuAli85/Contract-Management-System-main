@@ -11,7 +11,6 @@ const nextConfig = {
 
   // Enable experimental features for better performance
   experimental: {
-    appDir: true,
     optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
   },
 
@@ -19,9 +18,6 @@ const nextConfig = {
     formats: ["image/webp", "image/avif"],
     domains: ["localhost"],
   },
-
-  // Enable SWC minification
-  swcMinify: true,
 
   reactStrictMode: false, // Disable strict mode to avoid double effects
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
@@ -35,7 +31,7 @@ const nextConfig = {
       new webpack.ProvidePlugin({
         React: "react",
         react: "react",
-      })
+      }),
     )
 
     return config

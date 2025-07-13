@@ -1,214 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import { Upload, X, FileImage, AlertCircle, CheckCircle } from "lucide-react"
-import { cn } from "@/lib/utils"
-
-interface DocumentUploadFieldProps {
-  type: "id_card" | "passport" | "profile"
-  currentUrl?: string | null
-  onUpload: (file: File) => Promise<void>
-  uploading: boolean
-  label: string
-  required: boolean
-}
-
-export function DocumentUploadField({
-  type,
-  currentUrl,
-  onUpload,
-  uploading,
-  label,
-  required,
-}: DocumentUploadFieldProps) {
-  const [dragOver, setDragOver] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [uploadProgress, setUploadProgress] = useState(0)
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-  }, [])
-
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault()
-      setDragOver(false)
-      setError(null)
-
-      const files = Array.from(e.dataTransfer.files)
-      if (files.length === 0) return
-
-      const file = files[0]
-      await handleFileUpload(file)
-    },
-    [onUpload]
-  )
-
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files || files.length === 0) return
-
-      const file = files[0]
-      await handleFileUpload(file)
-    },
-    [onUpload]
-  )
-
-  const handleFileUpload = async (file: File) => {
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"]
-    if (!allowedTypes.includes(file.type)) {
-      setError("Please upload a valid image (JPEG, PNG, WebP) or PDF file")
-      return
-    }
-
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      setError("File size must be less than 10MB")
-      return
-    }
-
-    setError(null)
-    setUploadProgress(0)
-
-    try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90
-          }
-          return prev + 10
-        })
-      }, 100)
-
-      await onUpload(file)
-      setUploadProgress(100)
-
-      setTimeout(() => {
-        setUploadProgress(0)
-      }, 1000)
-    } catch (error) {
-      setError("Upload failed. Please try again.")
-      setUploadProgress(0)
-    }
-  }
-
-  const handleRemove = () => {
-    // This would typically call an onRemove prop
-    setError(null)
-    setUploadProgress(0)
-  }
-
-  return (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
-
-      {/* Current document display */}
-      {currentUrl && (
-        <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-green-700">Document uploaded</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => window.open(currentUrl, "_blank")}
-            >
-              <FileImage className="h-4 w-4" />
-              View
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleRemove}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Upload area */}
-      <div
-        className={cn(
-          "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-          dragOver
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400",
-          uploading && "opacity-50 pointer-events-none"
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {uploading ? (
-          <div className="space-y-2">
-            <div className="flex justify-center">
-              <Upload className="h-8 w-8 text-blue-500 animate-pulse" />
-            </div>
-            <p className="text-sm text-gray-600">Uploading...</p>
-            {uploadProgress > 0 && (
-              <Progress value={uploadProgress} className="w-full max-w-xs mx-auto" />
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="flex justify-center">
-              <Upload className="h-8 w-8 text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">
-                Drop your file here, or{" "}
-                <label className="text-blue-500 hover:text-blue-600 cursor-pointer underline">
-                  browse
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*,.pdf"
-                    onChange={handleFileSelect}
-                    disabled={uploading}
-                  />
-                </label>
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Supports: JPEG, PNG, WebP, PDF (max 10MB)
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Error display */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-    </div>
-  )
-}"use client"
+import type React from "react"
 
 import { useAuth } from "@/hooks/use-auth"
 import { useState, useEffect, useCallback, useMemo } from "react"
@@ -217,28 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   DropdownMenu,
@@ -259,14 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
   Plus,
   Search,
@@ -274,7 +40,6 @@ import {
   Trash2,
   MoreHorizontal,
   User,
-  FileText,
   CheckCircle,
   AlertCircle,
   XCircle,
@@ -286,35 +51,18 @@ import {
   Upload,
   Download,
   Eye,
-  Bell,
-  Calendar,
-  Phone,
-  Mail,
-  MapPin,
-  CreditCard,
-  Passport,
+  StampIcon as Passport,
   Camera,
-  FileImage,
-  ExternalLink,
-  Copy,
-  Filter,
   SortAsc,
   SortDesc,
-  Archive,
-  UserCheck,
-  UserX,
-  Settings,
-  History,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DocumentUploadField } from "./DocumentUploadField"
 import { supabase } from "@/lib/supabase"
-import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
+import { parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 
 // Enhanced Promoter interface
 interface Promoter {
@@ -437,10 +185,7 @@ function getDocumentStatus(expiryDate?: string) {
   }
 }
 
-function getOverallStatus(
-  promoter: Promoter,
-  activeContracts: number
-): "active" | "warning" | "critical" | "inactive" {
+function getOverallStatus(promoter: Promoter, activeContracts: number): "active" | "warning" | "critical" | "inactive" {
   if (promoter.status === "Inactive" || promoter.status === "Suspended") {
     return "inactive"
   }
@@ -463,14 +208,9 @@ function getOverallStatus(
   return "inactive"
 }
 
-function areRequiredDocsUploaded(
-  editingPromoter: Promoter | null,
-  documentUploads: { [key: string]: DocumentUpload }
-) {
+function areRequiredDocsUploaded(editingPromoter: Promoter | null, documentUploads: { [key: string]: DocumentUpload }) {
   const idCardUploaded =
-    (editingPromoter && editingPromoter.id_card_url) ||
-    documentUploads.id_card.file ||
-    documentUploads.id_card.preview
+    (editingPromoter && editingPromoter.id_card_url) || documentUploads.id_card.file || documentUploads.id_card.preview
   const passportUploaded =
     (editingPromoter && editingPromoter.passport_url) ||
     documentUploads.passport.file ||
@@ -599,7 +339,7 @@ export function PromoterManagement() {
           })
 
           const lastContract = promoterContracts.sort(
-            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
           )[0]
 
           return {
@@ -621,8 +361,7 @@ export function PromoterManagement() {
         active: processedPromoters.filter((p) => p.status === "Active").length,
         inactive: processedPromoters.filter((p) => p.status === "Inactive").length,
         suspended: processedPromoters.filter((p) => p.status === "Suspended").length,
-        withActiveContracts: processedPromoters.filter((p) => (p.active_contracts_count || 0) > 0)
-          .length,
+        withActiveContracts: processedPromoters.filter((p) => (p.active_contracts_count || 0) > 0).length,
         documentsExpiring: processedPromoters.filter((p) => {
           const idStatus = getDocumentStatus(p.id_card_expiry_date)
           const passportStatus = getDocumentStatus(p.passport_expiry_date)
@@ -633,10 +372,9 @@ export function PromoterManagement() {
           const passportStatus = getDocumentStatus(p.passport_expiry_date)
           return idStatus.text === "Expired" || passportStatus.text === "Expired"
         }).length,
-        recentlyAdded: processedPromoters.filter((p) => new Date(p.created_at) >= thirtyDaysAgo)
-          .length,
+        recentlyAdded: processedPromoters.filter((p) => new Date(p.created_at) >= thirtyDaysAgo).length,
         needsAttention: processedPromoters.filter(
-          (p) => p.document_status === "expiring" || p.document_status === "expired"
+          (p) => p.document_status === "expiring" || p.document_status === "expired",
         ).length,
       }
 
@@ -675,10 +413,7 @@ export function PromoterManagement() {
       }
 
       if (editingPromoter) {
-        const { error } = await supabase
-          .from("promoters")
-          .update(promoterData)
-          .eq("id", editingPromoter.id)
+        const { error } = await supabase.from("promoters").update(promoterData).eq("id", editingPromoter.id)
 
         if (error) throw error
 
@@ -799,28 +534,19 @@ export function PromoterManagement() {
     switch (status) {
       case "Active":
         return (
-          <Badge
-            variant="default"
-            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-          >
+          <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
             Active
           </Badge>
         )
       case "Inactive":
         return (
-          <Badge
-            variant="secondary"
-            className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
-          >
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
             Inactive
           </Badge>
         )
       case "Suspended":
         return (
-          <Badge
-            variant="outline"
-            className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
-          >
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
             Suspended
           </Badge>
         )
@@ -842,10 +568,7 @@ export function PromoterManagement() {
     }
   }
 
-  const handleDocumentUpload = async (
-    type: "id_card" | "passport" | "profile",
-    file: File
-  ): Promise<void> => {
+  const handleDocumentUpload = async (type: "id_card" | "passport" | "profile", file: File): Promise<void> => {
     setDocumentUploads((prev) => ({
       ...prev,
       [type]: {
@@ -934,9 +657,7 @@ export function PromoterManagement() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>
-                    {editingPromoter ? "Edit Promoter" : "Add New Promoter"}
-                  </DialogTitle>
+                  <DialogTitle>{editingPromoter ? "Edit Promoter" : "Add New Promoter"}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -1014,9 +735,7 @@ export function PromoterManagement() {
                       id="id_card_expiry_date"
                       type="date"
                       value={formData.id_card_expiry_date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, id_card_expiry_date: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, id_card_expiry_date: e.target.value })}
                     />
                   </div>
                   <div>
@@ -1024,9 +743,7 @@ export function PromoterManagement() {
                     <Input
                       id="passport_number"
                       value={formData.passport_number}
-                      onChange={(e) =>
-                        setFormData({ ...formData, passport_number: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, passport_number: e.target.value })}
                     />
                   </div>
                   <div>
@@ -1035,9 +752,7 @@ export function PromoterManagement() {
                       id="passport_expiry_date"
                       type="date"
                       value={formData.passport_expiry_date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, passport_expiry_date: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, passport_expiry_date: e.target.value })}
                     />
                   </div>
                   <div>
@@ -1089,15 +804,12 @@ export function PromoterManagement() {
                       onUpload={(file) => handleDocumentUpload("profile", file)}
                       uploading={documentUploads.profile.uploading}
                       label="Profile Image (Optional)"
+                      required={false}
                     />
                   </div>
                   {formError && <div className="text-sm font-medium text-red-600">{formError}</div>}
                   <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={submitting}>
@@ -1172,65 +884,6 @@ export function PromoterManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{memoizedStats?.suspended ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {promoters.reduce(
-                  (sum, promoter) => sum + (promoter.total_contracts_count || 0),
-                  0
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">With Active Contracts</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memoizedStats?.withActiveContracts ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Documents Expiring</CardTitle>
-              <AlertTriangleIcon className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memoizedStats?.documentsExpiring ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Documents Expired</CardTitle>
-              <ShieldAlertIcon className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memoizedStats?.documentsExpired ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recently Added</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memoizedStats?.recentlyAdded ?? 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Needs Attention</CardTitle>
-              <Bell className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{memoizedStats?.needsAttention ?? 0}</div>
             </CardContent>
           </Card>
         </div>
@@ -1331,15 +984,11 @@ export function PromoterManagement() {
                       <TableCell>
                         <Tooltip>
                           <TooltipTrigger>
-                            <div
-                              className={`${getDocumentStatus(promoter.id_card_expiry_date).colorClass}`}
-                            >
+                            <div className={`${getDocumentStatus(promoter.id_card_expiry_date).colorClass}`}>
                               {getDocumentStatus(promoter.id_card_expiry_date).text}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            {getDocumentStatus(promoter.id_card_expiry_date).tooltip}
-                          </TooltipContent>
+                          <TooltipContent>{getDocumentStatus(promoter.id_card_expiry_date).tooltip}</TooltipContent>
                         </Tooltip>
                       </TableCell>
                       <TableCell>{new Date(promoter.created_at).toLocaleDateString()}</TableCell>
@@ -1360,10 +1009,7 @@ export function PromoterManagement() {
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeletePromoter(promoter)}
-                              className="text-red-600"
-                            >
+                            <DropdownMenuItem onClick={() => setDeletePromoter(promoter)} className="text-red-600">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -1405,9 +1051,7 @@ export function PromoterManagement() {
             <SheetContent side="right">
               <SheetHeader>
                 <SheetTitle>{selectedPromoter.name_en}</SheetTitle>
-                <SheetDescription>
-                  View and manage details of {selectedPromoter.name_en}.
-                </SheetDescription>
+                <SheetDescription>View and manage details of {selectedPromoter.name_en}.</SheetDescription>
               </SheetHeader>
               <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2">
@@ -1420,7 +1064,7 @@ export function PromoterManagement() {
                       <div className="flex items-center space-x-2">
                         <Avatar>
                           <AvatarImage
-                            src={selectedPromoter.profile_image_url}
+                            src={selectedPromoter.profile_image_url || "/placeholder.svg"}
                             alt={selectedPromoter.name_en}
                           />
                           <AvatarFallback>{selectedPromoter.name_en.charAt(0)}</AvatarFallback>
@@ -1446,9 +1090,7 @@ export function PromoterManagement() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">National ID</p>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedPromoter.national_id}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{selectedPromoter.national_id}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">CRN</p>
@@ -1464,9 +1106,7 @@ export function PromoterManagement() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">Active Contracts</p>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedPromoter.active_contracts_count}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{selectedPromoter.active_contracts_count}</p>
                       </div>
                     </div>
                     <div>
@@ -1494,13 +1134,13 @@ export function PromoterManagement() {
                         <div className="relative mt-2">
                           {documentUploads.id_card.preview ? (
                             <img
-                              src={documentUploads.id_card.preview}
+                              src={documentUploads.id_card.preview || "/placeholder.svg"}
                               alt="ID Card Preview"
                               className="h-48 w-full rounded-md object-cover"
                             />
                           ) : selectedPromoter.id_card_url ? (
                             <img
-                              src={selectedPromoter.id_card_url}
+                              src={selectedPromoter.id_card_url || "/placeholder.svg"}
                               alt="ID Card"
                               className="h-48 w-full rounded-md object-cover"
                             />
@@ -1513,15 +1153,13 @@ export function PromoterManagement() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) =>
-                              e.target.files && handleDocumentUpload("id_card", e.target.files[0])
-                            }
+                            onChange={(e) => e.target.files && handleDocumentUpload("id_card", e.target.files[0])}
                             ref={(el) => el && documentUploads.id_card.uploading && el.click()}
                           />
                           <Button
                             variant="outline"
                             size="sm"
-                            className="mt-2 w-full"
+                            className="mt-2 w-full bg-transparent"
                             onClick={() => document.querySelector(`input[type="file"]`)?.click()}
                           >
                             {documentUploads.id_card.uploading ? (
@@ -1543,13 +1181,13 @@ export function PromoterManagement() {
                         <div className="relative mt-2">
                           {documentUploads.passport.preview ? (
                             <img
-                              src={documentUploads.passport.preview}
+                              src={documentUploads.passport.preview || "/placeholder.svg"}
                               alt="Passport Preview"
                               className="h-48 w-full rounded-md object-cover"
                             />
                           ) : selectedPromoter.passport_url ? (
                             <img
-                              src={selectedPromoter.passport_url}
+                              src={selectedPromoter.passport_url || "/placeholder.svg"}
                               alt="Passport"
                               className="h-48 w-full rounded-md object-cover"
                             />
@@ -1562,15 +1200,13 @@ export function PromoterManagement() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) =>
-                              e.target.files && handleDocumentUpload("passport", e.target.files[0])
-                            }
+                            onChange={(e) => e.target.files && handleDocumentUpload("passport", e.target.files[0])}
                             ref={(el) => el && documentUploads.passport.uploading && el.click()}
                           />
                           <Button
                             variant="outline"
                             size="sm"
-                            className="mt-2 w-full"
+                            className="mt-2 w-full bg-transparent"
                             onClick={() => document.querySelector(`input[type="file"]`)?.click()}
                           >
                             {documentUploads.passport.uploading ? (
@@ -1593,13 +1229,13 @@ export function PromoterManagement() {
                       <div className="relative mt-2">
                         {documentUploads.profile.preview ? (
                           <img
-                            src={documentUploads.profile.preview}
+                            src={documentUploads.profile.preview || "/placeholder.svg"}
                             alt="Profile Image Preview"
                             className="h-48 w-full rounded-md object-cover"
                           />
                         ) : selectedPromoter.profile_image_url ? (
                           <img
-                            src={selectedPromoter.profile_image_url}
+                            src={selectedPromoter.profile_image_url || "/placeholder.svg"}
                             alt="Profile Image"
                             className="h-48 w-full rounded-md object-cover"
                           />
@@ -1607,7 +1243,7 @@ export function PromoterManagement() {
                           <div className="flex h-48 w-full items-center justify-center rounded-md bg-gray-100">
                             <Avatar className="h-24 w-24">
                               <AvatarImage
-                                src={selectedPromoter.profile_image_url}
+                                src={selectedPromoter.profile_image_url || "/placeholder.svg"}
                                 alt={selectedPromoter.name_en}
                               />
                               <AvatarFallback>{selectedPromoter.name_en.charAt(0)}</AvatarFallback>
@@ -1618,15 +1254,13 @@ export function PromoterManagement() {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) =>
-                            e.target.files && handleDocumentUpload("profile", e.target.files[0])
-                          }
+                          onChange={(e) => e.target.files && handleDocumentUpload("profile", e.target.files[0])}
                           ref={(el) => el && documentUploads.profile.uploading && el.click()}
                         />
                         <Button
                           variant="outline"
                           size="sm"
-                          className="mt-2 w-full"
+                          className="mt-2 w-full bg-transparent"
                           onClick={() => document.querySelector(`input[type="file"]`)?.click()}
                         >
                           {documentUploads.profile.uploading ? (
