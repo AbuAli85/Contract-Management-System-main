@@ -1,18 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { ImageIcon, Upload, ExternalLink, X, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
+import { Upload, X, FileImage, AlertCircle, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DocumentUploadFieldProps {
   type: "id_card" | "passport" | "profile"
-  currentUrl?: string
+  currentUrl?: string | null
   onUpload: (file: File) => Promise<void>
   uploading: boolean
   label: string
-  required?: boolean
+  required: boolean
 }
 
 export function DocumentUploadField({
@@ -21,125 +23,148 @@ export function DocumentUploadField({
   onUpload,
   uploading,
   label,
-  required = false,
+  required,
 }: DocumentUploadFieldProps) {
-  const [preview, setPreview] = useState<string | null>(currentUrl || null)
   const [dragOver, setDragOver] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
-  useEffect(() => {
-    setPreview(currentUrl || null)
-  }, [currentUrl])
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }, [])
 
-  const handleFileSelect = async (file: File) => {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader()
-      reader.onload = () => setPreview(reader.result as string)
-      reader.readAsDataURL(file)
-      await onUpload(file)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFileSelect(file)
+  }, [])
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault()
+      setDragOver(false)
+      setError(null)
+
+      const files = Array.from(e.dataTransfer.files)
+      if (files.length === 0) return
+
+      const file = files[0]
+      await handleFileUpload(file)
+    },
+    [onUpload]
+  )
+
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files
+      if (!files || files.length === 0) return
+
+      const file = files[0]
+      await handleFileUpload(file)
+    },
+    [onUpload]
+  )
+
+  const handleFileUpload = async (file: File) => {
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"]
+    if (!allowedTypes.includes(file.type)) {
+      setError("Please upload a valid image (JPEG, PNG, WebP) or PDF file")
+      return
+    }
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      setError("File size must be less than 10MB")
+      return
+    }
+
+    try {
+      setError(null)
+      setUploadProgress(0)
+      await onUpload(file)
+      setUploadProgress(100)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Upload failed")
+      setUploadProgress(0)
+    }
   }
 
   return (
     <div className="space-y-2">
-      <Label className="flex items-center gap-2">
-        {label}
-        {required && <span className="text-red-500">*</span>}
+      <Label htmlFor={`${type}-upload`}>
+        {label} {required && <span className="text-red-500">*</span>}
       </Label>
+
       <div
         className={cn(
           "relative rounded-lg border-2 border-dashed p-4 transition-all duration-200",
           dragOver
             ? "scale-[1.02] border-primary bg-primary/5"
-            : "border-gray-300 hover:border-gray-400"
+            : "border-gray-300 hover:border-gray-400",
+          uploading && "pointer-events-none opacity-50"
         )}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDragOver(true)
-        }}
-        onDragLeave={() => setDragOver(false)}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {uploading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-sm text-muted-foreground">Uploading...</span>
-          </div>
-        ) : preview ? (
-          <div className="group relative">
-            <img
-              src={preview}
-              alt={label}
-              className="h-48 w-full rounded-lg object-cover transition-transform group-hover:scale-[1.02]"
-            />
-            <div className="absolute inset-0 rounded-lg bg-black/0 transition-colors group-hover:bg-black/20" />
+        {currentUrl ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-sm text-green-600">Document uploaded</span>
+            </div>
             <Button
               type="button"
-              variant="destructive"
+              variant="outline"
               size="sm"
-              className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-              onClick={() => setPreview(null)}
+              onClick={() => window.open(currentUrl, "_blank")}
             >
-              <X className="h-4 w-4" />
+              View
             </Button>
-            <div className="absolute bottom-2 left-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-                className="hidden"
-                id={`file-${type}`}
-              />
-              <label htmlFor={`file-${type}`}>
-                <Button type="button" variant="secondary" size="sm" className="w-full">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Replace Image
-                </Button>
-              </label>
-            </div>
-            {currentUrl && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="absolute left-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={() => window.open(currentUrl, "_blank")}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         ) : (
-          <div className="py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-              <ImageIcon className="h-8 w-8 text-gray-400" />
+          <div className="text-center">
+            <FileImage className="mx-auto h-8 w-8 text-gray-400" />
+            <div className="mt-2">
+              <Label
+                htmlFor={`${type}-upload`}
+                className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80"
+              >
+                Click to upload or drag and drop
+              </Label>
+              <p className="text-xs text-gray-500">PNG, JPG, WebP or PDF up to 10MB</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-600">Drag and drop an image here</p>
-              <p className="text-xs text-gray-500">or click to select from your device</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-                className="hidden"
-                id={`file-${type}`}
-              />
-              <label htmlFor={`file-${type}`}>
-                <Button type="button" variant="outline" size="sm">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Select Image
-                </Button>
-              </label>
+          </div>
+        )}
+
+        <input
+          id={`${type}-upload`}
+          type="file"
+          className="hidden"
+          accept="image/*,application/pdf"
+          onChange={handleFileSelect}
+          disabled={uploading}
+        />
+
+        {uploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+            <div className="text-center">
+              <Upload className="mx-auto h-6 w-6 animate-pulse text-primary" />
+              <p className="mt-1 text-sm text-gray-600">Uploading...</p>
+              {uploadProgress > 0 && <Progress value={uploadProgress} className="mt-2 w-32" />}
             </div>
           </div>
         )}
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }
