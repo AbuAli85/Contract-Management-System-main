@@ -1,10 +1,13 @@
 import { getSupabaseBrowserClient } from "./supabase/singleton"
+import { isEnvConfigured } from "./env"
 
-// Export the singleton instance
-export const supabase = getSupabaseBrowserClient()
+// Export the singleton instance with safety check
+export const supabase = isEnvConfigured() ? getSupabaseBrowserClient() : null
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
+  if (!supabase) return false
+
   try {
     const {
       data: { session },
@@ -18,6 +21,8 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 // Utility function to get current user
 export const getCurrentUser = async () => {
+  if (!supabase) return null
+
   try {
     const {
       data: { user },
@@ -36,6 +41,8 @@ export const getCurrentUser = async () => {
 
 // Utility function to get current session
 export const getCurrentSession = async () => {
+  if (!supabase) return null
+
   try {
     const {
       data: { session },
@@ -54,6 +61,8 @@ export const getCurrentSession = async () => {
 
 // Utility function to refresh session
 export const refreshSession = async () => {
+  if (!supabase) return null
+
   try {
     const { data, error } = await supabase.auth.refreshSession()
     if (error) {
@@ -69,6 +78,8 @@ export const refreshSession = async () => {
 
 // Utility function to sign out
 export const signOut = async () => {
+  if (!supabase) return false
+
   try {
     const { error } = await supabase.auth.signOut()
     if (error) {
@@ -108,6 +119,8 @@ export const handleRealtimeError = (error: any, tableName: string) => {
 
 // Utility function to safely create a realtime channel
 export const createRealtimeChannel = (tableName: string, callback: (payload: any) => void) => {
+  if (!supabase) return null
+
   try {
     return supabase
       .channel(`public-${tableName}-realtime`)
@@ -119,10 +132,7 @@ export const createRealtimeChannel = (tableName: string, callback: (payload: any
 }
 
 // Utility function to safely subscribe to a channel
-export const subscribeToChannel = (
-  channel: any,
-  onStatusChange?: (status: string, error?: any) => void
-) => {
+export const subscribeToChannel = (channel: any, onStatusChange?: (status: string, error?: any) => void) => {
   if (!channel) return null
 
   try {
@@ -139,7 +149,7 @@ export const subscribeToChannel = (
 
 // Debug function to log current auth state
 export const debugAuthState = async () => {
-  if (process.env.NODE_ENV !== "development") return
+  if (process.env.NODE_ENV !== "development" || !supabase) return
 
   try {
     const {

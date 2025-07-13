@@ -2,12 +2,15 @@ import { type NextRequest, NextResponse } from "next/server"
 import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env"
 import { createClient } from "@supabase/supabase-js"
 
-export async function GET(request: NextRequest) {
-  // Check if we have required environment variables
+// Helper function to create Supabase client with error handling
+function createSupabaseClient() {
   if (!NEXT_PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+    throw new Error("Missing Supabase configuration")
   }
+  return createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+}
 
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    const supabase = createSupabaseClient()
 
     // Get user's effective permissions (direct + role-based)
     const { data, error } = await supabase.rpc("get_user_effective_permissions", {
@@ -31,6 +34,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ permissions: data || [] })
   } catch (error) {
     console.error("GET effective permissions error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
   }
 }

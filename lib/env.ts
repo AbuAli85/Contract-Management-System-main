@@ -1,13 +1,17 @@
-// Environment variables configuration
+// Environment variables with build-time safety
 export const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 export const NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 
-// Validation function for required environment variables
+// Additional environment variables
+export const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || ""
+export const GOOGLE_DOCS_API_KEY = process.env.GOOGLE_DOCS_API_KEY || ""
+
+// Validation function for runtime
 export function validateEnv() {
   const requiredEnvVars = {
-    NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   }
 
   const missingVars = Object.entries(requiredEnvVars)
@@ -21,6 +25,35 @@ export function validateEnv() {
   return missingVars.length === 0
 }
 
-// Optional environment variables
-export const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL
-export const GOOGLE_DOCS_API_KEY = process.env.GOOGLE_DOCS_API_KEY
+// Runtime check for server-side environment variables
+export function validateServerEnv() {
+  const serverEnvVars = {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  }
+
+  const missingServerVars = Object.entries(serverEnvVars)
+    .filter(([_, value]) => !value)
+    .map(([key]) => key)
+
+  if (missingServerVars.length > 0) {
+    console.warn(`Missing server environment variables: ${missingServerVars.join(", ")}`)
+    return false
+  }
+
+  return true
+}
+
+// Check if environment is properly configured
+export function isEnvConfigured() {
+  return !!(NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_KEY && SUPABASE_SERVICE_ROLE_KEY)
+}
+
+// Environment object for easier access
+export const env = {
+  NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY,
+  MAKE_WEBHOOK_URL,
+  GOOGLE_DOCS_API_KEY,
+  isConfigured: isEnvConfigured(),
+}
