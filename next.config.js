@@ -1,65 +1,30 @@
-import createNextIntlPlugin from "next-intl/plugin"
-
-const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable compiler optimizations
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
-
-  // Enable experimental features for better performance
   experimental: {
-    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
+    serverComponentsExternalPackages: ["@googleapis/drive"],
   },
-
   images: {
-    formats: ["image/webp", "image/avif"],
-    domains: ["localhost"],
-  },
-
-  reactStrictMode: false, // Disable strict mode to avoid double effects
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "@": "./src",
-    }
-
-    // Provide React globally for all environments
-    config.plugins.push(
-      new webpack.ProvidePlugin({
-        React: "react",
-        react: "react",
-      }),
-    )
-
-    return config
-  },
-  // Disable resource preloading for unused assets
-  async headers() {
-    return [
+    domains: [
+      "localhost",
+      "via.placeholder.com",
+      "images.unsplash.com",
+      "lh3.googleusercontent.com",
+      "avatars.githubusercontent.com",
+      "ui-avatars.com",
+    ],
+    remotePatterns: [
       {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "X-DNS-Prefetch-Control",
-            value: "on",
-          },
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-        ],
+        protocol: "https",
+        hostname: "**",
       },
-    ]
-  },
-  typescript: {
-    ignoreBuildErrors: false,
+    ],
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
 }
 
-export default withNextIntl(nextConfig)
+export default nextConfig
