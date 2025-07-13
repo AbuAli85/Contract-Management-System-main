@@ -20,11 +20,20 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
     notFound()
   }
 
-  const messages = await getMessages({ locale })
+  let messages
+  try {
+    messages = await getMessages({ locale })
+  } catch (error) {
+    console.error(`Failed to load messages for locale ${locale}:`, error)
+    // Fallback to English messages
+    messages = await getMessages({ locale: "en" })
+  }
 
   return (
     <div suppressHydrationWarning>
-      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <ClientLayout>{children}</ClientLayout>
+      </NextIntlClientProvider>
     </div>
   )
 }
