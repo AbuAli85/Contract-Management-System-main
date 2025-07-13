@@ -1,7 +1,6 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { Suspense } from "react"
+import { useEffect, useState } from "react"
 
 // Loading component
 const LoadingSpinner = () => (
@@ -10,16 +9,22 @@ const LoadingSpinner = () => (
   </div>
 )
 
-// Dynamically import the component to prevent SSR issues
-const ManagePartiesContent = dynamic(() => import("./manage-parties-content"), {
-  ssr: false,
-  loading: LoadingSpinner,
-})
-
 export default function ManagePartiesPage() {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <ManagePartiesContent />
-    </Suspense>
-  )
+  const [isClient, setIsClient] = useState(false)
+  const [ManagePartiesContent, setManagePartiesContent] = useState<any>(null)
+
+  useEffect(() => {
+    setIsClient(true)
+
+    // Dynamically import the component only on client side
+    import("./manage-parties-content").then((module) => {
+      setManagePartiesContent(() => module.default)
+    })
+  }, [])
+
+  if (!isClient || !ManagePartiesContent) {
+    return <LoadingSpinner />
+  }
+
+  return <ManagePartiesContent />
 }

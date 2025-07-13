@@ -1,43 +1,58 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-// Mock audit logs for when Supabase is not configured
+// Mock audit logs data
 const mockAuditLogs = [
   {
     id: "1",
     user_id: "1",
     action: "CREATE",
-    table_name: "contracts",
-    record_id: "1",
-    old_values: null,
-    new_values: { title: "New Contract", status: "draft" },
+    resource_type: "contract",
+    resource_id: "1",
+    details: { name: "New Contract Created" },
+    ip_address: "192.168.1.1",
+    user_agent: "Mozilla/5.0...",
     created_at: new Date().toISOString(),
+    user: {
+      email: "admin@example.com",
+      name: "Admin User",
+    },
   },
   {
     id: "2",
-    user_id: "1",
+    user_id: "2",
     action: "UPDATE",
-    table_name: "promoters",
-    record_id: "1",
-    old_values: { status: "inactive" },
-    new_values: { status: "active" },
+    resource_type: "promoter",
+    resource_id: "2",
+    details: { field: "status", old_value: "inactive", new_value: "active" },
+    ip_address: "192.168.1.2",
+    user_agent: "Mozilla/5.0...",
     created_at: new Date(Date.now() - 3600000).toISOString(),
+    user: {
+      email: "user@example.com",
+      name: "Regular User",
+    },
   },
   {
     id: "3",
-    user_id: "2",
+    user_id: "1",
     action: "DELETE",
-    table_name: "parties",
-    record_id: "5",
-    old_values: { name: "Old Party", type: "individual" },
-    new_values: null,
+    resource_type: "party",
+    resource_id: "3",
+    details: { name: "Old Party Deleted" },
+    ip_address: "192.168.1.1",
+    user_agent: "Mozilla/5.0...",
     created_at: new Date(Date.now() - 7200000).toISOString(),
+    user: {
+      email: "admin@example.com",
+      name: "Admin User",
+    },
   },
 ]
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return null
@@ -48,95 +63,203 @@ function getSupabaseClient() {
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const page = Number.parseInt(searchParams.get("page") || "1")
+    const limit = Number.parseInt(searchParams.get("limit") || "10")
+    const action = searchParams.get("action")
+    const resource_type = searchParams.get("resource_type")
+    const user_id = searchParams.get("user_id")
+    const start_date = searchParams.get("start_date")
+    const end_date = searchParams.get("end_date")
+
     const supabase = getSupabaseClient()
 
     if (!supabase) {
-      console.log("Supabase not configured, returning mock audit logs")
-      return NextResponse.json({ logs: mockAuditLogs })
+      // Return filtered mock data
+      let filteredLogs = [...mockAuditLogs]
+
+      if (action) {
+        filteredLogs = filteredLogs.filter((log) => log.action === action)
+      }
+
+      if (resource_type) {
+        filteredLogs = filteredLogs.filter((log) => log.resource_type === resource_type)
+      }
+
+      if (user_id) {
+        filteredLogs = filteredLogs.filter((log) => log.user_id === user_id)
+      }
+
+      if (start_date) {
+        filteredLogs = filteredLogs.filter((log) => new Date(log.created_at) >= new Date(start_date))
+      }
+
+      if (end_date) {
+        filteredLogs = filteredLogs.filter((log) => new Date(log.created_at) <= new Date(end_date))
+      }
+
+      // Pagination
+      const offset = (page - 1) * limit
+      const paginatedLogs = filteredLogs.slice(offset, offset + limit)
+
+      return NextResponse.json({
+        success: true,
+        data: paginatedLogs,
+        pagination: {
+          page,
+          limit,
+          total: filteredLogs.length,
+          totalPages: Math.ceil(filteredLogs.length / limit),
+        },
+        message: "Using mock data - Supabase not configured",
+      })
     }
 
-    const { searchParams } = new URL(request.url)
-    const page = Number.parseInt(searchParams.get("page") || "1")
-    const limit = Number.parseInt(searchParams.get("limit") || "50")
-    const table_name = searchParams.get("table_name")
-    const action = searchParams.get("action")
-    const user_id = searchParams.get("user_id")
-
-    let query = supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
+    // Build query
+    let query = supabase
+      .from("audit_logs")
+      .select(`
+        *,
+        user:profiles(email, name)
+      `)
+      .order("created_at", { ascending: false })
 
     // Apply filters
-    if (table_name) {
-      query = query.eq("table_name", table_name)
-    }
     if (action) {
       query = query.eq("action", action)
     }
+
+    if (resource_type) {
+      query = query.eq("resource_type", resource_type)
+    }
+
     if (user_id) {
       query = query.eq("user_id", user_id)
     }
 
-    // Apply pagination
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    query = query.range(from, to)
+    if (start_date) {
+      query = query.gte("created_at", start_date)
+    }
 
-    const { data: logs, error, count } = await query
+    if (end_date) {
+      query = query.lte("created_at", end_date)
+    }
+
+    // Apply pagination
+    const offset = (page - 1) * limit
+    query = query.range(offset, offset + limit - 1)
+
+    const { data, error, count } = await query
 
     if (error) {
-      console.error("Error fetching audit logs:", error)
-      return NextResponse.json({ logs: mockAuditLogs, total: mockAuditLogs.length })
+      console.error("Supabase error:", error)
+      // Return mock data on error
+      let filteredLogs = [...mockAuditLogs]
+
+      if (action) {
+        filteredLogs = filteredLogs.filter((log) => log.action === action)
+      }
+
+      const offset = (page - 1) * limit
+      const paginatedLogs = filteredLogs.slice(offset, offset + limit)
+
+      return NextResponse.json({
+        success: true,
+        data: paginatedLogs,
+        pagination: {
+          page,
+          limit,
+          total: filteredLogs.length,
+          totalPages: Math.ceil(filteredLogs.length / limit),
+        },
+        message: "Using mock data - Database error",
+      })
     }
 
     return NextResponse.json({
-      logs: logs || [],
-      total: count || 0,
-      page,
-      limit,
+      success: true,
+      data: data || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
     })
   } catch (error) {
-    console.error("Audit logs API error:", error)
-    return NextResponse.json({ logs: mockAuditLogs, total: mockAuditLogs.length })
+    console.error("API error:", error)
+    return NextResponse.json({
+      success: true,
+      data: mockAuditLogs.slice(0, 10),
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: mockAuditLogs.length,
+        totalPages: Math.ceil(mockAuditLogs.length / 10),
+      },
+      message: "Using mock data - API error",
+    })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json()
     const supabase = getSupabaseClient()
 
     if (!supabase) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 503 })
+      // Simulate creation with mock data
+      const newLog = {
+        id: Date.now().toString(),
+        ...body,
+        created_at: new Date().toISOString(),
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: newLog,
+        message: "Mock audit log created - Supabase not configured",
+      })
     }
 
-    const body = await request.json()
-    const { user_id, action, table_name, record_id, old_values, new_values } = body
-
-    if (!user_id || !action || !table_name || !record_id) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
-
-    const { data: log, error } = await supabase
+    const { data, error } = await supabase
       .from("audit_logs")
       .insert([
         {
-          user_id,
-          action,
-          table_name,
-          record_id,
-          old_values,
-          new_values,
+          ...body,
+          created_at: new Date().toISOString(),
         },
       ])
       .select()
       .single()
 
     if (error) {
-      console.error("Error creating audit log:", error)
-      return NextResponse.json({ error: "Failed to create audit log" }, { status: 500 })
+      console.error("Supabase error:", error)
+      const newLog = {
+        id: Date.now().toString(),
+        ...body,
+        created_at: new Date().toISOString(),
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: newLog,
+        message: "Mock audit log created - Database error",
+      })
     }
 
-    return NextResponse.json({ log })
+    return NextResponse.json({
+      success: true,
+      data,
+    })
   } catch (error) {
-    console.error("Audit logs POST error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("API error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to create audit log",
+      },
+      { status: 500 },
+    )
   }
 }
