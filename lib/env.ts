@@ -20,3 +20,20 @@ export function validateEnv() {
 
   return missingVars.length === 0
 }
+
+// Runtime check for server-side environment variables
+export function validateServerEnv() {
+  const serverEnvVars = {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  }
+
+  const missingServerVars = Object.entries(serverEnvVars)
+    .filter(([_, value]) => !value || value.includes("placeholder"))
+    .map(([key]) => key)
+
+  if (missingServerVars.length > 0) {
+    throw new Error(`Missing server environment variables: ${missingServerVars.join(", ")}`)
+  }
+
+  return true
+}

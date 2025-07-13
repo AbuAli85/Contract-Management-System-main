@@ -1,5 +1,5 @@
 // app/api/contracts/makecom/generate/route.ts
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import {
   generateContractWithMakecom,
@@ -8,17 +8,19 @@ import {
 } from "@/lib/contract-type-config"
 import { getMakecomTemplateConfig, generateMakecomBlueprint } from "@/lib/makecom-template-config"
 
-// Support both client and server environments for robustness
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Function to get Supabase client with runtime validation
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error(
-    "Supabase URL or Service Role Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set."
-  )
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error(
+      "Supabase URL or Service Role Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.",
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey)
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 // GET: List all Make.com enabled contract types
 export async function GET(request: NextRequest) {
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
             success: false,
             error: "Template configuration not found",
           },
-          { status: 404 }
+          { status: 404 },
         )
       }
 
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
             success: false,
             error: "Blueprint generation failed",
           },
-          { status: 404 }
+          { status: 404 },
         )
       }
 
@@ -99,7 +101,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: "Invalid action parameter",
       },
-      { status: 400 }
+      { status: 400 },
     )
   } catch (error) {
     console.error("❌ Make.com API error:", error)
@@ -108,7 +110,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
@@ -116,6 +118,9 @@ export async function GET(request: NextRequest) {
 // POST: Generate contract using Make.com templates
 export async function POST(request: NextRequest) {
   try {
+    // Get Supabase client with runtime validation
+    const supabase = getSupabaseClient()
+
     const body = await request.json()
     const { contractType, contractData, triggerMakecom = true } = body
 
@@ -127,15 +132,12 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Contract type and data are required",
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     // Generate contract with Make.com integration
-    const { webhookPayload, templateConfig, validation } = generateContractWithMakecom(
-      contractType,
-      contractData
-    )
+    const { webhookPayload, templateConfig, validation } = generateContractWithMakecom(contractType, contractData)
 
     if (!validation.isValid) {
       return NextResponse.json(
@@ -147,7 +149,7 @@ export async function POST(request: NextRequest) {
             warnings: validation.warnings,
           },
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -183,7 +185,7 @@ export async function POST(request: NextRequest) {
           error: "Failed to create contract",
           details: contractError,
         },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -267,7 +269,7 @@ export async function POST(request: NextRequest) {
         error: "Contract generation failed",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
