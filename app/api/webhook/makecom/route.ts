@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl) {
-  throw new Error("Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL.")
-}
-if (!supabaseServiceRoleKey) {
-  throw new Error("Supabase Service Role Key is required. Please set SUPABASE_SERVICE_ROLE_KEY.")
-}
+  if (!supabaseUrl) {
+    throw new Error("Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL.")
+  }
+  if (!supabaseServiceRoleKey) {
+    throw new Error("Supabase Service Role Key is required. Please set SUPABASE_SERVICE_ROLE_KEY.")
+  }
 
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+  return createClient(supabaseUrl, supabaseServiceRoleKey)
+}
 
 export async function POST(request: Request) {
   try {
+    const supabase = getSupabaseClient()
     const { contract_number } = await request.json()
 
     console.log("🔄 Webhook received contract_number:", contract_number)
@@ -32,7 +35,7 @@ export async function POST(request: Request) {
         client_company:companies!contracts_client_company_id_fkey(*),
         employer_company:companies!contracts_employer_company_id_fkey(*),
         promoter:promoters(*)
-      `
+      `,
       )
       .eq("contract_number", contract_number)
       .eq("is_current", true)
@@ -57,12 +60,12 @@ export async function POST(request: Request) {
       contract_id: contract.id,
       contract_number: contract.contract_number,
 
-      // � PARTY A = CLIENT COMPANY
+      // 🏢 PARTY A = CLIENT COMPANY
       first_party_name_en: contract.client_company?.name_en || "",
       first_party_name_ar: contract.client_company?.name_ar || "",
       first_party_crn: contract.client_company?.crn || "",
 
-      // � PARTY B = EMPLOYER COMPANY
+      // 🏢 PARTY B = EMPLOYER COMPANY
       second_party_name_en: contract.employer_company?.name_en || "",
       second_party_name_ar: contract.employer_company?.name_ar || "",
       second_party_crn: contract.employer_company?.crn || "",
@@ -100,7 +103,10 @@ export async function POST(request: Request) {
     return NextResponse.json(webhookData)
   } catch (error) {
     console.error("❌ Webhook error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      { status: 500 },
+    )
   }
 }
 
@@ -112,13 +118,14 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
       version: "1.0",
     },
-    { status: 200 }
+    { status: 200 },
   )
 }
 
 // Handle PATCH requests for PDF ready updates
 export async function PATCH(request: Request) {
   try {
+    const supabase = getSupabaseClient()
     const data = await request.json()
     console.log("📄 PDF ready webhook received:", data)
 
@@ -129,7 +136,7 @@ export async function PATCH(request: Request) {
         {
           error: "contract_number and pdf_url are required",
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -175,6 +182,9 @@ export async function PATCH(request: Request) {
     })
   } catch (error) {
     console.error("❌ PATCH webhook error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      { status: 500 },
+    )
   }
 }
