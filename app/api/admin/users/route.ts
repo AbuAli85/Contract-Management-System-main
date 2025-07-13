@@ -1,92 +1,176 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerComponentClient } from "@/lib/supabaseServer"
-import { setUserActiveStatus, resetUserPassword } from "./actions"
+import { createClient } from "@supabase/supabase-js"
+import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, isEnvConfigured } from "@/lib/env"
 
-// Helper: check if user has a specific permission
-async function hasPermission(supabase: any, userId: string, permission: string) {
-  try {
-    const { data, error } = await supabase
-      .from("user_permissions")
-      .select("permission_id, permissions(name)")
-      .eq("user_id", userId)
-
-    if (error) return false
-    return (data || []).some((p: any) => p.permissions?.name === permission)
-  } catch (error) {
-    console.error("Permission check error:", error)
-    return false
-  }
-}
-
-// GET: List all users with roles and status
 export async function GET() {
   try {
-    const supabase = await createServerComponentClient()
-    if (!supabase) {
-      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Supabase not configured",
+          users: [],
+        },
+        { status: 200 },
+      )
     }
 
-    // Join profiles, user_roles, and roles tables
-    const { data, error } = await supabase.from("profiles").select(`
-        id, 
-        email, 
-        is_active, 
-        user_roles: user_roles!inner(
-          role_id, 
-          roles: roles!inner(name)
-        )
-      `)
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 
     if (error) {
-      console.error("Supabase error:", error)
-      return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+      console.error("Error fetching users:", error)
+      return NextResponse.json(
+        {
+          error: error.message,
+          users: [],
+        },
+        { status: 500 },
+      )
     }
 
-    // Map roles to array of names
-    const users = (data || []).map((u: any) => ({
-      ...u,
-      roles: u.user_roles?.map((ur: any) => ur.roles?.name).filter(Boolean) || [],
-      is_active: u.is_active ?? true, // fallback to true if not present
-    }))
-
-    return NextResponse.json({ users })
+    return NextResponse.json({ users: data || [] })
   } catch (err: any) {
-    console.error("API error:", err)
-    return NextResponse.json({ error: "Internal Server Error", details: err?.message || err }, { status: 500 })
+    console.error("Users API error:", err)
+    return NextResponse.json(
+      {
+        error: err.message || "Internal server error",
+        users: [],
+      },
+      { status: 500 },
+    )
   }
 }
 
-// PATCH: Enable/disable user or reset password
-export async function PATCH(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerComponentClient()
-    if (!supabase) {
-      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 503 })
     }
 
-    const { user_id, is_active, reset_password, new_password, admin_id } = await req.json()
+    const body = await request.json()
+    const { email, full_name, role } = body
 
-    // --- Permission check ---
-    if (!admin_id || !(await hasPermission(supabase, admin_id, "manage_users"))) {
-      return NextResponse.json({ error: "Forbidden: missing permission" }, { status: 403 })
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Create user in auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      email_confirm: true,
+    })
+
+    if (authError) {
+      console.error("Error creating auth user:", authError)
+      return NextResponse.json({ error: authError.message }, { status: 500 })
     }
 
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || ""
-    const userAgent = req.headers.get("user-agent") || ""
+    // Create profile
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: authData.user.id,
+        email,
+        full_name,
+        role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      })
+      .select()
+      .single()
 
-    if (typeof is_active === "boolean") {
-      await setUserActiveStatus(user_id, is_active, admin_id, ip, userAgent)
-      return NextResponse.json({ success: true, is_active })
+    if (profileError) {
+      console.error("Error creating profile:", profileError)
+      // Try to clean up auth user
+      await supabase.auth.admin.deleteUser(authData.user.id)
+      return NextResponse.json({ error: profileError.message }, { status: 500 })
     }
 
-    if (reset_password && new_password) {
-      await resetUserPassword(user_id, new_password, admin_id, ip, userAgent)
-      return NextResponse.json({ success: true, reset_password: true })
-    }
-
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    return NextResponse.json({ success: true, user: profileData })
   } catch (err: any) {
-    console.error("PATCH users error:", err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error("Users POST error:", err)
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 503 })
+    }
+
+    const body = await request.json()
+    const { id, email, full_name, role, is_active } = body
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        email,
+        full_name,
+        role,
+        is_active,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error updating user:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, user: data })
+  } catch (err: any) {
+    console.error("Users PUT error:", err)
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 503 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    }
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Delete profile
+    const { error: profileError } = await supabase.from("profiles").delete().eq("id", id)
+
+    if (profileError) {
+      console.error("Error deleting profile:", profileError)
+      return NextResponse.json({ error: profileError.message }, { status: 500 })
+    }
+
+    // Delete auth user
+    const { error: authError } = await supabase.auth.admin.deleteUser(id)
+
+    if (authError) {
+      console.error("Error deleting auth user:", authError)
+      // Profile is already deleted, so we'll continue
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error("Users DELETE error:", err)
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 })
   }
 }

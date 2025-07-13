@@ -1,108 +1,177 @@
-import { createServerComponentClient } from "@/lib/supabaseServer"
+import { createClient } from "@supabase/supabase-js"
+import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, isEnvConfigured } from "@/lib/env"
 
-export async function setUserActiveStatus(
-  userId: string,
-  isActive: boolean,
-  adminId: string,
-  ip: string,
-  userAgent: string,
-) {
-  const supabase = await createServerComponentClient()
-  if (!supabase) {
-    throw new Error("Service unavailable")
-  }
-
-  // Update user status
-  const { error: updateError } = await supabase.from("profiles").update({ is_active: isActive }).eq("id", userId)
-
-  if (updateError) {
-    throw new Error(`Failed to update user status: ${updateError.message}`)
-  }
-
-  // Log the action
+export async function getUsers() {
   try {
-    await supabase.from("audit_logs").insert([
-      {
-        user_id: adminId,
-        action: isActive ? "user_activated" : "user_deactivated",
-        resource_type: "user",
-        resource_id: userId,
-        details: {
-          target_user_id: userId,
-          new_status: isActive,
-          ip_address: ip,
-          user_agent: userAgent,
-        },
-        created_at: new Date().toISOString(),
-      },
-    ])
-  } catch (logError) {
-    console.warn("Failed to log user status change:", logError)
-  }
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return { users: [], error: null }
+    }
 
-  // Create notification
-  try {
-    await supabase.from("notifications").insert([
-      {
-        type: isActive ? "user_activated" : "user_deactivated",
-        message: `User ${isActive ? "activated" : "deactivated"} by admin`,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        is_read: false,
-      },
-    ])
-  } catch (notificationError) {
-    console.warn("Failed to create notification:", notificationError)
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching users:", error)
+      return { users: [], error: error.message }
+    }
+
+    return { users: data || [], error: null }
+  } catch (err: any) {
+    console.error("Get users error:", err)
+    return { users: [], error: err.message || "Internal server error" }
   }
 }
 
-export async function resetUserPassword(
-  userId: string,
-  newPassword: string,
-  adminId: string,
-  ip: string,
-  userAgent: string,
+export async function createUser(userData: {
+  email: string
+  full_name: string
+  role: string
+}) {
+  try {
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return { user: null, error: "Supabase not configured" }
+    }
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Create user in auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      email_confirm: true,
+    })
+
+    if (authError) {
+      console.error("Error creating auth user:", authError)
+      return { user: null, error: authError.message }
+    }
+
+    // Create profile
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: authData.user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      })
+      .select()
+      .single()
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError)
+      // Try to clean up auth user
+      await supabase.auth.admin.deleteUser(authData.user.id)
+      return { user: null, error: profileError.message }
+    }
+
+    return { user: profileData, error: null }
+  } catch (err: any) {
+    console.error("Create user error:", err)
+    return { user: null, error: err.message || "Internal server error" }
+  }
+}
+
+export async function updateUser(
+  id: string,
+  userData: {
+    email?: string
+    full_name?: string
+    role?: string
+    is_active?: boolean
+  },
 ) {
-  const supabase = await createServerComponentClient()
-  if (!supabase) {
-    throw new Error("Service unavailable")
-  }
-
-  // Note: In a real implementation, you would use Supabase Admin API
-  // to reset the password. This is a placeholder implementation.
-
-  // Log the action
   try {
-    await supabase.from("audit_logs").insert([
-      {
-        user_id: adminId,
-        action: "password_reset",
-        resource_type: "user",
-        resource_id: userId,
-        details: {
-          target_user_id: userId,
-          ip_address: ip,
-          user_agent: userAgent,
-        },
-        created_at: new Date().toISOString(),
-      },
-    ])
-  } catch (logError) {
-    console.warn("Failed to log password reset:", logError)
-  }
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return { user: null, error: "Supabase not configured" }
+    }
 
-  // Create notification
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        ...userData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error updating user:", error)
+      return { user: null, error: error.message }
+    }
+
+    return { user: data, error: null }
+  } catch (err: any) {
+    console.error("Update user error:", err)
+    return { user: null, error: err.message || "Internal server error" }
+  }
+}
+
+export async function deleteUser(id: string) {
   try {
-    await supabase.from("notifications").insert([
-      {
-        type: "password_reset",
-        message: "Your password has been reset by an administrator",
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        is_read: false,
-      },
-    ])
-  } catch (notificationError) {
-    console.warn("Failed to create notification:", notificationError)
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return { success: false, error: "Supabase not configured" }
+    }
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Delete profile
+    const { error: profileError } = await supabase.from("profiles").delete().eq("id", id)
+
+    if (profileError) {
+      console.error("Error deleting profile:", profileError)
+      return { success: false, error: profileError.message }
+    }
+
+    // Delete auth user
+    const { error: authError } = await supabase.auth.admin.deleteUser(id)
+
+    if (authError) {
+      console.error("Error deleting auth user:", authError)
+      // Profile is already deleted, so we'll continue
+    }
+
+    return { success: true, error: null }
+  } catch (err: any) {
+    console.error("Delete user error:", err)
+    return { success: false, error: err.message || "Internal server error" }
+  }
+}
+
+export async function getUserById(id: string) {
+  try {
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return { user: null, error: "Supabase not configured" }
+    }
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single()
+
+    if (error) {
+      console.error("Error fetching user:", error)
+      return { user: null, error: error.message }
+    }
+
+    return { user: data, error: null }
+  } catch (err: any) {
+    console.error("Get user by ID error:", err)
+    return { user: null, error: err.message || "Internal server error" }
   }
 }

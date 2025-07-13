@@ -1,142 +1,158 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerComponentClient } from "@/lib/supabaseServer"
+import { createClient } from "@supabase/supabase-js"
+import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, isEnvConfigured } from "@/lib/env"
 
-// Helper to check admin using users table
-async function requireAdmin(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerComponentClient()
-    if (!supabase) {
-      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json(
+        {
+          error: "Supabase not configured",
+          userPermissions: [],
+        },
+        { status: 200 },
+      )
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId")
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    let query = supabase.from("user_permissions").select(`
+        *,
+        permissions (
+          id,
+          name,
+          description
+        )
+      `)
+
+    if (userId) {
+      query = query.eq("user_id", userId)
     }
 
-    // Check if user has admin role in users table
-    const { data: user, error } = await supabase.from("users").select("role").eq("id", session.user.id).single()
+    const { data, error } = await query.order("created_at", { ascending: false })
 
-    if (error || user?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 })
+    if (error) {
+      console.error("Error fetching user permissions:", error)
+      return NextResponse.json(
+        {
+          error: error.message,
+          userPermissions: [],
+        },
+        { status: 500 },
+      )
     }
 
-    return { user: session.user, supabase }
-  } catch (error) {
-    console.error("Admin check error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ userPermissions: data || [] })
+  } catch (err: any) {
+    console.error("User permissions API error:", err)
+    return NextResponse.json(
+      {
+        error: err.message || "Internal server error",
+        userPermissions: [],
+      },
+      { status: 500 },
+    )
   }
 }
 
-// POST: Assign a permission to a user
 export async function POST(request: NextRequest) {
   try {
-    const adminCheck = await requireAdmin(request)
-    if (adminCheck instanceof NextResponse) return adminCheck
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 503 })
+    }
 
-    const { user, supabase } = adminCheck
-    const { user_id, permission_id } = await request.json()
+    const body = await request.json()
+    const { user_id, permission_id } = body
 
     if (!user_id || !permission_id) {
-      return NextResponse.json({ error: "Missing user_id or permission_id" }, { status: 400 })
+      return NextResponse.json({ error: "User ID and Permission ID are required" }, { status: 400 })
+    }
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Check if the user permission already exists
+    const { data: existing } = await supabase
+      .from("user_permissions")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("permission_id", permission_id)
+      .single()
+
+    if (existing) {
+      return NextResponse.json({ error: "User already has this permission" }, { status: 400 })
     }
 
     const { data, error } = await supabase
       .from("user_permissions")
-      .insert([{ user_id, permission_id }])
-      .select()
+      .insert({
+        user_id,
+        permission_id,
+        created_at: new Date().toISOString(),
+      })
+      .select(`
+        *,
+        permissions (
+          id,
+          name,
+          description
+        )
+      `)
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-
-    // Create notification
-    try {
-      await supabase.from("notifications").insert([
-        {
-          type: "permission_assigned",
-          message: `Permission assigned (permission_id: ${permission_id}) to user_id: ${user_id}`,
-          user_id,
-          created_at: new Date().toISOString(),
-          is_read: false,
-        },
-      ])
-    } catch (notificationError) {
-      console.warn("Failed to create notification:", notificationError)
-    }
-
-    return NextResponse.json({ user_permission: data })
-  } catch (error) {
-    console.error("POST user-permissions error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-// DELETE: Remove a permission from a user
-export async function DELETE(request: NextRequest) {
-  try {
-    const adminCheck = await requireAdmin(request)
-    if (adminCheck instanceof NextResponse) return adminCheck
-
-    const { user, supabase } = adminCheck
-    const { user_id, permission_id } = await request.json()
-
-    if (!user_id || !permission_id) {
-      return NextResponse.json({ error: "Missing user_id or permission_id" }, { status: 400 })
-    }
-
-    const { error } = await supabase
-      .from("user_permissions")
-      .delete()
-      .eq("user_id", user_id)
-      .eq("permission_id", permission_id)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-
-    // Create notification
-    try {
-      await supabase.from("notifications").insert([
-        {
-          type: "permission_removed",
-          message: `Permission removed (permission_id: ${permission_id}) from user_id: ${user_id}`,
-          user_id,
-          created_at: new Date().toISOString(),
-          is_read: false,
-        },
-      ])
-    } catch (notificationError) {
-      console.warn("Failed to create notification:", notificationError)
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("DELETE user-permissions error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-// GET: List all user_permissions
-export async function GET(request: NextRequest) {
-  try {
-    const adminCheck = await requireAdmin(request)
-    if (adminCheck instanceof NextResponse) return adminCheck
-
-    const { user, supabase } = adminCheck
-    const { data, error } = await supabase.from("user_permissions").select("user_id, permission_id")
-
-    if (error) {
+      console.error("Error creating user permission:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ user_permissions: data })
-  } catch (error) {
-    console.error("GET user-permissions error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ success: true, userPermission: data })
+  } catch (err: any) {
+    console.error("User permissions POST error:", err)
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Check if environment is configured
+    if (!isEnvConfigured()) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 503 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+    const userId = searchParams.get("userId")
+    const permissionId = searchParams.get("permissionId")
+
+    // Create Supabase client
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    let query = supabase.from("user_permissions").delete()
+
+    if (id) {
+      query = query.eq("id", id)
+    } else if (userId && permissionId) {
+      query = query.eq("user_id", userId).eq("permission_id", permissionId)
+    } else {
+      return NextResponse.json({ error: "Either ID or both User ID and Permission ID are required" }, { status: 400 })
+    }
+
+    const { error } = await query
+
+    if (error) {
+      console.error("Error deleting user permission:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error("User permissions DELETE error:", err)
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 })
   }
 }
