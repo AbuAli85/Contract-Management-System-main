@@ -74,91 +74,125 @@ export function DocumentUploadField({
     }
 
     // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024
+    const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
       setError("File size must be less than 10MB")
       return
     }
 
+    setError(null)
+    setUploadProgress(0)
+
     try {
-      setError(null)
-      setUploadProgress(0)
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 100)
+
       await onUpload(file)
       setUploadProgress(100)
+
+      setTimeout(() => {
+        setUploadProgress(0)
+      }, 1000)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Upload failed")
+      setError("Upload failed. Please try again.")
       setUploadProgress(0)
     }
   }
 
+  const handleRemove = () => {
+    // This would typically call an onRemove prop
+    setError(null)
+    setUploadProgress(0)
+  }
+
   return (
     <div className="space-y-2">
-      <Label htmlFor={`${type}-upload`}>
-        {label} {required && <span className="text-red-500">*</span>}
+      <Label className="text-sm font-medium">
+        {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </Label>
 
+      {/* Current document display */}
+      {currentUrl && (
+        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span className="text-sm text-green-700">Document uploaded</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open(currentUrl, "_blank")}
+            >
+              <FileImage className="h-4 w-4" />
+              View
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={handleRemove}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Upload area */}
       <div
         className={cn(
-          "relative rounded-lg border-2 border-dashed p-4 transition-all duration-200",
-          dragOver
-            ? "scale-[1.02] border-primary bg-primary/5"
-            : "border-gray-300 hover:border-gray-400",
+          "rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+          dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400",
           uploading && "pointer-events-none opacity-50"
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {currentUrl ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm text-green-600">Document uploaded</span>
+        {uploading ? (
+          <div className="space-y-2">
+            <div className="flex justify-center">
+              <Upload className="h-8 w-8 animate-pulse text-blue-500" />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(currentUrl, "_blank")}
-            >
-              View
-            </Button>
+            <p className="text-sm text-gray-600">Uploading...</p>
+            {uploadProgress > 0 && (
+              <Progress value={uploadProgress} className="mx-auto w-full max-w-xs" />
+            )}
           </div>
         ) : (
-          <div className="text-center">
-            <FileImage className="mx-auto h-8 w-8 text-gray-400" />
-            <div className="mt-2">
-              <Label
-                htmlFor={`${type}-upload`}
-                className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80"
-              >
-                Click to upload or drag and drop
-              </Label>
-              <p className="text-xs text-gray-500">PNG, JPG, WebP or PDF up to 10MB</p>
+          <div className="space-y-2">
+            <div className="flex justify-center">
+              <Upload className="h-8 w-8 text-gray-400" />
             </div>
-          </div>
-        )}
-
-        <input
-          id={`${type}-upload`}
-          type="file"
-          className="hidden"
-          accept="image/*,application/pdf"
-          onChange={handleFileSelect}
-          disabled={uploading}
-        />
-
-        {uploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-            <div className="text-center">
-              <Upload className="mx-auto h-6 w-6 animate-pulse text-primary" />
-              <p className="mt-1 text-sm text-gray-600">Uploading...</p>
-              {uploadProgress > 0 && <Progress value={uploadProgress} className="mt-2 w-32" />}
+            <div>
+              <p className="text-sm text-gray-600">
+                Drop your file here, or{" "}
+                <label className="cursor-pointer text-blue-500 underline hover:text-blue-600">
+                  browse
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf"
+                    onChange={handleFileSelect}
+                    disabled={uploading}
+                  />
+                </label>
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Supports: JPEG, PNG, WebP, PDF (max 10MB)
+              </p>
             </div>
           </div>
         )}
       </div>
 
+      {/* Error display */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
