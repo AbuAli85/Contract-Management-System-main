@@ -1,183 +1,108 @@
-// Make.com (Integromat) Integration
-// Handles webhook communication with Make.com scenarios
+import { createClient } from "@supabase/supabase-js"
 
-import { ContractInsert } from "@/app/actions/contracts"
-import { Party, Promoter } from "@/lib/types"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
 
-interface MakeWebhookPayload {
-  contractId: string
-  templateId: string
-  contractData: {
-    contractNumber: string
-    firstParty: Party
-    secondParty: Party
-    promoter: Promoter
-    startDate: string
-    endDate: string
-    value?: number | null
-    jobTitle?: string | null
-    workLocation?: string | null
-    metadata?: Record<string, any>
-  }
-  callbackUrl?: string
-}
-
-interface MakeWebhookResponse {
-  success: boolean
-  documentUrl?: string
-  error?: string
-  processId?: string
+export interface MakeWebhookPayload {
+  contract_id: string
+  contract_type: string
+  party_a_name: string
+  party_b_name: string
+  contract_start_date: string
+  contract_end_date: string
+  contract_value?: number
+  status: string
+  template_id?: string
+  created_at: string
 }
 
 export class MakeIntegration {
-  private webhookUrl: string
-  private apiKey: string
+  private webhookUrl: string | null
 
   constructor() {
-    this.webhookUrl = process.env.MAKE_WEBHOOK_URL || ""
-    this.apiKey = process.env.MAKE_API_KEY || ""
-
+    this.webhookUrl = process.env.MAKE_WEBHOOK_URL || null
     if (!this.webhookUrl) {
       console.warn("Make.com webhook URL not configured")
     }
   }
 
-  /**
-   * Send contract data to Make.com for document generation
-   */
-  async generateDocument(
-    contractId: string,
-    templateId: string,
-    contractData: any,
-    parties: { first: Party; second: Party },
-    promoter: Promoter
-  ): Promise<MakeWebhookResponse> {
+  async triggerContractGeneration(payload: MakeWebhookPayload): Promise<boolean> {
     if (!this.webhookUrl) {
-      return {
-        success: false,
-        error: "Make.com integration not configured",
-      }
+      console.warn("Make.com webhook URL not configured")
+      return false
     }
 
     try {
-      const payload: MakeWebhookPayload = {
-        contractId,
-        templateId,
-        contractData: {
-          contractNumber: contractData.contract_number,
-          firstParty: parties.first,
-          secondParty: parties.second,
-          promoter: promoter,
-          startDate: contractData.contract_start_date,
-          endDate: contractData.contract_end_date,
-          value: contractData.contract_value,
-          jobTitle: contractData.job_title,
-          workLocation: contractData.work_location,
-          metadata: contractData.metadata || {},
-        },
-        callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/make/callback`,
-      }
-
       const response = await fetch(this.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": this.apiKey,
-          "X-Contract-ID": contractId,
         },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        throw new Error(`Make.com webhook failed: ${response.statusText}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
-
-      return {
-        success: true,
-        documentUrl: result.documentUrl,
-        processId: result.processId,
-      }
+      console.log("Make.com webhook triggered successfully:", result)
+      return true
     } catch (error) {
-      console.error("Make.com integration error:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred",
-      }
+      console.error("Error triggering Make.com webhook:", error)
+      return false
     }
   }
 
-  /**
-   * Check the status of a document generation process
-   */
-  async checkStatus(processId: string): Promise<{
-    status: "pending" | "completed" | "failed"
-    documentUrl?: string
-    error?: string
-  }> {
-    if (!this.webhookUrl) {
-      return {
-        status: "failed",
-        error: "Make.com integration not configured",
-      }
-    }
-
+  async getContractData(contractId: string) {
     try {
-      const response = await fetch(`${this.webhookUrl}/status/${processId}`, {
-        headers: {
-          "X-API-Key": this.apiKey,
-        },
-      })
+      const { data: contract, error } = await supabase
+        .from("contracts")
+        .select(`
+          *,
+          party_a:parties!contracts_party_a_id_fkey(*),
+          party_b:parties!contracts_party_b_id_fkey(*)
+        `)
+        .eq("id", contractId)
+        .single()
 
-      if (!response.ok) {
-        throw new Error(`Status check failed: ${response.statusText}`)
-      }
+      if (error) throw error
 
-      return await response.json()
+      return contract
     } catch (error) {
-      return {
-        status: "failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+      console.error("Error fetching contract data:", error)
+      return null
+    }
+  }
+
+  async processContractForMake(contractId: string): Promise<boolean> {
+    try {
+      const contract = await this.getContractData(contractId)
+      if (!contract) {
+        console.error("Contract not found:", contractId)
+        return false
       }
-    }
-  }
 
-  /**
-   * Handle callback from Make.com when document is ready
-   */
-  async handleCallback(data: any): Promise<void> {
-    const { contractId, documentUrl, status, error } = data
+      const payload: MakeWebhookPayload = {
+        contract_id: contract.id,
+        contract_type: contract.contract_type || "standard",
+        party_a_name: contract.party_a?.name_en || "Unknown",
+        party_b_name: contract.party_b?.name_en || "Unknown",
+        contract_start_date: contract.contract_start_date,
+        contract_end_date: contract.contract_end_date,
+        contract_value: contract.contract_value,
+        status: contract.status || "draft",
+        template_id: contract.template_id,
+        created_at: contract.created_at,
+      }
 
-    if (status === "completed" && documentUrl) {
-      // Update contract with document URL
-      await this.updateContractDocument(contractId, documentUrl)
-    } else if (status === "failed") {
-      // Log error and notify
-      console.error(`Document generation failed for contract ${contractId}:`, error)
-      // You could send a notification here
-    }
-  }
-
-  private async updateContractDocument(contractId: string, documentUrl: string) {
-    // This would update the contract in Supabase with the generated document URL
-    // Implementation depends on your Supabase setup
-    const { createClient } = await import("@/lib/supabase/server")
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from("contracts")
-      .update({
-        document_url: documentUrl,
-        document_generated_at: new Date().toISOString(),
-      })
-      .eq("id", contractId)
-
-    if (error) {
-      console.error("Failed to update contract document:", error)
+      return await this.triggerContractGeneration(payload)
+    } catch (error) {
+      console.error("Error processing contract for Make.com:", error)
+      return false
     }
   }
 }
 
-// Singleton instance
 export const makeIntegration = new MakeIntegration()
