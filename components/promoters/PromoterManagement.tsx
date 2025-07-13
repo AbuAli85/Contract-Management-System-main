@@ -99,6 +99,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { DocumentUploadField } from "./DocumentUploadField"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -226,6 +227,47 @@ function getDocumentStatus(expiryDate?: string) {
   }
 }
 
+function getOverallStatus(
+  promoter: Promoter,
+  activeContracts: number
+): "active" | "warning" | "critical" | "inactive" {
+  if (promoter.status === "Inactive" || promoter.status === "Suspended") {
+    return "inactive"
+  }
+
+  const idStatus = getDocumentStatus(promoter.id_card_expiry_date)
+  const passportStatus = getDocumentStatus(promoter.passport_expiry_date)
+
+  if (idStatus.text === "Expired" || passportStatus.text === "Expired") {
+    return "critical"
+  }
+
+  if (idStatus.text === "Expiring" || passportStatus.text === "Expiring") {
+    return "warning"
+  }
+
+  if (activeContracts > 0) {
+    return "active"
+  }
+
+  return "inactive"
+}
+
+function areRequiredDocsUploaded(
+  editingPromoter: Promoter | null,
+  documentUploads: { [key: string]: DocumentUpload }
+) {
+  const idCardUploaded =
+    (editingPromoter && editingPromoter.id_card_url) ||
+    documentUploads.id_card.file ||
+    documentUploads.id_card.preview
+  const passportUploaded =
+    (editingPromoter && editingPromoter.passport_url) ||
+    documentUploads.passport.file ||
+    documentUploads.passport.preview
+  return !!idCardUploaded && !!passportUploaded
+}
+
 export function PromoterManagement() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -272,6 +314,8 @@ export function PromoterManagement() {
     status: "Active",
     notes: "",
   })
+
+  const [formError, setFormError] = useState<string | null>(null)
 
   // Memoized filtered promoters (must come before sortedPromoters)
   const filteredPromoters = useMemo(() => {
@@ -406,6 +450,13 @@ export function PromoterManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    setFormError(null)
+
+    if (!areRequiredDocsUploaded(editingPromoter, documentUploads)) {
+      setFormError("ID Card and Passport documents are required.")
+      setSubmitting(false)
+      return
+    }
 
     try {
       const promoterData = {
@@ -581,29 +632,31 @@ export function PromoterManagement() {
     }
   }
 
-  const handleDocumentUpload = (type: "id_card" | "passport" | "profile", file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      setDocumentUploads((prev) => ({
-        ...prev,
-        [type]: {
-          ...prev[type],
-          file,
-          preview: reader.result as string,
-          uploading: true,
-        },
-      }))
-      uploadDocument(type, file)
-    }
-    reader.readAsDataURL(file)
+  const handleDocumentUpload = async (
+    type: "id_card" | "passport" | "profile",
+    file: File
+  ): Promise<void> => {
+    setDocumentUploads((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        file,
+        uploading: true,
+      },
+    }))
+    await uploadDocument(type, file)
   }
 
-  const uploadDocument = async (type: "id_card" | "passport" | "profile", file: File) => {
-    if (!selectedPromoter) return
+  const uploadDocument = async (
+    type: "id_card" | "passport" | "profile",
+    file: File
+  ) => {
+    const promoter = editingPromoter || selectedPromoter
+    if (!promoter) return
 
     const { data, error } = await supabase.storage
       .from("promoter-documents")
-      .upload(`${selectedPromoter.id}/${type}.${file.name.split(".").pop()}`, file)
+      .upload(`${promoter.id}/${type}.${file.name.split(".").pop()}`, file, { upsert: true })
 
     if (error) {
       console.error("Error uploading document:", error)
@@ -628,7 +681,7 @@ export function PromoterManagement() {
     const { error: updateError } = await supabase
       .from("promoters")
       .update({ [updateField]: publicUrl })
-      .eq("id", selectedPromoter.id)
+      .eq("id", promoter.id)
 
     if (updateError) {
       console.error("Error updating promoter document URL:", updateError)
@@ -647,10 +700,7 @@ export function PromoterManagement() {
 
     setDocumentUploads((prev) => ({
       ...prev,
-      [type]: {
-        ...prev[type],
-        uploading: false,
-      },
+      [type]: { ...prev[type], uploading: false, preview: publicUrl },
     }))
   }
 
@@ -807,6 +857,36 @@ export function PromoterManagement() {
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DocumentUploadField
+                      type="id_card"
+                      currentUrl={editingPromoter?.id_card_url}
+                      onUpload={(file) => handleDocumentUpload("id_card", file)}
+                      uploading={documentUploads.id_card.uploading}
+                      label="ID Card (Required)"
+                      required={true}
+                    />
+                    <DocumentUploadField
+                      type="passport"
+                      currentUrl={editingPromoter?.passport_url}
+                      onUpload={(file) => handleDocumentUpload("passport", file)}
+                      uploading={documentUploads.passport.uploading}
+                      label="Passport (Required)"
+                      required={true}
+                    />
+                  </div>
+                  <div>
+                    <DocumentUploadField
+                      type="profile"
+                      currentUrl={editingPromoter?.profile_image_url}
+                      onUpload={(file) => handleDocumentUpload("profile", file)}
+                      uploading={documentUploads.profile.uploading}
+                      label="Profile Image (Optional)"
+                    />
+                  </div>
+                  {formError && (
+                    <div className="text-red-600 text-sm font-medium">{formError}</div>
+                  )}
                   <div className="flex justify-end space-x-2">
                     <Button
                       type="button"
