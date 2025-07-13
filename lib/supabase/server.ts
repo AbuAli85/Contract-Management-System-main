@@ -1,57 +1,30 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Database } from "@/types/database.types"
+import { env } from "../env"
 
 export async function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const cookieStore = await cookies()
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
-    )
+  // Return null if environment variables are missing
+  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn("Supabase environment variables not configured")
+    return null
   }
 
-  try {
-    // Get cookies store
-    const cookieStore = await cookies()
-
-    const client = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-            console.warn("Cookie set error (can be ignored in Server Components):", error)
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options })
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-            console.warn("Cookie remove error (can be ignored in Server Components):", error)
-          }
-        },
+  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
       },
-    })
-
-    // Verify the client has auth methods
-    if (!client.auth) {
-      throw new Error("Supabase client auth is not available")
-    }
-
-    return client
-  } catch (error) {
-    console.error("Failed to create Supabase server client:", error)
-    throw error
-  }
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
+      },
+    },
+  })
 }
