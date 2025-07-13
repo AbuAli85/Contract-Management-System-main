@@ -1,44 +1,24 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import type React from "react"
+
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-import { useSupabase } from "@/components/supabase-provider"
-import PromoterForm from "@/components/promoter-form"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,1336 +28,772 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Progress } from "@/components/ui/progress"
 import {
-  User,
   Plus,
   Search,
-  Filter,
-  RefreshCw,
-  MoreHorizontal,
   Edit,
-  Eye,
   Trash2,
-  Download,
-  Upload,
-  FileText,
-  Calendar,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Users,
-  Building2,
-  Phone,
-  Mail,
-  MapPin,
-  Briefcase,
-  Star,
-  Archive,
-  TrendingUp,
-  Activity,
-  CreditCard,
-  Shield,
-  Hash,
-  Globe,
-  ArrowLeftIcon,
-  FileCheck,
+  MoreHorizontal,
+  User,
+  CheckCircle,
+  AlertCircle,
   XCircle,
-  IdCard,
-  CalendarDays,
-  UserCheck,
-  UserX,
-  FileWarning,
+  Loader2,
+  RefreshCw,
+  Eye,
 } from "lucide-react"
-import {
-  format,
-  parseISO,
-  differenceInDays,
-  isPast,
-  isAfter,
-  isBefore,
-  subDays,
-  addDays,
-} from "date-fns"
-import type { Promoter, Contract } from "@/lib/types"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { supabase } from "@/lib/supabase"
+import { format, parseISO } from "date-fns"
 
-interface PromoterWithStats extends Promoter {
+// Promoter interface
+interface Promoter {
+  id: string
+  name_en: string
+  name_ar: string
+  email: string
+  phone: string
+  address?: string
+  national_id?: string
+  crn?: string
+  id_card_number: string
+  id_card_expiry_date?: string
+  passport_number?: string
+  passport_expiry_date?: string
+  id_card_url?: string
+  passport_url?: string
+  profile_image_url?: string
+  status: "Active" | "Inactive" | "Suspended"
+  created_at: string
+  updated_at?: string
+  notes?: string
   active_contracts_count?: number
   total_contracts_count?: number
-  document_status?: "valid" | "expiring" | "expired"
-  overall_status?: "active" | "warning" | "critical" | "inactive"
-  contracts?: Contract[]
+  last_contract_date?: string
+}
+
+interface FormData {
+  name_en: string
+  name_ar: string
+  email: string
+  phone: string
+  address: string
+  national_id: string
+  crn: string
+  id_card_number: string
+  id_card_expiry_date: string
+  passport_number: string
+  passport_expiry_date: string
+  status: "Active" | "Inactive" | "Suspended"
+  notes: string
 }
 
 interface PromoterStats {
   total: number
   active: number
   inactive: number
-  documentsExpiring: number
-  documentsExpired: number
+  suspended: number
   withActiveContracts: number
   recentlyAdded: number
-  averageContractsPerPromoter: number
 }
-
-type PromoterFilter = "all" | "active" | "inactive" | "expiring" | "expired"
-type DocumentFilter = "all" | "valid" | "expiring" | "expired"
 
 export default function ManagePromotersPage() {
   const { toast } = useToast()
-  const { supabase } = useSupabase()
 
-  const [promoters, setPromoters] = useState<PromoterWithStats[]>([])
-  const [filteredPromoters, setFilteredPromoters] = useState<PromoterWithStats[]>([])
+  // State management
+  const [promoters, setPromoters] = useState<Promoter[]>([])
+  const [stats, setStats] = useState<PromoterStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedPromoters, setSelectedPromoters] = useState<string[]>([])
-  const [selectedPromoter, setSelectedPromoter] = useState<PromoterWithStats | null>(null)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showForm, setShowForm] = useState(false)
-  const [promoterToEdit, setPromoterToEdit] = useState<Promoter | null>(null)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [promoterToDelete, setPromoterToDelete] = useState<PromoterWithStats | null>(null)
-
-  // Filters
+  const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<PromoterFilter>("all")
-  const [documentFilter, setDocumentFilter] = useState<DocumentFilter>("all")
-  const [contractFilter, setContractFilter] = useState<string>("all")
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("name_en")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingPromoter, setEditingPromoter] = useState<Promoter | null>(null)
+  const [deletePromoter, setDeletePromoter] = useState<Promoter | null>(null)
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
+  const [formData, setFormData] = useState<FormData>({
+    name_en: "",
+    name_ar: "",
+    email: "",
+    phone: "",
+    address: "",
+    national_id: "",
+    crn: "",
+    id_card_number: "",
+    id_card_expiry_date: "",
+    passport_number: "",
+    passport_expiry_date: "",
+    status: "Active",
+    notes: "",
+  })
 
-  // Stats
-  const stats = useMemo<PromoterStats>(() => {
-    const now = new Date()
-    const sevenDaysAgo = subDays(now, 7)
+  const [formError, setFormError] = useState<string | null>(null)
 
-    const totalContracts = promoters.reduce((sum, p) => sum + (p.active_contracts_count || 0), 0)
-
-    return {
-      total: promoters.length,
-      active: promoters.filter((p) => p.overall_status === "active").length,
-      inactive: promoters.filter((p) => p.overall_status === "inactive").length,
-      documentsExpiring: promoters.filter((p) => p.document_status === "expiring").length,
-      documentsExpired: promoters.filter((p) => p.document_status === "expired").length,
-      withActiveContracts: promoters.filter((p) => (p.active_contracts_count || 0) > 0).length,
-      recentlyAdded: promoters.filter(
-        (p) => p.created_at && isAfter(parseISO(p.created_at), sevenDaysAgo)
-      ).length,
-      averageContractsPerPromoter: promoters.length > 0 ? totalContracts / promoters.length : 0,
-    }
-  }, [promoters])
-
-  useEffect(() => {
-    fetchPromoters()
-    setupRealtimeSubscription()
-  }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [promoters, searchTerm, statusFilter, documentFilter, contractFilter])
-
-  const fetchPromoters = async () => {
+  // Fetch promoters data
+  const fetchPromoters = useCallback(async () => {
     try {
       setLoading(true)
 
-      // Fetch promoters
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("name_en")
 
-      if (promotersError) throw promotersError
-
-      if (!promotersData || promotersData.length === 0) {
-        setPromoters([])
+      if (promotersError) {
+        console.error("Error fetching promoters:", promotersError)
+        toast({
+          title: "Error",
+          description: "Failed to load promoters. Please try again.",
+          variant: "destructive",
+        })
         return
       }
 
-      // Fetch contract counts for each promoter
-      const promoterIds = promotersData.map((p) => p.id).filter(Boolean)
+      // Process promoters data
+      const processedPromoters = promotersData || []
+      setPromoters(processedPromoters)
 
-      let contractsData: any[] = []
+      // Calculate stats
+      const now = new Date()
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-      // Try to fetch contracts data, but don't fail if there's an error
-      try {
-        const { data, error } = await supabase
-          .from("contracts")
-          .select("*")
-          .in("promoter_id", promoterIds)
-
-        if (error) {
-          console.warn("Error fetching contract data:", error)
-          // Continue without contract data
-        } else {
-          contractsData = data || []
-        }
-      } catch (err) {
-        console.warn("Failed to fetch contracts:", err)
-        // Continue without contract data
+      const statsData: PromoterStats = {
+        total: processedPromoters.length,
+        active: processedPromoters.filter((p) => p.status === "Active").length,
+        inactive: processedPromoters.filter((p) => p.status === "Inactive").length,
+        suspended: processedPromoters.filter((p) => p.status === "Suspended").length,
+        withActiveContracts: processedPromoters.filter((p) => (p.active_contracts_count || 0) > 0).length,
+        recentlyAdded: processedPromoters.filter((p) => new Date(p.created_at) >= thirtyDaysAgo).length,
       }
 
-      // Enhance promoters with stats and status
-      const enhancedPromoters = promotersData.map((promoter) => {
-        const promoterContracts = contractsData?.filter((c) => c.promoter_id === promoter.id) || []
-        const activeContracts = promoterContracts.filter(
-          (c) =>
-            c.contract_end_date &&
-            isAfter(parseISO(c.contract_end_date), new Date()) &&
-            c.status === "active"
-        )
-
-        const documentStatus = getDocumentStatus(promoter)
-        const overallStatus = getOverallStatus(promoter, activeContracts.length)
-
-        return {
-          ...promoter,
-          active_contracts_count: activeContracts.length,
-          total_contracts_count: promoterContracts.length,
-          document_status: documentStatus,
-          overall_status: overallStatus,
-          contracts: promoterContracts,
-        }
-      })
-
-      setPromoters(enhancedPromoters)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load promoters"
+      setStats(statsData)
+    } catch (error) {
+      console.error("Error fetching promoters:", error)
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to load promoters. Please try again.",
         variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
-  const setupRealtimeSubscription = () => {
-    const promotersChannel = supabase
-      .channel("promoters_realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () => {
-        fetchPromoters()
-      })
-      .subscribe()
-
-    const contractsChannel = supabase
-      .channel("contracts_realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => {
-        fetchPromoters()
-      })
+  // Setup realtime subscription
+  const setupRealtimeSubscription = useCallback(() => {
+    const subscription = supabase
+      .channel("promoters_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "promoters",
+        },
+        () => {
+          fetchPromoters()
+        },
+      )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(promotersChannel)
-      supabase.removeChannel(contractsChannel)
+      subscription.unsubscribe()
     }
-  }
+  }, [fetchPromoters])
 
-  const getDocumentStatus = (promoter: PromoterWithStats): "valid" | "expiring" | "expired" => {
-    const now = new Date()
-    const idCardExpiry = promoter.id_card_expiry_date
-      ? parseISO(promoter.id_card_expiry_date)
-      : null
-    const passportExpiry = promoter.passport_expiry_date
-      ? parseISO(promoter.passport_expiry_date)
-      : null
+  // Apply filters
+  const applyFilters = useCallback(() => {
+    return promoters.filter((promoter) => {
+      const matchesSearch =
+        promoter.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        promoter.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        promoter.email.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = selectedStatus === "all" || promoter.status === selectedStatus
+      return matchesSearch && matchesStatus
+    })
+  }, [promoters, searchTerm, selectedStatus])
 
-    // Check if any document is expired
-    if ((idCardExpiry && isPast(idCardExpiry)) || (passportExpiry && isPast(passportExpiry))) {
-      return "expired"
-    }
+  // Memoized filtered promoters
+  const filteredPromoters = useMemo(() => {
+    return applyFilters()
+  }, [applyFilters])
 
-    // Check if any document is expiring within 30 days
-    const thirtyDaysFromNow = addDays(now, 30)
-    if (
-      (idCardExpiry && isBefore(idCardExpiry, thirtyDaysFromNow)) ||
-      (passportExpiry && isBefore(passportExpiry, thirtyDaysFromNow))
-    ) {
-      return "expiring"
-    }
+  // Memoized sorted promoters
+  const sortedPromoters = useMemo(() => {
+    return [...filteredPromoters].sort((a, b) => {
+      const aValue = a[sortBy as keyof Promoter]
+      const bValue = b[sortBy as keyof Promoter]
 
-    return "valid"
-  }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+  }, [filteredPromoters, sortBy, sortOrder])
 
-  const getOverallStatus = (
-    promoter: PromoterWithStats,
-    activeContracts: number
-  ): "active" | "warning" | "critical" | "inactive" => {
-    const documentStatus = getDocumentStatus(promoter)
-
-    if (documentStatus === "expired") return "critical"
-    if (documentStatus === "expiring") return "warning"
-    if (activeContracts > 0) return "active"
-
-    return "inactive"
-  }
-
-  const applyFilters = () => {
-    let filtered = promoters
-
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (p) =>
-          p.name_en?.toLowerCase().includes(searchLower) ||
-          p.name_ar?.toLowerCase().includes(searchLower) ||
-          p.id_card_number?.toLowerCase().includes(searchLower) ||
-          p.email?.toLowerCase().includes(searchLower) ||
-          p.phone?.toLowerCase().includes(searchLower)
-      )
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      if (statusFilter === "active") {
-        filtered = filtered.filter((p) => p.overall_status === "active")
-      } else if (statusFilter === "inactive") {
-        filtered = filtered.filter((p) => p.overall_status === "inactive")
-      } else if (statusFilter === "expiring") {
-        filtered = filtered.filter((p) => p.document_status === "expiring")
-      } else if (statusFilter === "expired") {
-        filtered = filtered.filter((p) => p.document_status === "expired")
-      }
-    }
-
-    // Document filter
-    if (documentFilter !== "all") {
-      filtered = filtered.filter((p) => p.document_status === documentFilter)
-    }
-
-    // Contract filter
-    if (contractFilter === "with-contracts") {
-      filtered = filtered.filter((p) => (p.active_contracts_count || 0) > 0)
-    } else if (contractFilter === "without-contracts") {
-      filtered = filtered.filter((p) => (p.active_contracts_count || 0) === 0)
-    }
-
-    setFilteredPromoters(filtered)
-    setCurrentPage(1) // Reset to first page when filters change
-  }
-
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge className="border-green-200 bg-green-100 text-green-800">
-            <CheckCircle2 className="mr-1 h-3 w-3" />
-            Active
-          </Badge>
-        )
-      case "warning":
-        return (
-          <Badge className="border-yellow-200 bg-yellow-100 text-yellow-800">
-            <Clock className="mr-1 h-3 w-3" />
-            Warning
-          </Badge>
-        )
-      case "critical":
-        return (
-          <Badge className="border-red-200 bg-red-100 text-red-800">
-            <AlertTriangle className="mr-1 h-3 w-3" />
-            Critical
-          </Badge>
-        )
-      case "inactive":
-        return (
-          <Badge variant="secondary">
-            <UserX className="mr-1 h-3 w-3" />
-            Inactive
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  const getDocumentStatusBadge = (status?: string) => {
-    switch (status) {
-      case "valid":
-        return (
-          <Badge className="border-green-200 bg-green-100 text-green-800">
-            <FileCheck className="mr-1 h-3 w-3" />
-            Valid
-          </Badge>
-        )
-      case "expiring":
-        return (
-          <Badge className="border-yellow-200 bg-yellow-100 text-yellow-800">
-            <FileWarning className="mr-1 h-3 w-3" />
-            Expiring
-          </Badge>
-        )
-      case "expired":
-        return (
-          <Badge className="border-red-200 bg-red-100 text-red-800">
-            <XCircle className="mr-1 h-3 w-3" />
-            Expired
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  const exportPromoters = () => {
-    const headers = [
-      "ID",
-      "Name (EN)",
-      "Name (AR)",
-      "ID Card Number",
-      "Email",
-      "Phone",
-      "ID Card Expiry",
-      "Passport Expiry",
-      "Active Contracts",
-      "Document Status",
-      "Overall Status",
-      "Created At",
-    ]
-
-    const csvData = filteredPromoters.map((p) => [
-      p.id,
-      p.name_en || "",
-      p.name_ar || "",
-      p.id_card_number || "",
-      p.email || "",
-      p.phone || "",
-      p.id_card_expiry_date || "",
-      p.passport_expiry_date || "",
-      p.active_contracts_count || 0,
-      p.document_status || "",
-      p.overall_status || "",
-      p.created_at || "",
-    ])
-
-    const csvContent = [
-      headers.join(","),
-      ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `promoters-${format(new Date(), "yyyy-MM-dd")}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const clearFilters = () => {
-    setSearchTerm("")
-    setStatusFilter("all")
-    setDocumentFilter("all")
-    setContractFilter("all")
-  }
-
-  const handleEdit = (promoter: PromoterWithStats) => {
-    setPromoterToEdit(promoter)
-    setShowForm(true)
-  }
-
-  const handleAddNew = () => {
-    setPromoterToEdit(null)
-    setShowForm(true)
-  }
-
-  const handleFormClose = () => {
-    setShowForm(false)
-    setPromoterToEdit(null)
+  useEffect(() => {
     fetchPromoters()
-  }
+    setupRealtimeSubscription()
+  }, [fetchPromoters, setupRealtimeSubscription])
 
-  const handleDelete = async (promoter: PromoterWithStats) => {
-    setPromoterToDelete(promoter)
-    setShowDeleteDialog(true)
-  }
+  useEffect(() => {
+    applyFilters()
+  }, [applyFilters])
 
-  const confirmDelete = async () => {
-    if (!promoterToDelete) return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setFormError(null)
 
     try {
-      const { error } = await supabase.from("promoters").delete().eq("id", promoterToDelete.id)
+      const promoterData = {
+        ...formData,
+        updated_at: new Date().toISOString(),
+      }
 
-      if (error) throw error
+      if (editingPromoter) {
+        const { error } = await supabase.from("promoters").update(promoterData).eq("id", editingPromoter.id)
 
-      toast({
-        title: "Promoter deleted",
-        description: "The promoter has been successfully deleted.",
-      })
+        if (error) throw error
 
+        toast({
+          title: "Success",
+          description: "Promoter updated successfully",
+        })
+      } else {
+        const { error } = await supabase.from("promoters").insert([
+          {
+            ...promoterData,
+            created_at: new Date().toISOString(),
+          },
+        ])
+
+        if (error) throw error
+
+        toast({
+          title: "Success",
+          description: "Promoter created successfully",
+        })
+      }
+
+      setIsAddDialogOpen(false)
+      setEditingPromoter(null)
+      resetForm()
       fetchPromoters()
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error saving promoter:", error)
       toast({
-        title: "Error deleting promoter",
-        description: error.message,
+        title: "Error",
+        description: "Failed to save promoter. Please try again.",
         variant: "destructive",
       })
     } finally {
-      setShowDeleteDialog(false)
-      setPromoterToDelete(null)
+      setSubmitting(false)
     }
   }
 
-  const handleBulkDelete = async () => {
+  const handleDelete = async () => {
+    if (!deletePromoter) return
+
     try {
-      const { error } = await supabase.from("promoters").delete().in("id", selectedPromoters)
+      const { error } = await supabase.from("promoters").delete().eq("id", deletePromoter.id)
 
       if (error) throw error
 
       toast({
-        title: "Promoters deleted",
-        description: `${selectedPromoters.length} promoters have been successfully deleted.`,
+        title: "Success",
+        description: "Promoter deleted successfully",
       })
 
-      setSelectedPromoters([])
+      setDeletePromoter(null)
       fetchPromoters()
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error deleting promoter:", error)
       toast({
-        title: "Error deleting promoters",
-        description: error.message,
+        title: "Error",
+        description: "Failed to delete promoter. Please try again.",
         variant: "destructive",
       })
     }
   }
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPromoters.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedPromoters = filteredPromoters.slice(startIndex, startIndex + itemsPerPage)
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl">
-          <Skeleton className="mb-8 h-8 w-48" />
-          <div className="mb-8 grid gap-4 md:grid-cols-4 lg:grid-cols-7">
-            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-          <Skeleton className="h-96" />
-        </div>
-      </div>
-    )
+  const resetForm = () => {
+    setFormData({
+      name_en: "",
+      name_ar: "",
+      email: "",
+      phone: "",
+      address: "",
+      national_id: "",
+      crn: "",
+      id_card_number: "",
+      id_card_expiry_date: "",
+      passport_number: "",
+      passport_expiry_date: "",
+      status: "Active",
+      notes: "",
+    })
   }
 
-  if (showForm) {
-    return (
-      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-2xl">
-          <Button variant="outline" onClick={handleFormClose} className="mb-4">
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
-            Back to Promoter List
-          </Button>
-          <PromoterForm promoterToEdit={promoterToEdit} onFormSubmit={handleFormClose} />
-        </div>
-      </div>
-    )
+  const handleEdit = (promoter: Promoter) => {
+    setEditingPromoter(promoter)
+    setFormData({
+      name_en: promoter.name_en,
+      name_ar: promoter.name_ar,
+      email: promoter.email,
+      phone: promoter.phone,
+      address: promoter.address || "",
+      national_id: promoter.national_id || "",
+      crn: promoter.crn || "",
+      id_card_number: promoter.id_card_number,
+      id_card_expiry_date: promoter.id_card_expiry_date || "",
+      passport_number: promoter.passport_number || "",
+      passport_expiry_date: promoter.passport_expiry_date || "",
+      status: promoter.status,
+      notes: promoter.notes || "",
+    })
+    setIsAddDialogOpen(true)
+  }
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Active":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+            Active
+          </Badge>
+        )
+      case "Inactive":
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+            Inactive
+          </Badge>
+        )
+      case "Suspended":
+        return (
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
+            Suspended
+          </Badge>
+        )
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Active":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "Inactive":
+        return <XCircle className="h-4 w-4 text-gray-500" />
+      case "Suspended":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "MMM dd, yyyy")
+    } catch {
+      return "Invalid date"
+    }
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <TooltipProvider>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Promoter Management</h1>
-              <p className="mt-1 text-muted-foreground">
-                Manage promoter profiles, documents, and contract assignments
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={fetchPromoters} disabled={loading}>
-                <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-                Refresh
-              </Button>
-              <Button variant="outline" onClick={exportPromoters}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-              <Button onClick={handleAddNew}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Promoter
-              </Button>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Promoter Management</h1>
+            <p className="text-muted-foreground">Manage contract promoters and their information</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={fetchPromoters} disabled={loading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Promoter
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{editingPromoter ? "Edit Promoter" : "Add New Promoter"}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name_en">English Name</Label>
+                      <Input
+                        id="name_en"
+                        value={formData.name_en}
+                        onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="name_ar">Arabic Name</Label>
+                      <Input
+                        id="name_ar"
+                        value={formData.name_ar}
+                        onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="national_id">National ID</Label>
+                      <Input
+                        id="national_id"
+                        value={formData.national_id}
+                        onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="crn">CRN</Label>
+                      <Input
+                        id="crn"
+                        value={formData.crn}
+                        onChange={(e) => setFormData({ ...formData, crn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="id_card_number">ID Card Number</Label>
+                      <Input
+                        id="id_card_number"
+                        value={formData.id_card_number}
+                        onChange={(e) => setFormData({ ...formData, id_card_number: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="id_card_expiry_date">ID Card Expiry Date</Label>
+                      <Input
+                        id="id_card_expiry_date"
+                        type="date"
+                        value={formData.id_card_expiry_date}
+                        onChange={(e) => setFormData({ ...formData, id_card_expiry_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="passport_number">Passport Number</Label>
+                      <Input
+                        id="passport_number"
+                        value={formData.passport_number}
+                        onChange={(e) => setFormData({ ...formData, passport_number: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="passport_expiry_date">Passport Expiry Date</Label>
+                      <Input
+                        id="passport_expiry_date"
+                        type="date"
+                        value={formData.passport_expiry_date}
+                        onChange={(e) => setFormData({ ...formData, passport_expiry_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                  </div>
+
+                  {formError && <div className="text-sm font-medium text-red-600">{formError}</div>}
+
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={submitting}>
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {editingPromoter ? "Updating..." : "Creating..."}
+                        </>
+                      ) : (
+                        <>{editingPromoter ? "Update" : "Create"} Promoter</>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        {/* Filters */}
+        <div className="flex space-x-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search promoters..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="Suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Promoters
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Promoters</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="mt-1 text-xs text-muted-foreground">All registered promoters</p>
+              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <p className="mt-1 text-xs text-muted-foreground">With active contracts</p>
+              <div className="text-2xl font-bold">{stats?.active ?? 0}</div>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+              <XCircle className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{stats.inactive}</div>
-              <p className="mt-1 text-xs text-muted-foreground">No active contracts</p>
+              <div className="text-2xl font-bold">{stats?.inactive ?? 0}</div>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Docs Expiring
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Suspended</CardTitle>
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.documentsExpiring}</div>
-              <p className="mt-1 text-xs text-muted-foreground">Within 30 days</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Docs Expired
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.documentsExpired}</div>
-              <p className="mt-1 text-xs text-muted-foreground">Need renewal</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                With Contracts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.withActiveContracts}</div>
-              <p className="mt-1 text-xs text-muted-foreground">Currently assigned</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Avg Contracts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
-                {stats.averageContractsPerPromoter.toFixed(1)}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">Per promoter</p>
+              <div className="text-2xl font-bold">{stats?.suspended ?? 0}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters and Actions */}
-        <Card className="mb-6">
+        {/* Promoters Table */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Filters & Search</CardTitle>
+            <CardTitle>Promoters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Search and Filters */}
-              <div className="grid gap-4 md:grid-cols-5">
-                <div className="md:col-span-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                    <Input
-                      placeholder="Search promoters..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <div className="h-12 w-12 animate-pulse rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-1/4 animate-pulse rounded bg-gray-200" />
+                      <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+                    </div>
                   </div>
-                </div>
-
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value: PromoterFilter) => setStatusFilter(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="expiring">Expiring Documents</SelectItem>
-                    <SelectItem value="expired">Expired Documents</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={documentFilter}
-                  onValueChange={(value: DocumentFilter) => setDocumentFilter(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Document Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Documents</SelectItem>
-                    <SelectItem value="valid">Valid</SelectItem>
-                    <SelectItem value="expiring">Expiring</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={contractFilter} onValueChange={setContractFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Contract Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Contracts</SelectItem>
-                    <SelectItem value="with-contracts">With Active Contracts</SelectItem>
-                    <SelectItem value="without-contracts">Without Contracts</SelectItem>
-                  </SelectContent>
-                </Select>
+                ))}
               </div>
-
-              {/* Actions */}
-              <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={clearFilters} size="sm">
-                    Clear Filters
-                  </Button>
-                  <span className="self-center text-sm text-muted-foreground">
-                    {filteredPromoters.length} of {promoters.length} promoters
-                  </span>
-                </div>
-
-                {selectedPromoters.length > 0 && (
-                  <div className="flex gap-2">
-                    <span className="self-center text-sm text-muted-foreground">
-                      {selectedPromoters.length} selected
-                    </span>
-                    <Button variant="outline" size="sm">
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Promoters</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete {selectedPromoters.length} promoters?
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleBulkDelete}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-              </div>
-            </div>
+            ) : sortedPromoters.length === 0 ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No promoters found.{" "}
+                  {searchTerm || selectedStatus !== "all"
+                    ? "Try adjusting your filters."
+                    : "Add your first promoter to get started."}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead onClick={() => handleSort("name_en")} className="cursor-pointer">
+                      Name
+                    </TableHead>
+                    <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
+                      Email
+                    </TableHead>
+                    <TableHead onClick={() => handleSort("status")} className="cursor-pointer">
+                      Status
+                    </TableHead>
+                    <TableHead>Contracts</TableHead>
+                    <TableHead onClick={() => handleSort("created_at")} className="cursor-pointer">
+                      Created
+                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedPromoters.map((promoter) => (
+                    <TableRow key={promoter.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div className="font-semibold">{promoter.name_en}</div>
+                          {promoter.name_ar && (
+                            <div className="text-sm text-muted-foreground" dir="rtl">
+                              {promoter.name_ar}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{promoter.email}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(promoter.status)}
+                          {getStatusBadge(promoter.status)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Active: {promoter.active_contracts_count || 0}</div>
+                          <div className="text-muted-foreground">Total: {promoter.total_contracts_count || 0}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDate(promoter.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(promoter)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setDeletePromoter(promoter)} className="text-red-600">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
-        {/* Promoters Table */}
-        {filteredPromoters.length === 0 ? (
-          <Card className="py-10 text-center">
-            <CardHeader>
-              <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-              <CardTitle>No Promoters Found</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                {searchTerm ||
-                statusFilter !== "all" ||
-                documentFilter !== "all" ||
-                contractFilter !== "all"
-                  ? "No promoters match your current filters. Try adjusting your search criteria."
-                  : "Get started by adding your first promoter. Click the 'Add Promoter' button."}
-              </CardDescription>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
-                  Promoters ({filteredPromoters.length})
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={
-                      selectedPromoters.length === paginatedPromoters.length &&
-                      paginatedPromoters.length > 0
-                    }
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedPromoters(paginatedPromoters.map((p) => p.id))
-                      } else {
-                        setSelectedPromoters([])
-                      }
-                    }}
-                  />
-                  <span className="text-sm text-muted-foreground">Select All</span>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <span className="sr-only">Select</span>
-                      </TableHead>
-                      <TableHead>Promoter</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Documents</TableHead>
-                      <TableHead>Contracts</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {paginatedPromoters.map((promoter) => {
-                      const isSelected = selectedPromoters.includes(promoter.id)
-
-                      return (
-                        <TableRow key={promoter.id} className={isSelected ? "bg-muted/50" : ""}>
-                          <TableCell>
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedPromoters((prev) => [...prev, promoter.id])
-                                } else {
-                                  setSelectedPromoters((prev) =>
-                                    prev.filter((id) => id !== promoter.id)
-                                  )
-                                }
-                              }}
-                            />
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="font-medium">{promoter.name_en}</div>
-                              {promoter.name_ar && (
-                                <div className="text-sm text-muted-foreground" dir="rtl">
-                                  {promoter.name_ar}
-                                </div>
-                              )}
-                              <div className="text-xs text-muted-foreground">
-                                <code>{promoter.id_card_number}</code>
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="space-y-1">
-                              {promoter.email && (
-                                <div className="flex items-center text-sm">
-                                  <Mail className="mr-1 h-3 w-3 text-muted-foreground" />
-                                  <a href={`mailto:${promoter.email}`} className="hover:underline">
-                                    {promoter.email}
-                                  </a>
-                                </div>
-                              )}
-                              {promoter.phone && (
-                                <div className="flex items-center text-sm">
-                                  <Phone className="mr-1 h-3 w-3 text-muted-foreground" />
-                                  <a href={`tel:${promoter.phone}`} className="hover:underline">
-                                    {promoter.phone}
-                                  </a>
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="space-y-2">
-                              {getDocumentStatusBadge(promoter.document_status)}
-                              <div className="space-y-1">
-                                {promoter.id_card_expiry_date && (
-                                  <div className="flex items-center text-xs text-muted-foreground">
-                                    <IdCard className="mr-1 h-3 w-3" />
-                                    {format(parseISO(promoter.id_card_expiry_date), "MMM yyyy")}
-                                  </div>
-                                )}
-                                {promoter.passport_expiry_date && (
-                                  <div className="flex items-center text-xs text-muted-foreground">
-                                    <CreditCard className="mr-1 h-3 w-3" />
-                                    {format(parseISO(promoter.passport_expiry_date), "MMM yyyy")}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={promoter.active_contracts_count ? "default" : "secondary"}
-                              >
-                                <Briefcase className="mr-1 h-3 w-3" />
-                                {promoter.active_contracts_count || 0}
-                              </Badge>
-                              {promoter.total_contracts_count &&
-                                promoter.total_contracts_count >
-                                  (promoter.active_contracts_count || 0) && (
-                                  <span className="text-xs text-muted-foreground">
-                                    ({promoter.total_contracts_count} total)
-                                  </span>
-                                )}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>{getStatusBadge(promoter.overall_status)}</TableCell>
-
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedPromoter(promoter)
-                                    setShowDetailsModal(true)
-                                  }}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Details
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem onClick={() => handleEdit(promoter)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit Promoter
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  View Contracts
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem>
-                                  <Upload className="mr-2 h-4 w-4" />
-                                  Upload Documents
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(promoter)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t p-4">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to{" "}
-                    {Math.min(startIndex + itemsPerPage, filteredPromoters.length)} of{" "}
-                    {filteredPromoters.length} promoters
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Delete Confirmation Dialog */}
+        {deletePromoter && (
+          <AlertDialog open={!!deletePromoter} onOpenChange={() => setDeletePromoter(null)}>
+            <AlertDialogTrigger />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the promoter{" "}
+                  <strong>&quot;{deletePromoter.name_en}&quot;</strong> and remove all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
-
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Button asChild variant="outline">
-            <Link href="/">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
-            </Link>
-          </Button>
-        </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the promoter "{promoterToDelete?.name_en}". This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Promoter Details Modal */}
-      {selectedPromoter && (
-        <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
-          <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Promoter Details
-              </DialogTitle>
-              <DialogDescription>
-                Complete information for {selectedPromoter.name_en}
-              </DialogDescription>
-            </DialogHeader>
-
-            <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="contracts">Contracts</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="general" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">English Name</Label>
-                      <p className="mt-1 text-sm">{selectedPromoter.name_en}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">ID Card Number</Label>
-                      <p className="mt-1 font-mono text-sm">{selectedPromoter.id_card_number}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Email</Label>
-                      <p className="mt-1 text-sm">
-                        {selectedPromoter.email ? (
-                          <a
-                            href={`mailto:${selectedPromoter.email}`}
-                            className="text-primary hover:underline"
-                          >
-                            {selectedPromoter.email}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">Not provided</span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Active Contracts</Label>
-                      <p className="mt-1 text-sm">{selectedPromoter.active_contracts_count || 0}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Arabic Name</Label>
-                      <p className="mt-1 text-sm" dir="rtl">
-                        {selectedPromoter.name_ar || "Not provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Status</Label>
-                      <div className="mt-1">{getStatusBadge(selectedPromoter.overall_status)}</div>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Phone</Label>
-                      <p className="mt-1 text-sm">
-                        {selectedPromoter.phone ? (
-                          <a
-                            href={`tel:${selectedPromoter.phone}`}
-                            className="text-primary hover:underline"
-                          >
-                            {selectedPromoter.phone}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">Not provided</span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Total Contracts</Label>
-                      <p className="mt-1 text-sm">{selectedPromoter.total_contracts_count || 0}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedPromoter.address && (
-                  <div>
-                    <Label className="text-sm font-medium">Address</Label>
-                    <p className="mt-1 text-sm">{selectedPromoter.address}</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-4">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <IdCard className="h-4 w-4" />
-                        ID Card
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <Label className="text-xs">Number</Label>
-                        <p className="font-mono text-sm">{selectedPromoter.id_card_number}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Expiry Date</Label>
-                        <p className="text-sm">
-                          {selectedPromoter.id_card_expiry_date
-                            ? format(parseISO(selectedPromoter.id_card_expiry_date), "PPP")
-                            : "Not set"}
-                        </p>
-                        {selectedPromoter.id_card_expiry_date && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {(() => {
-                              const days = differenceInDays(
-                                parseISO(selectedPromoter.id_card_expiry_date),
-                                new Date()
-                              )
-                              if (days < 0) return `Expired ${Math.abs(days)} days ago`
-                              if (days === 0) return "Expires today"
-                              if (days <= 30) return `Expires in ${days} days`
-                              return `Valid for ${days} days`
-                            })()}
-                          </p>
-                        )}
-                      </div>
-                      {selectedPromoter.id_card_url && (
-                        <div>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={selectedPromoter.id_card_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              View Document
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <CreditCard className="h-4 w-4" />
-                        Passport
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <Label className="text-xs">Number</Label>
-                        <p className="font-mono text-sm">
-                          {selectedPromoter.passport_number || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Expiry Date</Label>
-                        <p className="text-sm">
-                          {selectedPromoter.passport_expiry_date
-                            ? format(parseISO(selectedPromoter.passport_expiry_date), "PPP")
-                            : "Not set"}
-                        </p>
-                        {selectedPromoter.passport_expiry_date && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {(() => {
-                              const days = differenceInDays(
-                                parseISO(selectedPromoter.passport_expiry_date),
-                                new Date()
-                              )
-                              if (days < 0) return `Expired ${Math.abs(days)} days ago`
-                              if (days === 0) return "Expires today"
-                              if (days <= 30) return `Expires in ${days} days`
-                              return `Valid for ${days} days`
-                            })()}
-                          </p>
-                        )}
-                      </div>
-                      {selectedPromoter.passport_url && (
-                        <div>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={selectedPromoter.passport_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              View Document
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="mt-4">
-                  <Label className="text-sm font-medium">Document Status</Label>
-                  <div className="mt-2">
-                    {getDocumentStatusBadge(selectedPromoter.document_status)}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="contracts" className="space-y-4">
-                {selectedPromoter.contracts && selectedPromoter.contracts.length > 0 ? (
-                  <div className="space-y-3">
-                    {selectedPromoter.contracts.map((contract) => (
-                      <Card key={contract.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">{contract.contract_number}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {contract.contract_start_date && contract.contract_end_date && (
-                                  <>
-                                    {format(parseISO(contract.contract_start_date), "MMM d, yyyy")}{" "}
-                                    -{format(parseISO(contract.contract_end_date), "MMM d, yyyy")}
-                                  </>
-                                )}
-                              </p>
-                            </div>
-                            <Badge variant={contract.status === "active" ? "default" : "secondary"}>
-                              {contract.status}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-2 text-sm font-semibold">No Contracts</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      This promoter has no contracts assigned yet.
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Created:</span>
-                    <span>
-                      {selectedPromoter.created_at &&
-                        format(parseISO(selectedPromoter.created_at), "PPP")}
-                    </span>
-                  </div>
-                  {selectedPromoter.updated_at &&
-                    selectedPromoter.updated_at !== selectedPromoter.created_at && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Last Updated:</span>
-                        <span>{format(parseISO(selectedPromoter.updated_at), "PPP")}</span>
-                      </div>
-                    )}
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDetailsModal(false)}>
-                Close
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowDetailsModal(false)
-                  handleEdit(selectedPromoter)
-                }}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Promoter
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+    </TooltipProvider>
   )
 }

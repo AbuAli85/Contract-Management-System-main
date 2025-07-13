@@ -1,18 +1,16 @@
-'use client'
+"use client"
 
-import { BellIcon, SettingsIcon, Trash2Icon } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import { BellIcon, SettingsIcon, Trash2Icon } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 export default function NotificationsPage() {
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold">Notifications</h1>
-      <p className="text-gray-600">
-        Manage your notification preferences and view recent alerts.
-      </p>
+      <p className="text-gray-600">Manage your notification preferences and view recent alerts.</p>
 
       <Card>
         <CardHeader>
@@ -24,11 +22,11 @@ export default function NotificationsPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="rounded-lg border p-4">
-              <p className="font-medium">Contract "EMP-001" is due for renewal in 7 days.</p>
+              <p className="font-medium">Contract &quot;EMP-001&quot; is due for renewal in 7 days.</p>
               <p className="text-sm text-gray-500">2024-07-15 11:00 AM</p>
             </div>
             <div className="rounded-lg border p-4">
-              <p className="font-medium">New contract "SVC-005" has been generated.</p>
+              <p className="font-medium">New contract &quot;SVC-005&quot; has been generated.</p>
               <p className="text-sm text-gray-500">2024-07-14 09:30 AM</p>
             </div>
             <div className="rounded-lg border p-4">

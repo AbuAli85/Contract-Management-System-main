@@ -1,582 +1,435 @@
 "use client"
-import { useEffect, useState, useRef, useMemo, useCallback } from "react"
+
 import type React from "react"
 
-import PartyForm from "@/components/party-form"
+import { useState, useEffect, useMemo, useCallback } from "react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-import type { Party } from "@/lib/types"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import {
-  EditIcon,
-  PlusCircleIcon,
-  ArrowLeftIcon,
-  BuildingIcon,
-  Loader2,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
+  Plus,
   Search,
-  Filter,
-  MoreHorizontal,
-  Download,
+  Edit,
   Trash2,
-  RefreshCw,
-  Grid3x3,
-  List,
-  AlertTriangle,
+  MoreHorizontal,
+  User,
+  Building,
   CheckCircle,
+  AlertCircle,
   XCircle,
-  Calendar,
-  Users,
-  Activity,
-  TrendingUp,
-  Clock,
-  ArrowUpDown,
-  ChevronUp,
-  ChevronDown,
-  FileText,
-  Mail,
-  Phone,
-  MapPin,
-  CreditCard,
-  Shield,
+  Loader2,
+  RefreshCw,
   Eye,
-  Building2,
-  Briefcase,
+  ArrowUpDown,
+  FileText,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { format, parseISO, differenceInDays } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { supabase } from "@/lib/supabase"
+import { format, parseISO } from "date-fns"
 
-interface PartyWithContractCount extends Party {
-  contract_count?: number
+// Party interface
+interface Party {
+  id: string
+  name_en: string
+  name_ar: string
+  email: string
+  phone: string
+  address?: string
+  type: "individual" | "company"
+  status: "active" | "inactive" | "suspended"
+  created_at: string
+  updated_at?: string
+  notes?: string
+  crn?: string
+  national_id?: string
+  contact_person?: string
+  website?: string
+  industry?: string
+  tax_number?: string
+  bank_account?: string
+  active_contracts_count?: number
+  total_contracts_count?: number
+  last_contract_date?: string
 }
 
-// Enhanced Party interface
-interface EnhancedParty extends Party {
-  cr_status: "valid" | "expiring" | "expired" | "missing"
-  license_status: "valid" | "expiring" | "expired" | "missing"
-  overall_status: "active" | "warning" | "critical" | "inactive"
-  days_until_cr_expiry?: number
-  days_until_license_expiry?: number
-  contract_count?: number
+interface FormData {
+  name_en: string
+  name_ar: string
+  email: string
+  phone: string
+  address: string
+  type: "individual" | "company"
+  status: "active" | "inactive" | "suspended"
+  notes: string
+  crn: string
+  national_id: string
+  contact_person: string
+  website: string
+  industry: string
+  tax_number: string
+  bank_account: string
 }
 
-// Statistics interface
 interface PartyStats {
   total: number
   active: number
   inactive: number
   suspended: number
-  expiring_documents: number
-  expired_documents: number
-  employers: number
-  clients: number
-  total_contracts: number
+  individuals: number
+  companies: number
+  withActiveContracts: number
+  recentlyAdded: number
 }
 
 export default function ManagePartiesPage() {
-  const [parties, setParties] = useState<PartyWithContractCount[]>([])
-  const [filteredParties, setFilteredParties] = useState<EnhancedParty[]>([])
-  const [selectedParties, setSelectedParties] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedParty, setSelectedParty] = useState<Party | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [currentView, setCurrentView] = useState<"table" | "grid">("table")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [typeFilter, setTypeFilter] = useState<string>("all")
-  const [documentFilter, setDocumentFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"name" | "cr_expiry" | "license_expiry" | "contracts">(
-    "name"
-  )
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showStats, setShowStats] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
-  const [bulkActionLoading, setBulkActionLoading] = useState(false)
+  const params = useParams()
   const { toast } = useToast()
-  const isMountedRef = useRef(true)
 
-  const fetchPartiesWithContractCount = useCallback(async () => {
-    if (isMountedRef.current) setIsLoading(true)
+  // State management
+  const [parties, setParties] = useState<Party[]>([])
+  const [stats, setStats] = useState<PartyStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedType, setSelectedType] = useState<string>("all")
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("name_en")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingParty, setEditingParty] = useState<Party | null>(null)
+  const [deleteParty, setDeleteParty] = useState<Party | null>(null)
 
+  const [formData, setFormData] = useState<FormData>({
+    name_en: "",
+    name_ar: "",
+    email: "",
+    phone: "",
+    address: "",
+    type: "individual",
+    status: "active",
+    notes: "",
+    crn: "",
+    national_id: "",
+    contact_person: "",
+    website: "",
+    industry: "",
+    tax_number: "",
+    bank_account: "",
+  })
+
+  const [formError, setFormError] = useState<string | null>(null)
+
+  // Fetch parties data
+  const fetchParties = useCallback(async () => {
     try {
-      // Fetch parties
-      const { data: partiesData, error: partiesError } = await supabase
-        .from("parties")
-        .select("*")
-        .order("name_en")
+      setIsLoading(true)
+
+      const { data: partiesData, error: partiesError } = await supabase.from("parties").select("*").order("name_en")
 
       if (partiesError) {
         console.error("Error fetching parties:", partiesError)
         toast({
           title: "Error",
-          description: "Failed to load parties",
+          description: "Failed to load parties. Please try again.",
           variant: "destructive",
         })
         return
       }
 
       // Fetch contract counts for each party
-      const enhancedData = await Promise.all(
-        (partiesData || []).map(async (party) => {
-          try {
-            const { count: contractCount, error: contractError } = await supabase
-              .from("contracts")
-              .select("*", { count: "exact", head: true })
-              .or(`first_party_id.eq.${party.id},second_party_id.eq.${party.id}`)
-              .eq("status", "active")
+      const partyIds = partiesData?.map((p) => p.id) || []
+      let contractsData: any[] = []
 
-            if (contractError) {
-              console.warn(`Error fetching contracts for party ${party.id}:`, contractError)
-            }
+      if (partyIds.length > 0) {
+        const { data: contracts, error: contractsError } = await supabase
+          .from("contracts")
+          .select("party_a_id, party_b_id, contract_end_date, created_at")
+          .or(`party_a_id.in.(${partyIds.join(",")}),party_b_id.in.(${partyIds.join(",")})`)
 
-            return {
-              ...party,
-              contract_count: contractCount || 0,
-            }
-          } catch (error) {
-            console.warn(`Error processing party ${party.id}:`, error)
-            return {
-              ...party,
-              contract_count: 0,
-            }
-          }
-        })
-      )
-
-      if (isMountedRef.current) {
-        setParties(enhancedData)
+        if (!contractsError) {
+          contractsData = contracts || []
+        }
       }
+
+      // Process parties data
+      const processedParties =
+        partiesData?.map((party: any) => {
+          const partyContracts = contractsData.filter((c) => c.party_a_id === party.id || c.party_b_id === party.id)
+          const activeContracts = partyContracts.filter((contract: any) => {
+            const endDate = new Date(contract.contract_end_date)
+            return endDate >= new Date()
+          })
+
+          const lastContract = partyContracts.sort(
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          )[0]
+
+          return {
+            ...party,
+            active_contracts_count: activeContracts.length,
+            total_contracts_count: partyContracts.length,
+            last_contract_date: lastContract?.created_at || null,
+          }
+        }) || []
+
+      setParties(processedParties)
+
+      // Calculate stats
+      const now = new Date()
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+      const statsData: PartyStats = {
+        total: processedParties.length,
+        active: processedParties.filter((p) => p.status === "active").length,
+        inactive: processedParties.filter((p) => p.status === "inactive").length,
+        suspended: processedParties.filter((p) => p.status === "suspended").length,
+        individuals: processedParties.filter((p) => p.type === "individual").length,
+        companies: processedParties.filter((p) => p.type === "company").length,
+        withActiveContracts: processedParties.filter((p) => (p.active_contracts_count || 0) > 0).length,
+        recentlyAdded: processedParties.filter((p) => new Date(p.created_at) >= thirtyDaysAgo).length,
+      }
+
+      setStats(statsData)
     } catch (error) {
-      console.error("Unexpected error:", error)
+      console.error("Error fetching parties:", error)
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to load parties. Please try again.",
         variant: "destructive",
       })
     } finally {
-      if (isMountedRef.current) setIsLoading(false)
+      setIsLoading(false)
     }
   }, [toast])
 
-  // Combine fetching and auto-refresh logic
-  useEffect(() => {
-    isMountedRef.current = true
-    fetchPartiesWithContractCount()
+  // Apply filters
+  const applyFilters = useCallback(() => {
+    let filtered = [...parties]
 
-    const refreshInterval = setInterval(
-      () => {
-        if (isMountedRef.current && !isLoading) {
-          setIsRefreshing(true)
-          fetchPartiesWithContractCount().finally(() => {
-            if (isMountedRef.current) {
-              setIsRefreshing(false)
-            }
-          })
-        }
-      },
-      5 * 60 * 1000
-    ) // Refresh every 5 minutes
-
-    return () => {
-      isMountedRef.current = false
-      clearInterval(refreshInterval)
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (party) =>
+          party.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          party.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
     }
-  }, [fetchPartiesWithContractCount]) // Re-run if fetch function instance changes
 
-  // Apply filters whenever parties or filter settings change
+    // Type filter
+    if (selectedType !== "all") {
+      filtered = filtered.filter((party) => party.type === selectedType)
+    }
+
+    // Status filter
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter((party) => party.status === selectedStatus)
+    }
+
+    return filtered
+  }, [parties, searchTerm, selectedType, selectedStatus])
+
+  // Memoized filtered parties
+  const filteredParties = useMemo(() => {
+    return applyFilters()
+  }, [applyFilters])
+
+  // Memoized sorted parties
+  const sortedParties = useMemo(() => {
+    return [...filteredParties].sort((a, b) => {
+      const aValue = a[sortBy as keyof Party]
+      const bValue = b[sortBy as keyof Party]
+
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+  }, [filteredParties, sortBy, sortOrder])
+
+  useEffect(() => {
+    fetchParties()
+  }, [fetchParties])
+
   useEffect(() => {
     applyFilters()
-  }, [parties, searchTerm, statusFilter, typeFilter, documentFilter, sortBy, sortOrder])
+  }, [applyFilters])
 
-  // Helper functions for enhanced party data
-  const getDocumentStatusType = (
-    daysUntilExpiry: number | null,
-    dateString: string | null
-  ): "valid" | "expiring" | "expired" | "missing" => {
-    if (!dateString) return "missing"
-    if (daysUntilExpiry === null) return "missing"
-    if (daysUntilExpiry < 0) return "expired"
-    if (daysUntilExpiry <= 30) return "expiring"
-    return "valid"
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setFormError(null)
 
-  const getOverallStatus = (party: Party): "active" | "warning" | "critical" | "inactive" => {
-    if (!party.status || party.status === "Inactive" || party.status === "Suspended")
-      return "inactive"
-
-    const crExpiry = party.cr_expiry_date
-      ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
-      : null
-    const licenseExpiry = party.license_expiry_date
-      ? differenceInDays(parseISO(party.license_expiry_date), new Date())
-      : null
-
-    if ((crExpiry !== null && crExpiry < 0) || (licenseExpiry !== null && licenseExpiry < 0)) {
-      return "critical"
-    }
-
-    if ((crExpiry !== null && crExpiry <= 30) || (licenseExpiry !== null && licenseExpiry <= 30)) {
-      return "warning"
-    }
-
-    return "active"
-  }
-
-  // Enhanced filter and sort parties
-  const applyFilters = useCallback(() => {
-    if (!parties || parties.length === 0) {
-      setFilteredParties([])
-      return
-    }
-
-    let filtered = parties.filter((party) => {
-      // Search filter - enhanced to include more fields
-      const searchMatch =
-        !searchTerm ||
-        party.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        party.crn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (party.role && party.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (party.contact_person &&
-          party.contact_person.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (party.contact_email &&
-          party.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (party.notes && party.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-
-      // Status filter
-      const statusMatch = statusFilter === "all" || party.status === statusFilter
-
-      // Type filter
-      const typeMatch = typeFilter === "all" || party.type === typeFilter
-
-      return searchMatch && statusMatch && typeMatch
-    })
-
-    // Convert to enhanced parties for display
-    const enhancedFiltered: EnhancedParty[] = filtered.map((party) => {
-      const crExpiryDays = party.cr_expiry_date
-        ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
-        : null
-
-      const licenseExpiryDays = party.license_expiry_date
-        ? differenceInDays(parseISO(party.license_expiry_date), new Date())
-        : null
-
-      return {
-        ...party,
-        cr_status: getDocumentStatusType(crExpiryDays, party.cr_expiry_date || null),
-        license_status: getDocumentStatusType(licenseExpiryDays, party.license_expiry_date || null),
-        overall_status: getOverallStatus(party),
-        days_until_cr_expiry: crExpiryDays || undefined,
-        days_until_license_expiry: licenseExpiryDays || undefined,
-      }
-    })
-
-    // Apply document filter to enhanced data
-    const finalFiltered = enhancedFiltered.filter((party) => {
-      const documentMatch =
-        documentFilter === "all" ||
-        (documentFilter === "expiring" &&
-          (party.cr_status === "expiring" || party.license_status === "expiring")) ||
-        (documentFilter === "expired" &&
-          (party.cr_status === "expired" || party.license_status === "expired")) ||
-        (documentFilter === "valid" &&
-          party.cr_status === "valid" &&
-          party.license_status === "valid")
-
-      return documentMatch
-    })
-
-    // Apply sorting
-    const sorted = [...finalFiltered].sort((a, b) => {
-      let aValue: any, bValue: any
-
-      switch (sortBy) {
-        case "name":
-          aValue = a.name_en.toLowerCase()
-          bValue = b.name_en.toLowerCase()
-          break
-        case "cr_expiry":
-          aValue = a.days_until_cr_expiry ?? Infinity
-          bValue = b.days_until_cr_expiry ?? Infinity
-          break
-        case "license_expiry":
-          aValue = a.days_until_license_expiry ?? Infinity
-          bValue = b.days_until_license_expiry ?? Infinity
-          break
-        case "contracts":
-          aValue = a.contract_count || 0
-          bValue = b.contract_count || 0
-          break
-        default:
-          aValue = a.name_en.toLowerCase()
-          bValue = b.name_en.toLowerCase()
-      }
-
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
-      }
-    })
-
-    if (isMountedRef.current) {
-      setFilteredParties(sorted)
-    }
-  }, [searchTerm, statusFilter, typeFilter, documentFilter, sortBy, sortOrder, parties])
-
-  // Calculate statistics
-  const stats = useMemo((): PartyStats => {
-    const total = filteredParties.length
-    const active = filteredParties.filter((p) => p.status === "Active").length
-    const inactive = filteredParties.filter((p) => p.status === "Inactive").length
-    const suspended = filteredParties.filter((p) => p.status === "Suspended").length
-    const expiring = filteredParties.filter((p) => p.overall_status === "warning").length
-    const expired = filteredParties.filter((p) => p.overall_status === "critical").length
-    const employers = filteredParties.filter((p) => p.type === "Employer").length
-    const clients = filteredParties.filter((p) => p.type === "Client").length
-    const totalContracts = filteredParties.reduce((sum, p) => sum + (p.contract_count || 0), 0)
-
-    return {
-      total,
-      active,
-      inactive,
-      suspended,
-      expiring_documents: expiring,
-      expired_documents: expired,
-      employers,
-      clients,
-      total_contracts: totalContracts,
-    }
-  }, [filteredParties])
-
-  const handleEdit = (party: Party) => {
-    setSelectedParty(party)
-    setShowForm(true)
-  }
-
-  const handleAddNew = () => {
-    setSelectedParty(null)
-    setShowForm(true)
-  }
-
-  const handleFormClose = () => {
-    setShowForm(false)
-    setSelectedParty(null)
-    fetchPartiesWithContractCount() // Refresh the list after form submission
-  }
-
-  const handleBulkDelete = async () => {
-    if (selectedParties.length === 0) return
-
-    setBulkActionLoading(true)
     try {
-      const { error } = await supabase.from("parties").delete().in("id", selectedParties)
+      const partyData = {
+        ...formData,
+        updated_at: new Date().toISOString(),
+      }
+
+      if (editingParty) {
+        const { error } = await supabase.from("parties").update(partyData).eq("id", editingParty.id)
+
+        if (error) throw error
+
+        toast({
+          title: "Success",
+          description: "Party updated successfully",
+        })
+      } else {
+        const { error } = await supabase.from("parties").insert([
+          {
+            ...partyData,
+            created_at: new Date().toISOString(),
+          },
+        ])
+
+        if (error) throw error
+
+        toast({
+          title: "Success",
+          description: "Party created successfully",
+        })
+      }
+
+      setIsAddDialogOpen(false)
+      setEditingParty(null)
+      resetForm()
+      fetchParties()
+    } catch (error) {
+      console.error("Error saving party:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save party. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteParty) return
+
+    try {
+      const { error } = await supabase.from("parties").delete().eq("id", deleteParty.id)
 
       if (error) throw error
 
       toast({
         title: "Success",
-        description: `Deleted ${selectedParties.length} parties`,
-        variant: "default",
+        description: "Party deleted successfully",
       })
 
-      setSelectedParties([])
-      fetchPartiesWithContractCount()
+      setDeleteParty(null)
+      fetchParties()
     } catch (error) {
-      console.error("Error deleting parties:", error)
+      console.error("Error deleting party:", error)
       toast({
         title: "Error",
-        description: "Failed to delete parties",
+        description: "Failed to delete party. Please try again.",
         variant: "destructive",
       })
-    } finally {
-      setBulkActionLoading(false)
     }
   }
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await fetchPartiesWithContractCount()
-      toast({
-        title: "Refreshed",
-        description: "Party data has been updated",
-        variant: "default",
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
+  const resetForm = () => {
+    setFormData({
+      name_en: "",
+      name_ar: "",
+      email: "",
+      phone: "",
+      address: "",
+      type: "individual",
+      status: "active",
+      notes: "",
+      crn: "",
+      national_id: "",
+      contact_person: "",
+      website: "",
+      industry: "",
+      tax_number: "",
+      bank_account: "",
+    })
   }
 
-  const handleExportCSV = async () => {
-    setIsExporting(true)
-    try {
-      const csvData = filteredParties.map((party) => ({
-        "Name (EN)": party.name_en,
-        "Name (AR)": party.name_ar,
-        CRN: party.crn,
-        Type: party.type || "N/A",
-        Role: party.role || "N/A",
-        Status: party.status || "N/A",
-        "CR Status": party.cr_status,
-        "CR Expiry": party.cr_expiry_date || "N/A",
-        "License Status": party.license_status,
-        "License Expiry": party.license_expiry_date || "N/A",
-        "Contact Person": party.contact_person || "N/A",
-        "Contact Email": party.contact_email || "N/A",
-        "Contact Phone": party.contact_phone || "N/A",
-        "Address (EN)": party.address_en || "N/A",
-        "Tax Number": party.tax_number || "N/A",
-        "License Number": party.license_number || "N/A",
-        "Active Contracts": party.contract_count || 0,
-        "Overall Status": party.overall_status,
-        "Created At": party.created_at ? format(parseISO(party.created_at), "yyyy-MM-dd") : "N/A",
-        Notes: party.notes || "",
-      }))
-
-      const csvContent = [
-        Object.keys(csvData[0] || {}).join(","),
-        ...csvData.map((row) =>
-          Object.values(row)
-            .map((val) => `"${val}"`)
-            .join(",")
-        ),
-      ].join("\n")
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = `parties-export-${format(new Date(), "yyyy-MM-dd")}.csv`
-      link.click()
-
-      toast({
-        title: "Export Complete",
-        description: `Exported ${filteredParties.length} parties to CSV`,
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Export error:", error)
-      toast({
-        title: "Export Failed",
-        description: "Failed to export party data",
-        variant: "destructive",
-      })
-    } finally {
-      setIsExporting(false)
-    }
+  const handleEdit = (party: Party) => {
+    setEditingParty(party)
+    setFormData({
+      name_en: party.name_en,
+      name_ar: party.name_ar,
+      email: party.email,
+      phone: party.phone,
+      address: party.address || "",
+      type: party.type,
+      status: party.status,
+      notes: party.notes || "",
+      crn: party.crn || "",
+      national_id: party.national_id || "",
+      contact_person: party.contact_person || "",
+      website: party.website || "",
+      industry: party.industry || "",
+      tax_number: party.tax_number || "",
+      bank_account: party.bank_account || "",
+    })
+    setIsAddDialogOpen(true)
   }
 
-  const toggleSelectAll = () => {
-    if (selectedParties.length === filteredParties.length) {
-      setSelectedParties([])
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
     } else {
-      setSelectedParties(filteredParties.map((p) => p.id))
+      setSortBy(field)
+      setSortOrder("asc")
     }
   }
 
-  const toggleSelectParty = (partyId: string) => {
-    setSelectedParties((prev) =>
-      prev.includes(partyId) ? prev.filter((id) => id !== partyId) : [...prev, partyId]
-    )
-  }
-
-  const getStatusBadge = (status: string | null | undefined) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Active":
+      case "active":
         return (
-          <Badge
-            variant="default"
-            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-          >
+          <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
             Active
           </Badge>
         )
-      case "Inactive":
+      case "inactive":
         return (
-          <Badge
-            variant="secondary"
-            className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-          >
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
             Inactive
           </Badge>
         )
-      case "Suspended":
+      case "suspended":
         return (
-          <Badge
-            variant="destructive"
-            className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-          >
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
             Suspended
           </Badge>
         )
       default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  const getTypeBadge = (type: string | null | undefined) => {
-    switch (type) {
-      case "Employer":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-          >
-            Employer
-          </Badge>
-        )
-      case "Client":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-          >
-            Client
-          </Badge>
-        )
-      case "Generic":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-          >
-            Generic
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant="secondary">{status}</Badge>
     }
   }
 
@@ -584,832 +437,430 @@ export default function ManagePartiesPage() {
     switch (status) {
       case "active":
         return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-      case "critical":
-        return <XCircle className="h-4 w-4 text-red-500" />
+      case "inactive":
+        return <XCircle className="h-4 w-4 text-gray-500" />
+      case "suspended":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />
+        return <AlertCircle className="h-4 w-4 text-gray-500" />
     }
   }
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "active":
-        return "default"
-      case "warning":
-        return "secondary"
-      case "critical":
-        return "destructive"
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case "individual":
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+            <User className="mr-1 h-3 w-3" />
+            Individual
+          </Badge>
+        )
+      case "company":
+        return (
+          <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+            <Building className="mr-1 h-3 w-3" />
+            Company
+          </Badge>
+        )
       default:
-        return "outline"
+        return <Badge variant="secondary">{type}</Badge>
     }
   }
 
-  const getDocumentStatus = (expiryDate: string | null | undefined) => {
-    if (!expiryDate) {
-      return {
-        text: "No Date",
-        Icon: AlertTriangle,
-        colorClass: "text-slate-500",
-        tooltip: "Expiry date not set",
-      }
-    }
-
-    const date = parseISO(expiryDate)
-    const today = new Date()
-    const daysUntilExpiry = differenceInDays(date, today)
-
-    if (daysUntilExpiry < 0) {
-      return {
-        text: "Expired",
-        Icon: XCircle,
-        colorClass: "text-red-500",
-        tooltip: `Expired on ${format(date, "MMM d, yyyy")}`,
-      }
-    }
-    if (daysUntilExpiry <= 30) {
-      return {
-        text: "Expires Soon",
-        Icon: AlertTriangle,
-        colorClass: "text-orange-500",
-        tooltip: `Expires in ${daysUntilExpiry} day(s) on ${format(date, "MMM d, yyyy")}`,
-      }
-    }
-    return {
-      text: "Valid",
-      Icon: CheckCircle,
-      colorClass: "text-green-500",
-      tooltip: `Valid until ${format(date, "MMM d, yyyy")}`,
-    }
-  }
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "N/A"
+  const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), "dd-MM-yyyy")
+      return format(parseISO(dateString), "MMM dd, yyyy")
     } catch {
-      return "Invalid Date"
+      return "Invalid date"
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-lg text-slate-700 dark:text-slate-300">Loading parties...</p>
-      </div>
-    )
-  }
-
-  if (showForm) {
-    return (
-      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
-        <div className="mx-auto max-w-6xl">
-          <Button variant="outline" onClick={handleFormClose} className="mb-6">
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
-            Back to Party List
-          </Button>
-          <PartyForm partyToEdit={selectedParty} onFormSubmit={handleFormClose} />
-        </div>
-      </div>
-    )
   }
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
-        <div className="mx-auto max-w-screen-xl">
-          <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                Manage Parties
-              </h1>
-              {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isRefreshing || isLoading}
-              >
-                <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
-                Refresh
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/">
-                  <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
-                </Link>
-              </Button>
-              <Button
-                onClick={handleAddNew}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <PlusCircleIcon className="mr-2 h-5 w-5" />
-                Add New Party
-              </Button>
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Party Management</h1>
+            <p className="text-muted-foreground">Manage contract parties and their information</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={fetchParties} disabled={isLoading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Party
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{editingParty ? "Edit Party" : "Add New Party"}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name_en">English Name</Label>
+                      <Input
+                        id="name_en"
+                        value={formData.name_en}
+                        onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="name_ar">Arabic Name</Label>
+                      <Input
+                        id="name_ar"
+                        value={formData.name_ar}
+                        onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="type">Type</Label>
+                      <Select
+                        value={formData.type}
+                        onValueChange={(value) => setFormData({ ...formData, type: value as any })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">Individual</SelectItem>
+                          <SelectItem value="company">Company</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="suspended">Suspended</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {formData.type === "company" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="crn">Commercial Registration Number</Label>
+                        <Input
+                          id="crn"
+                          value={formData.crn}
+                          onChange={(e) => setFormData({ ...formData, crn: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="contact_person">Contact Person</Label>
+                        <Input
+                          id="contact_person"
+                          value={formData.contact_person}
+                          onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.type === "individual" && (
+                    <div>
+                      <Label htmlFor="national_id">National ID</Label>
+                      <Input
+                        id="national_id"
+                        value={formData.national_id}
+                        onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                  </div>
+
+                  {formError && <div className="text-sm font-medium text-red-600">{formError}</div>}
+
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={submitting}>
+                      {submitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {editingParty ? "Updating..." : "Creating..."}
+                        </>
+                      ) : (
+                        <>{editingParty ? "Update" : "Create"} Party</>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex space-x-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search parties..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
             </div>
           </div>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="individual">Individual</SelectItem>
+              <SelectItem value="company">Company</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Statistics Dashboard */}
-          {showStats && (
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                        {stats.total}
-                      </p>
-                    </div>
-                    <Building2 className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                        Active
-                      </p>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                        {stats.active}
-                      </p>
-                    </div>
-                    <CheckCircle className="h-8 w-8 text-green-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                        Expiring
-                      </p>
-                      <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                        {stats.expiring_documents}
-                      </p>
-                    </div>
-                    <AlertTriangle className="h-8 w-8 text-yellow-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
-                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">
-                        {stats.expired_documents}
-                      </p>
-                    </div>
-                    <XCircle className="h-8 w-8 text-red-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                        Contracts
-                      </p>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                        {stats.total_contracts}
-                      </p>
-                    </div>
-                    <Briefcase className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Enhanced Search and Filter Section */}
-          <Card className="mb-6 bg-card shadow-lg">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">Search & Filter</CardTitle>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentView(currentView === "table" ? "grid" : "table")}
-                  >
-                    {currentView === "table" ? (
-                      <>
-                        <Grid3x3 className="mr-2 h-4 w-4" />
-                        Grid View
-                      </>
-                    ) : (
-                      <>
-                        <List className="mr-2 h-4 w-4" />
-                        Table View
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
-                    <Activity className="mr-2 h-4 w-4" />
-                    {showStats ? "Hide" : "Show"} Stats
-                  </Button>
-                </div>
-              </div>
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Parties</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
-                {/* Search Input */}
-                <div className="sm:col-span-2">
-                  <Label htmlFor="search" className="sr-only">
-                    Search
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="search"
-                      placeholder="Search by name, CRN, role, or contact..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pr-10"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <Search className="h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Filter */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="Suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Type Filter */}
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Employer">Employer</SelectItem>
-                    <SelectItem value="Client">Client</SelectItem>
-                    <SelectItem value="Generic">Generic</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Document Filter */}
-                <Select value={documentFilter} onValueChange={setDocumentFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Documents" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Documents</SelectItem>
-                    <SelectItem value="valid">Valid</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort By */}
-                <Select value={sortBy} onValueChange={(value: typeof sortBy) => setSortBy(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="cr_expiry">CR Expiry</SelectItem>
-                    <SelectItem value="license_expiry">License Expiry</SelectItem>
-                    <SelectItem value="contracts">Contract Count</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort Order */}
-                <Button
-                  variant="outline"
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="justify-start"
-                >
-                  {sortOrder === "asc" ? (
-                    <ChevronUp className="mr-2 h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="mr-2 h-4 w-4" />
-                  )}
-                  {sortOrder === "asc" ? "Ascending" : "Descending"}
-                </Button>
-              </div>
-
-              {/* Bulk Actions */}
-              {selectedParties.length > 0 && (
-                <div className="flex items-center gap-2 rounded-lg bg-primary/10 p-3">
-                  <span className="text-sm font-medium">
-                    {selectedParties.length} party(ies) selected
-                  </span>
-                  <div className="ml-auto flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportCSV}
-                      disabled={isExporting}
-                    >
-                      {isExporting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="mr-2 h-4 w-4" />
-                      )}
-                      Export Selected
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleBulkDelete}
-                      disabled={bulkActionLoading}
-                    >
-                      {bulkActionLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="mr-2 h-4 w-4" />
-                      )}
-                      Delete Selected
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="text-sm text-muted-foreground">
-                Showing {filteredParties.length} of {parties.length} parties
-              </div>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
             </CardContent>
           </Card>
-
-          {filteredParties.length === 0 ? (
-            <Card className="bg-card py-12 text-center shadow-md">
-              <CardHeader>
-                <BuildingIcon className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-                <CardTitle className="text-2xl">No Parties Found</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-lg">
-                  {parties.length === 0
-                    ? "Get started by adding your first party. Click the 'Add New Party' button above."
-                    : "No parties match your current filters. Try adjusting your search criteria."}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ) : currentView === "table" ? (
-            <Card className="bg-card shadow-lg">
-              <CardHeader className="border-b">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl">Party Directory</CardTitle>
-                    <CardDescription>
-                      View, add, or edit party details, documents, and contract status. Showing{" "}
-                      {filteredParties.length} of {parties.length} parties.
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportCSV}
-                      disabled={isExporting || filteredParties.length === 0}
-                    >
-                      {isExporting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="mr-2 h-4 w-4" />
-                      )}
-                      Export All
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-slate-100 dark:bg-slate-800">
-                      <TableRow>
-                        <TableHead className="w-12 px-4 py-3">
-                          <Checkbox
-                            checked={
-                              selectedParties.length === filteredParties.length &&
-                              filteredParties.length > 0
-                            }
-                            onCheckedChange={toggleSelectAll}
-                            aria-label="Select all parties"
-                          />
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">
-                          Party Info
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                          Type & Status
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                          CR Status
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                          License Status
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                          Contact Info
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                          Contracts
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {filteredParties.map((party) => {
-                        const crStatus = getDocumentStatus(party.cr_expiry_date)
-                        const licenseStatus = getDocumentStatus(party.license_expiry_date)
-                        const isSelected = selectedParties.includes(party.id)
-
-                        return (
-                          <TableRow
-                            key={party.id}
-                            className={cn(
-                              "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50",
-                              isSelected && "bg-blue-50 dark:bg-blue-950/20"
-                            )}
-                          >
-                            <TableCell className="px-4 py-3">
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => toggleSelectParty(party.id)}
-                                aria-label={`Select ${party.name_en}`}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <div className="flex items-center gap-3">
-                                <div className="flex-shrink-0">
-                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-sm font-semibold text-white">
-                                    {party.name_en.charAt(0).toUpperCase()}
-                                  </div>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="truncate font-medium text-slate-900 dark:text-slate-100">
-                                    {party.name_en}
-                                  </div>
-                                  <div className="truncate text-sm text-muted-foreground" dir="rtl">
-                                    {party.name_ar}
-                                  </div>
-                                  <div className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">
-                                    CRN: {party.crn}
-                                  </div>
-                                  {party.role && (
-                                    <div className="truncate text-xs text-slate-400 dark:text-slate-500">
-                                      Role: {party.role}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-center">
-                              <div className="flex flex-col items-center gap-2">
-                                {getTypeBadge(party.type)}
-                                {getStatusBadge(party.status)}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-center">
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center">
-                                      <crStatus.Icon className={`h-5 w-5 ${crStatus.colorClass}`} />
-                                      <span className={`mt-1 text-xs ${crStatus.colorClass}`}>
-                                        {crStatus.text}
-                                      </span>
-                                      {party.days_until_cr_expiry !== undefined &&
-                                        party.days_until_cr_expiry <= 30 && (
-                                          <span className="mt-0.5 text-xs font-medium text-amber-600">
-                                            {party.days_until_cr_expiry}d left
-                                          </span>
-                                        )}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{crStatus.tooltip}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-center">
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex flex-col items-center">
-                                      <licenseStatus.Icon
-                                        className={`h-5 w-5 ${licenseStatus.colorClass}`}
-                                      />
-                                      <span className={`mt-1 text-xs ${licenseStatus.colorClass}`}>
-                                        {licenseStatus.text}
-                                      </span>
-                                      {party.days_until_license_expiry !== undefined &&
-                                        party.days_until_license_expiry <= 30 && (
-                                          <span className="mt-0.5 text-xs font-medium text-amber-600">
-                                            {party.days_until_license_expiry}d left
-                                          </span>
-                                        )}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{licenseStatus.tooltip}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <div className="flex flex-col gap-1 text-xs">
-                                {party.contact_person && (
-                                  <div className="flex items-center gap-1">
-                                    <Users className="h-3 w-3 text-muted-foreground" />
-                                    <span className="truncate">{party.contact_person}</span>
-                                  </div>
-                                )}
-                                {party.contact_email && (
-                                  <div className="flex items-center gap-1">
-                                    <Mail className="h-3 w-3 text-muted-foreground" />
-                                    <span className="truncate">{party.contact_email}</span>
-                                  </div>
-                                )}
-                                {party.contact_phone && (
-                                  <div className="flex items-center gap-1">
-                                    <Phone className="h-3 w-3 text-muted-foreground" />
-                                    <span className="truncate">{party.contact_phone}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <Badge
-                                  variant={
-                                    (party.contract_count || 0) > 0 ? "default" : "secondary"
-                                  }
-                                  className={
-                                    (party.contract_count || 0) > 0
-                                      ? "border-green-300 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                                      : "border-slate-300 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                                  }
-                                >
-                                  <Briefcase className="mr-1.5 h-3.5 w-3.5" />
-                                  {party.contract_count || 0}
-                                </Badge>
-                                {(party.contract_count || 0) > 0 && (
-                                  <span className="text-xs text-green-600 dark:text-green-400">
-                                    Active
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  asChild
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs"
-                                  disabled={!party.id}
-                                >
-                                  <Link href={party.id ? `/manage-parties/${party.id}` : "#"}>
-                                    <Eye className="mr-1 h-3.5 w-3.5" /> View
-                                  </Link>
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(party)}
-                                  className="text-xs"
-                                >
-                                  <EditIcon className="mr-1 h-3.5 w-3.5" /> Edit
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleEdit(party)}>
-                                      <EditIcon className="mr-2 h-4 w-4" />
-                                      Edit Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/manage-parties/${party.id}`}>
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        View Profile
-                                      </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-red-600"
-                                      onClick={() => {
-                                        setSelectedParties([party.id])
-                                        handleBulkDelete()
-                                      }}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            /* Grid View */
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredParties.map((party) => {
-                const crStatus = getDocumentStatus(party.cr_expiry_date)
-                const licenseStatus = getDocumentStatus(party.license_expiry_date)
-                const isSelected = selectedParties.includes(party.id)
-
-                return (
-                  <Card
-                    key={party.id}
-                    className={cn(
-                      "relative transition-shadow duration-200 hover:shadow-lg",
-                      isSelected && "ring-2 ring-primary ring-offset-2"
-                    )}
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 font-semibold text-white">
-                            {party.name_en.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                              {party.name_en}
-                            </h3>
-                            <p className="truncate text-sm text-muted-foreground" dir="rtl">
-                              {party.name_ar}
-                            </p>
-                            <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                              CRN: {party.crn}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleSelectParty(party.id)}
-                            aria-label={`Select ${party.name_en}`}
-                          />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(party)}>
-                                <EditIcon className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/manage-parties/${party.id}`}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Profile
-                                </Link>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Type and Status */}
-                      <div className="flex items-center justify-between">
-                        {getTypeBadge(party.type)}
-                        {getStatusBadge(party.status)}
-                      </div>
-
-                      {/* Document Status */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="mb-1 text-xs text-muted-foreground">CR Status</div>
-                          <div className="flex flex-col items-center">
-                            <crStatus.Icon className={`h-6 w-6 ${crStatus.colorClass}`} />
-                            <span className={`text-xs ${crStatus.colorClass} mt-1`}>
-                              {crStatus.text}
-                            </span>
-                            {party.days_until_cr_expiry !== undefined &&
-                              party.days_until_cr_expiry <= 30 && (
-                                <span className="text-xs font-medium text-amber-600">
-                                  {party.days_until_cr_expiry}d left
-                                </span>
-                              )}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="mb-1 text-xs text-muted-foreground">License</div>
-                          <div className="flex flex-col items-center">
-                            <licenseStatus.Icon className={`h-6 w-6 ${licenseStatus.colorClass}`} />
-                            <span className={`text-xs ${licenseStatus.colorClass} mt-1`}>
-                              {licenseStatus.text}
-                            </span>
-                            {party.days_until_license_expiry !== undefined &&
-                              party.days_until_license_expiry <= 30 && (
-                                <span className="text-xs font-medium text-amber-600">
-                                  {party.days_until_license_expiry}d left
-                                </span>
-                              )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Contact Information */}
-                      {(party.contact_person || party.contact_email || party.contact_phone) && (
-                        <div className="space-y-2">
-                          <div className="text-xs text-muted-foreground">Contact Info</div>
-                          <div className="space-y-1">
-                            {party.contact_person && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <Users className="h-3 w-3 text-muted-foreground" />
-                                <span className="truncate">{party.contact_person}</span>
-                              </div>
-                            )}
-                            {party.contact_email && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <Mail className="h-3 w-3 text-muted-foreground" />
-                                <span className="truncate">{party.contact_email}</span>
-                              </div>
-                            )}
-                            {party.contact_phone && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <Phone className="h-3 w-3 text-muted-foreground" />
-                                <span className="truncate">{party.contact_phone}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Contract Status */}
-                      <div className="text-center">
-                        <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
-                        <Badge
-                          variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
-                          className="text-sm"
-                        >
-                          <Briefcase className="mr-1.5 h-4 w-4" />
-                          {party.contract_count || 0}
-                        </Badge>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-2">
-                        <Button asChild variant="outline" size="sm" className="flex-1">
-                          <Link href={`/manage-parties/${party.id}`}>
-                            <Eye className="mr-1 h-4 w-4" /> View
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(party)}
-                          className="flex-1"
-                        >
-                          <EditIcon className="mr-1 h-4 w-4" /> Edit
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.active ?? 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Companies</CardTitle>
+              <Building className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.companies ?? 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">With Contracts</CardTitle>
+              <FileText className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.withActiveContracts ?? 0}</div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Parties Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Parties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <div className="h-12 w-12 animate-pulse rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-1/4 animate-pulse rounded bg-gray-200" />
+                      <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sortedParties.length === 0 ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No parties found.{" "}
+                  {searchTerm || selectedType !== "all" || selectedStatus !== "all"
+                    ? "Try adjusting your filters."
+                    : "Add your first party to get started."}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead onClick={() => handleSort("name_en")} className="cursor-pointer">
+                      Name
+                      {sortBy === "name_en" && <ArrowUpDown className="ml-2 inline h-4 w-4" />}
+                    </TableHead>
+                    <TableHead onClick={() => handleSort("email")} className="cursor-pointer">
+                      Email
+                      {sortBy === "email" && <ArrowUpDown className="ml-2 inline h-4 w-4" />}
+                    </TableHead>
+                    <TableHead onClick={() => handleSort("type")} className="cursor-pointer">
+                      Type
+                      {sortBy === "type" && <ArrowUpDown className="ml-2 inline h-4 w-4" />}
+                    </TableHead>
+                    <TableHead onClick={() => handleSort("status")} className="cursor-pointer">
+                      Status
+                      {sortBy === "status" && <ArrowUpDown className="ml-2 inline h-4 w-4" />}
+                    </TableHead>
+                    <TableHead>Contracts</TableHead>
+                    <TableHead onClick={() => handleSort("created_at")} className="cursor-pointer">
+                      Created
+                      {sortBy === "created_at" && <ArrowUpDown className="ml-2 inline h-4 w-4" />}
+                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedParties.map((party) => (
+                    <TableRow key={party.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div className="font-semibold">{party.name_en}</div>
+                          {party.name_ar && (
+                            <div className="text-sm text-muted-foreground" dir="rtl">
+                              {party.name_ar}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{party.email}</TableCell>
+                      <TableCell>{getTypeBadge(party.type)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(party.status)}
+                          {getStatusBadge(party.status)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Active: {party.active_contracts_count || 0}</div>
+                          <div className="text-muted-foreground">Total: {party.total_contracts_count || 0}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDate(party.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(party)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setDeleteParty(party)} className="text-red-600">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Delete Confirmation Dialog */}
+        {deleteParty && (
+          <AlertDialog open={!!deleteParty} onOpenChange={() => setDeleteParty(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the party{" "}
+                  <strong>&quot;{deleteParty.name_en}&quot;</strong> and remove all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
-    </ProtectedRoute>
+    </TooltipProvider>
   )
 }
