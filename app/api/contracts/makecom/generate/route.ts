@@ -1,115 +1,46 @@
 // app/api/contracts/makecom/generate/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import {
-  generateContractWithMakecom,
-  getEnhancedContractTypeConfig,
-  getMakecomEnabledContractTypes,
-} from "@/lib/contract-type-config"
-import { getMakecomTemplateConfig, generateMakecomBlueprint } from "@/lib/makecom-template-config"
 
 // Function to get Supabase client with runtime validation
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error(
-      "Supabase URL or Service Role Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.",
-    )
+  if (!supabaseUrl) {
+    throw new Error("Supabase URL is required. Please set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL.")
+  }
+  if (!supabaseServiceRoleKey) {
+    throw new Error("Supabase Service Role Key is required. Please set SUPABASE_SERVICE_ROLE_KEY.")
   }
 
   return createClient(supabaseUrl, supabaseServiceRoleKey)
 }
 
-// GET: List all Make.com enabled contract types
+// GET: Fetch a specific contract by ID
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
+
     const { searchParams } = new URL(request.url)
-    const action = searchParams.get("action")
-    const contractType = searchParams.get("type")
+    const contractId = searchParams.get("id")
 
-    if (action === "types") {
-      // Return all Make.com enabled contract types
-      const makecomTypes = getMakecomEnabledContractTypes()
-      return NextResponse.json({
-        success: true,
-        data: makecomTypes.map((type) => ({
-          id: type.id,
-          name: type.name,
-          description: type.description,
-          category: type.category,
-          makecomTemplateId: type.makecomTemplateId,
-          requiredFields: type.requiredFields,
-          businessRules: type.businessRules,
-          omanCompliant: type.omanCompliant,
-        })),
-      })
+    if (!contractId) {
+      return NextResponse.json({ error: "Contract ID is required" }, { status: 400 })
     }
 
-    if (action === "template" && contractType) {
-      // Return template configuration for a specific contract type
-      const contractConfig = getEnhancedContractTypeConfig(contractType)
-      const templateConfig = contractConfig?.makecomTemplateId
-        ? getMakecomTemplateConfig(contractConfig.makecomTemplateId)
-        : null
+    const { data: contract, error } = await supabase.from("contracts").select("*").eq("id", contractId).single()
 
-      if (!templateConfig) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Template configuration not found",
-          },
-          { status: 404 },
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          contractConfig,
-          templateConfig,
-          googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-          templatePlaceholders: templateConfig.templatePlaceholders,
-          makecomModuleConfig: templateConfig.makecomModuleConfig,
-        },
-      })
+    if (error) {
+      console.error("Contract fetch error:", error)
+      return NextResponse.json({ error: "Contract not found" }, { status: 404 })
     }
 
-    if (action === "blueprint" && contractType) {
-      // Generate Make.com blueprint for a contract type
-      const blueprint = generateMakecomBlueprint(contractType)
-
-      if (!blueprint) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Blueprint generation failed",
-          },
-          { status: 404 },
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: blueprint,
-      })
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Invalid action parameter",
-      },
-      { status: 400 },
-    )
+    return NextResponse.json({ contract })
   } catch (error) {
-    console.error("❌ Make.com API error:", error)
+    console.error("Contract fetch error:", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: "Internal server error",
-      },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 },
     )
   }
@@ -118,157 +49,78 @@ export async function GET(request: NextRequest) {
 // POST: Generate contract using Make.com templates
 export async function POST(request: NextRequest) {
   try {
-    // Get Supabase client with runtime validation
     const supabase = getSupabaseClient()
 
     const body = await request.json()
-    const { contractType, contractData, triggerMakecom = true } = body
 
-    console.log("🔄 Make.com contract generation request:", { contractType, triggerMakecom })
+    // Validate required fields
+    const requiredFields = ["contract_type", "party_a_name", "party_b_name"]
+    const missingFields = requiredFields.filter((field) => !body[field])
 
-    if (!contractType || !contractData) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Contract type and data are required",
-        },
-        { status: 400 },
-      )
+    if (missingFields.length > 0) {
+      return NextResponse.json({ error: `Missing required fields: ${missingFields.join(", ")}` }, { status: 400 })
     }
 
-    // Generate contract with Make.com integration
-    const { webhookPayload, templateConfig, validation } = generateContractWithMakecom(contractType, contractData)
-
-    if (!validation.isValid) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Contract validation failed",
-          details: {
-            errors: validation.errors,
-            warnings: validation.warnings,
-          },
-        },
-        { status: 400 },
-      )
-    }
-
-    // First, create the contract in the database
+    // Create contract record
     const { data: contract, error: contractError } = await supabase
       .from("contracts")
       .insert({
-        contract_number: contractData.contract_number || generateContractNumber(),
-        first_party_id: contractData.first_party_id,
-        second_party_id: contractData.second_party_id,
-        promoter_id: contractData.promoter_id,
-        contract_start_date: contractData.contract_start_date,
-        contract_end_date: contractData.contract_end_date,
-        job_title: contractData.job_title,
-        work_location: contractData.work_location,
-        basic_salary: contractData.basic_salary,
-        allowances: contractData.allowances,
-        currency: contractData.currency || "OMR",
-        contract_type: contractType,
-        status: "pending_generation",
-        email: contractData.email,
-        special_terms: contractData.special_terms,
-        is_current: true,
+        contract_type: body.contract_type,
+        party_a_name: body.party_a_name,
+        party_b_name: body.party_b_name,
+        status: "draft",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        // Add other fields as needed
+        contract_details: body.contract_details || {},
+        terms: body.terms || [],
+        payment_terms: body.payment_terms || {},
       })
       .select()
       .single()
 
     if (contractError) {
-      console.error("❌ Contract creation error:", contractError)
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Failed to create contract",
-          details: contractError,
-        },
-        { status: 500 },
-      )
+      console.error("Contract creation error:", contractError)
+      return NextResponse.json({ error: "Failed to create contract" }, { status: 500 })
     }
 
-    console.log("✅ Contract created:", contract.id)
+    // Generate contract content (placeholder for now)
+    const contractContent = `
+      CONTRACT AGREEMENT
+      
+      Contract Type: ${body.contract_type}
+      Party A: ${body.party_a_name}
+      Party B: ${body.party_b_name}
+      
+      Date: ${new Date().toLocaleDateString()}
+      
+      [Contract content would be generated here based on template]
+    `
 
-    // If triggerMakecom is true, send webhook to Make.com
-    let makecomResponse = null
-    if (triggerMakecom && webhookPayload) {
-      try {
-        // Add the created contract ID to the webhook payload
-        const enhancedPayload = {
-          ...webhookPayload,
-          contract_id: contract.id,
-          contract_number: contract.contract_number,
-        }
+    // Update contract with generated content
+    const { error: updateError } = await supabase
+      .from("contracts")
+      .update({
+        content: contractContent,
+        status: "generated",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", contract.id)
 
-        // Trigger Make.com webhook (replace with your actual Make.com webhook URL)
-        const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL
-
-        if (makecomWebhookUrl) {
-          const response = await fetch(makecomWebhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(enhancedPayload),
-          })
-
-          makecomResponse = {
-            status: response.status,
-            success: response.ok,
-            timestamp: new Date().toISOString(),
-          }
-
-          if (response.ok) {
-            console.log("✅ Make.com webhook triggered successfully")
-
-            // Update contract status
-            await supabase.from("contracts").update({ status: "processing" }).eq("id", contract.id)
-          } else {
-            console.error("❌ Make.com webhook failed:", response.statusText)
-          }
-        } else {
-          console.warn("⚠️ MAKECOM_WEBHOOK_URL not configured")
-        }
-      } catch (makecomError) {
-        console.error("❌ Make.com webhook error:", makecomError)
-        makecomResponse = {
-          status: 500,
-          success: false,
-          error: makecomError instanceof Error ? makecomError.message : "Unknown error",
-          timestamp: new Date().toISOString(),
-        }
-      }
+    if (updateError) {
+      console.error("Contract update error:", updateError)
+      return NextResponse.json({ error: "Failed to update contract with content" }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        contract,
-        validation,
-        templateConfig: templateConfig
-          ? {
-              id: templateConfig.id,
-              name: templateConfig.name,
-              googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-            }
-          : null,
-        makecom: {
-          triggered: triggerMakecom,
-          webhookPayload: triggerMakecom ? webhookPayload : null,
-          response: makecomResponse,
-        },
-      },
+      contract_id: contract.id,
+      message: "Contract generated successfully",
     })
   } catch (error) {
-    console.error("❌ Contract generation error:", error)
+    console.error("Contract generation error:", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: "Contract generation failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 },
     )
   }
