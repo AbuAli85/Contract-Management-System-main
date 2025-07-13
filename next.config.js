@@ -1,27 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["@googleapis/drive"],
+  experimental: {
+    optimizePackageImports: ["@radix-ui/react-icons"],
+  },
+  serverExternalPackages: ["sharp"],
   images: {
-    domains: [
-      "localhost",
-      "via.placeholder.com",
-      "images.unsplash.com",
-      "lh3.googleusercontent.com",
-      "avatars.githubusercontent.com",
-      "ui-avatars.com",
-    ],
+    domains: ["localhost"],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**",
       },
     ],
+    unoptimized: true, // Added from updates
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // Added from updates
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Added from updates
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
