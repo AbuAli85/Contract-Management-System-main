@@ -5,214 +5,90 @@
 // Example of what it might contain (will be much more extensive):
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      contracts: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at?: string | null
-          contract_number?: string | null
-          is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string | null
-          first_party_id: string
-          second_party_id: string
-          promoter_id: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
-          job_title?: string | null
-          status?: string | null
-          work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
-          department?: string | null
-          currency?: string | null
-          end_date?: string | null
-          duration?: string | null
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string | null
-          contract_number?: string | null
-          is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string
-          first_party_id: string
-          second_party_id: string
-          promoter_id: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
-          job_title?: string | null
-          status?: string | null
-          work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
-          department?: string | null
-          currency?: string | null
-          end_date?: string | null
-          duration?: string | null
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string | null
-          contract_number?: string | null
-          is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string
-          first_party_id?: string
-          second_party_id?: string
-          promoter_id?: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
-          job_title?: string | null
-          status?: string | null
-          work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
-          department?: string | null
-          currency?: string | null
-          end_date?: string | null
-          duration?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contracts_first_party_id_fkey"
-            columns: ["first_party_id"]
-            referencedRelation: "parties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_promoter_id_fkey"
-            columns: ["promoter_id"]
-            referencedRelation: "promoters"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_second_party_id_fkey"
-            columns: ["second_party_id"]
-            referencedRelation: "parties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      parties: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          type: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email: string
-          type: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          email?: string
-          type?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      promoters: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          phone: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email: string
-          phone: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          email?: string
-          phone?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           id: string
+          user_id: string | null
           action: string
-          entity_type: string
-          entity_id: string
-          details?: Json | null
-          user_id?: string | null
+          resource_type: string | null
+          resource_id: string | null
+          details: Json | null
           created_at: string
-          table_name?: string | null
-          record_id?: string | null
         }
         Insert: {
           id?: string
-          action: string
-          entity_type: string
-          entity_id: string
-          details?: Json | null
           user_id?: string | null
+          action: string
+          resource_type?: string | null
+          resource_id?: string | null
+          details?: Json | null
           created_at?: string
-          table_name?: string | null
-          record_id?: string | null
         }
         Update: {
           id?: string
-          action?: string
-          entity_type?: string
-          entity_id?: string
-          details?: Json | null
           user_id?: string | null
+          action?: string
+          resource_type?: string | null
+          resource_id?: string | null
+          details?: Json | null
           created_at?: string
-          table_name?: string | null
-          record_id?: string | null
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          id: string
+          title: string
+          content: string | null
+          status: string
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          party_a_id: string | null
+          party_b_id: string | null
+          contract_type: string | null
+          effective_date: string | null
+          expiration_date: string | null
+          value: number | null
+          currency: string | null
+          template_id: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          content?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          party_a_id?: string | null
+          party_b_id?: string | null
+          contract_type?: string | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          value?: number | null
+          currency?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          party_a_id?: string | null
+          party_b_id?: string | null
+          contract_type?: string | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          value?: number | null
+          currency?: string | null
+          template_id?: string | null
         }
         Relationships: []
       }
@@ -221,271 +97,207 @@ export interface Database {
           id: string
           type: string
           message: string
-          user_id: string
+          user_id: string | null
           created_at: string
           is_read: boolean
+          data: Json | null
         }
         Insert: {
           id?: string
           type: string
           message: string
-          user_id: string
+          user_id?: string | null
           created_at?: string
           is_read?: boolean
+          data?: Json | null
         }
         Update: {
           id?: string
           type?: string
           message?: string
-          user_id?: string
+          user_id?: string | null
           created_at?: string
           is_read?: boolean
+          data?: Json | null
+        }
+        Relationships: []
+      }
+      parties: {
+        Row: {
+          id: string
+          name: string
+          email: string | null
+          phone: string | null
+          address: string | null
+          type: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          status: string | null
+          contact_person: string | null
+          tax_id: string | null
+          registration_number: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          type?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          status?: string | null
+          contact_person?: string | null
+          tax_id?: string | null
+          registration_number?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          type?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          status?: string | null
+          contact_person?: string | null
+          tax_id?: string | null
+          registration_number?: string | null
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          created_at?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           id: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Insert: {
-          id?: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          id: string
-          email: string
-          role: string
+          email: string | null
+          full_name: string | null
+          avatar_url: string | null
           created_at: string
           updated_at: string
+          is_active: boolean | null
+          role: string | null
+          last_login: string | null
         }
         Insert: {
           id: string
-          email: string
-          role?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
           created_at?: string
           updated_at?: string
+          is_active?: boolean | null
+          role?: string | null
+          last_login?: string | null
         }
         Update: {
           id?: string
-          email?: string
-          role?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
           created_at?: string
           updated_at?: string
-        }
-      }
-      app_users: {
-        Row: {
-          id: string
-          email: string
-          role: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          email: string
-          role: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          role?: string
-          created_at?: string
+          is_active?: boolean | null
+          role?: string | null
+          last_login?: string | null
         }
         Relationships: []
       }
-      party_files: {
+      promoters: {
         Row: {
           id: string
-          party_id: string
-          file_name: string
-          file_url: string
-          user_id: string
+          name: string
+          email: string | null
+          phone: string | null
+          address: string | null
           created_at: string
+          updated_at: string
+          created_by: string | null
+          status: string | null
+          specialization: string | null
+          experience_years: number | null
+          portfolio_url: string | null
+          hourly_rate: number | null
+          availability: string | null
         }
         Insert: {
           id?: string
-          party_id: string
-          file_name: string
-          file_url: string
-          user_id: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
           created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          status?: string | null
+          specialization?: string | null
+          experience_years?: number | null
+          portfolio_url?: string | null
+          hourly_rate?: number | null
+          availability?: string | null
         }
         Update: {
           id?: string
-          party_id?: string
-          file_name?: string
-          file_url?: string
-          user_id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
           created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          status?: string | null
+          specialization?: string | null
+          experience_years?: number | null
+          portfolio_url?: string | null
+          hourly_rate?: number | null
+          availability?: string | null
         }
         Relationships: []
-      }
-      party_notes: {
-        Row: {
-          id: string
-          party_id: string
-          user_id: string
-          note: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          party_id: string
-          user_id: string
-          note: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          party_id?: string
-          user_id?: string
-          note?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      party_tags: {
-        Row: {
-          id: string
-          party_id: string
-          tag: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          party_id: string
-          tag: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          party_id?: string
-          tag?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      party_activities: {
-        Row: {
-          id: string
-          party_id: string
-          activity_type: string
-          details: string
-          created_at: string
-          user_id?: string | null
-        }
-        Insert: {
-          id?: string
-          party_id: string
-          activity_type: string
-          details: string
-          created_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          party_id?: string
-          activity_type?: string
-          details?: string
-          created_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          id: string
-          user_id: string
-          role_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          role_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          role_id?: string
-          created_at?: string
-        }
-      }
-      user_permissions: {
-        Row: {
-          id: string
-          user_id: string
-          permission_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          permission_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          permission_id?: string
-          created_at?: string
-        }
       }
       roles: {
         Row: {
           id: string
           name: string
-          description: string
+          description: string | null
           created_at: string
         }
         Insert: {
           id?: string
           name: string
-          description?: string
+          description?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
-          description?: string
+          description?: string | null
           created_at?: string
         }
-      }
-      permissions: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          created_at?: string
-        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -506,10 +318,114 @@ export interface Database {
           permission_id?: string
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_permissions: {
+        Row: {
+          id: string
+          user_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          permission_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          id: string
+          email: string
+          role: string | null
+          created_at: string
+          updated_at: string
+          is_active: boolean | null
+          last_login: string | null
+        }
+        Insert: {
+          id: string
+          email: string
+          role?: string | null
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean | null
+          last_login?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          role?: string | null
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean | null
+          last_login?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
-      // ... views
+      [_ in never]: never
     }
     Functions: {
       get_dashboard_analytics: {
@@ -520,18 +436,95 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      // ... other functions
+      get_user_effective_permissions: {
+        Args: {
+          user_id: string
+        }
+        Returns: {
+          permission_id: string
+          permission_name: string
+          permission_description: string
+          source: string
+        }[]
+      }
     }
     Enums: {
-      // ... enums
+      [_ in never]: never
     }
     CompositeTypes: {
-      // ... composite types
+      [_ in never]: never
     }
   }
 }
 
-// Helper types (optional, but can be useful)
-export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"]
-export type Enums<T extends keyof Database["public"]["Enums"]> = Database["public"]["Enums"][T]
-// ... more helpers if needed
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] & Database["public"]["Views"])
+    ? (Database["public"]["Tables"] & Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends keyof Database["public"]["Tables"] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends keyof Database["public"]["Enums"] | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+    ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+    : never
