@@ -1,23 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env"
 import { createClient } from "@supabase/supabase-js"
 
-// Handle missing environment variables gracefully
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn("Missing Supabase environment variables")
-}
-
-// GET: Get all effective permissions for a user (direct + via roles)
 export async function GET(request: NextRequest) {
-  try {
-    // Return early if environment variables are missing
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json({ error: "Service configuration incomplete" }, { status: 503 })
-    }
+  // Check if we have required environment variables
+  if (!NEXT_PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+  }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
 
@@ -25,66 +16,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    // Direct permissions
-    const { data: directPermissions, error: directError } = await supabase
-      .from("user_permissions")
-      .select("permission_id, permissions(name, description)")
-      .eq("user_id", userId)
+    const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Role-based permissions
-    const { data: rolePermissions, error: roleError } = await supabase
-      .from("user_roles")
-      .select(`
-        role_id,
-        roles!inner(
-          name,
-          role_permissions!inner(
-            permission_id,
-            permissions(name, description)
-          )
-        )
-      `)
-      .eq("user_id", userId)
+    // Get user's effective permissions (direct + role-based)
+    const { data, error } = await supabase.rpc("get_user_effective_permissions", {
+      user_id: userId,
+    })
 
-    if (directError || roleError) {
-      return NextResponse.json({ error: directError?.message || roleError?.message }, { status: 500 })
+    if (error) {
+      console.error("Error fetching effective permissions:", error)
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // Combine and deduplicate permissions
-    const allPermissions = new Map()
-
-    // Add direct permissions
-    directPermissions?.forEach((perm: any) => {
-      if (perm.permissions) {
-        allPermissions.set(perm.permission_id, {
-          id: perm.permission_id,
-          name: perm.permissions.name,
-          description: perm.permissions.description,
-          source: "direct",
-        })
-      }
-    })
-
-    // Add role-based permissions
-    rolePermissions?.forEach((userRole: any) => {
-      userRole.roles?.role_permissions?.forEach((rolePerm: any) => {
-        if (rolePerm.permissions && !allPermissions.has(rolePerm.permission_id)) {
-          allPermissions.set(rolePerm.permission_id, {
-            id: rolePerm.permission_id,
-            name: rolePerm.permissions.name,
-            description: rolePerm.permissions.description,
-            source: "role",
-            roleName: userRole.roles.name,
-          })
-        }
-      })
-    })
-
-    return NextResponse.json({
-      permissions: Array.from(allPermissions.values()),
-    })
+    return NextResponse.json({ permissions: data || [] })
   } catch (error) {
-    console.error("Error in effective permissions API:", error)
+    console.error("GET effective permissions error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

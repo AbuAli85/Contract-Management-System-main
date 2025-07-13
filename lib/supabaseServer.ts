@@ -1,33 +1,40 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Database } from "@/types/supabase"
+import { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } from "./env"
 
 export async function createServerComponentClient() {
-  // Support both client and server environments for robustness
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY are set."
-    )
+  // Return null if environment variables are missing
+  if (!NEXT_PUBLIC_SUPABASE_URL || !NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn("Supabase environment variables not configured")
+    return null
   }
 
-  // Use the async cookies() function directly in the cookie handlers
-  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      async get(name: string) {
-        const cookieStore = await cookies()
-        return cookieStore.get(name)?.value
+  try {
+    const cookieStore = await cookies()
+
+    const client = createServerClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+            console.warn("Cookie set error (can be ignored in Server Components):", error)
+          }
+        },
       },
-      async set(name: string, value: string, options) {
-        const cookieStore = await cookies()
-        cookieStore.set({ name, value, ...options })
-      },
-      async remove(name: string, options) {
-        const cookieStore = await cookies()
-        cookieStore.delete({ name, ...options })
-      },
-    },
-  })
+    })
+
+    return client
+  } catch (error) {
+    console.error("Failed to create Supabase server client:", error)
+    return null
+  }
 }

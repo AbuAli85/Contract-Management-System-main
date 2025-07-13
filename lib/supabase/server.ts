@@ -1,30 +1,42 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import { env } from "../env"
+import { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY } from "../env"
+import type { Database } from "@/types/database.types"
 
 export async function createClient() {
-  const cookieStore = await cookies()
-
   // Return null if environment variables are missing
-  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (!NEXT_PUBLIC_SUPABASE_URL || !NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.warn("Supabase environment variables not configured")
     return null
   }
 
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll()
+  try {
+    // Get cookies store
+    const cookieStore = await cookies()
+
+    const client = createServerClient<Database>(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+            console.warn("Cookie set error (can be ignored in Server Components):", error)
+          }
+        },
       },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-        } catch {
-          // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-    },
-  })
+    })
+
+    return client
+  } catch (error) {
+    console.error("Failed to create Supabase server client:", error)
+    return null
+  }
 }
