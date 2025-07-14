@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Contract Management System",
-  description: "Manage your contracts efficiently",
+  description: "Bilingual contract management platform",
 }
 
 interface RootLayoutProps {
@@ -16,11 +16,9 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+    <html lang="en">
+      <body className={inter.className}>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )
