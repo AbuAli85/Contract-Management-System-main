@@ -74,3 +74,4 @@ pids/
 # Temporary folders
 tmp/
 temp/
+app/globals.css 
