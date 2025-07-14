@@ -1,10 +1,10 @@
 "use client"
 
-import NavigationTester from "@/components/NavigationTester"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import { CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
+import NavigationTester from "@/components/NavigationTester"
 
 export default function TestNavigationPage() {
   const [consoleErrors, setConsoleErrors] = useState<string[]>([])
@@ -131,45 +131,29 @@ export default function TestNavigationPage() {
                   <div className="flex items-center gap-3">
                     <XCircle className="h-8 w-8 text-red-500" />
                     <div>
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-sm text-muted-foreground">Pages with Errors</p>
+                      <p className="text-2xl font-bold">{consoleErrors.length}</p>
+                      <p className="text-sm text-muted-foreground">Errors Found</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Common Issues Checklist */}
-            <Card>
+            {/* Testing Notes */}
+            <Card className="border-amber-200 bg-amber-50">
               <CardHeader>
-                <CardTitle className="text-lg">Common Issues Checklist</CardTitle>
+                <CardTitle className="text-lg">Testing Notes</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[
-                    "Authentication redirects work correctly",
-                    "All navigation links are functional",
-                    "Forms can be submitted without errors",
-                    "Data loads properly (no infinite loading)",
-                    "No 404 errors for existing pages",
-                    "Language switching works",
-                    "Responsive design on mobile",
-                    "No console errors on page load",
-                  ].map((item, index) => (
-                    <label key={index} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" className="rounded" />
-                      <span>{item}</span>
-                    </label>
-                  ))}
-                </div>
+              <CardContent className="space-y-2 text-sm">
+                <p>• This page helps you systematically test all routes</p>
+                <p>• Monitor console for hydration mismatches and other errors</p>
+                <p>• Test with different user roles and authentication states</p>
+                <p>• Check both English and Arabic locales</p>
               </CardContent>
             </Card>
           </CardContent>
         </Card>
       </div>
-
-      {/* Navigation Tester Component */}
-      <NavigationTester />
     </div>
   )
 }

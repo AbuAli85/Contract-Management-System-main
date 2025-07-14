@@ -1,8 +1,8 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { Link } from "@/navigation"
 import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 
 export default function NotFoundPage() {
   const t = useTranslations("NotFoundPage")

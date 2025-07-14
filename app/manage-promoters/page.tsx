@@ -256,34 +256,50 @@ export default function ManagePromotersPage() {
         updated_at: new Date().toISOString(),
       }
 
+      let result
       if (editingPromoter) {
-        const { error } = await supabase.from("promoters").update(promoterData).eq("id", editingPromoter.id)
-
-        if (error) throw error
-
-        toast({
-          title: "Success",
-          description: "Promoter updated successfully",
-        })
+        result = await supabase
+          .from("promoters")
+          .update(promoterData)
+          .eq("id", editingPromoter.id)
       } else {
-        const { error } = await supabase.from("promoters").insert([
-          {
-            ...promoterData,
-            created_at: new Date().toISOString(),
-          },
-        ])
-
-        if (error) throw error
-
-        toast({
-          title: "Success",
-          description: "Promoter created successfully",
-        })
+        result = await supabase
+          .from("promoters")
+          .insert([
+            {
+              ...promoterData,
+              created_at: new Date().toISOString(),
+            },
+          ])
       }
 
+      if (result.error) {
+        throw result.error
+      }
+
+      toast({
+        title: "Success",
+        description: `Promoter ${editingPromoter ? "updated" : "created"} successfully.`,
+      })
+
+      // Reset form and close dialog
+      setFormData({
+        name_en: "",
+        name_ar: "",
+        email: "",
+        phone: "",
+        address: "",
+        national_id: "",
+        crn: "",
+        id_card_number: "",
+        id_card_expiry_date: "",
+        passport_number: "",
+        passport_expiry_date: "",
+        status: "Active",
+        notes: "",
+      })
       setIsAddDialogOpen(false)
       setEditingPromoter(null)
-      resetForm()
       fetchPromoters()
     } catch (error) {
       console.error("Error saving promoter:", error)

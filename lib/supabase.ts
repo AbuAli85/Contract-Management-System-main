@@ -1,10 +1,21 @@
-import { getSupabaseBrowserClient } from "./supabase/singleton"
-import { isEnvConfigured } from "./env"
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
-// Export the singleton instance with safety check
-export const supabase = isEnvConfigured() ? getSupabaseBrowserClient() : null
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Utility function to check if user is authenticated
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
+
 export const isAuthenticated = async (): Promise<boolean> => {
   if (!supabase) return false
 
@@ -19,26 +30,17 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 }
 
-// Utility function to get current user
 export const getCurrentUser = async () => {
   if (!supabase) return null
 
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-    if (error) {
-      console.error("Error getting current user:", error)
-      return null
-    }
-    return user
+    const { data: { user }, error } = await supabase.auth.getUser()
+    return error ? null : user
   } catch (error) {
-    console.error("Error getting current user:", error)
+    console.error('Error getting current user:', error)
     return null
   }
 }
-
 // Utility function to get current session
 export const getCurrentSession = async () => {
   if (!supabase) return null

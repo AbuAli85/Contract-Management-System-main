@@ -205,7 +205,7 @@ export function UserManagement() {
     const thirtyDaysAgo = subDays(now, 30)
     const sevenDaysAgo = subDays(now, 7)
 
-    const stats: UserStats = {
+    const newStats: UserStats = {
       total: userData.length,
       active: userData.filter((u) => u.status === "active").length,
       inactive: userData.filter((u) => u.status === "inactive").length,
@@ -221,7 +221,7 @@ export function UserManagement() {
       ).length,
     }
 
-    setStats(stats)
+    setStats(newStats)
   }
 
   const applyFilters = () => {
@@ -735,45 +735,60 @@ export function UserManagement() {
                   ? "No users have been created yet."
                   : "Try adjusting your filters to see more results."}
               </p>
+              {filteredUsers.length === 0 && users.length === 0 && (
+                <Button onClick={() => setShowCreateModal(true)} className="mt-4">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create First User
+                </Button>
+              )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <span className="sr-only">Select</span>
-                    </TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Login</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {paginatedUsers.map((user) => {
-                    const isSelected = selectedUsers.includes(user.id)
-
-                    return (
-                      <TableRow key={user.id} className={isSelected ? "bg-muted/50" : ""}>
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            selectedUsers.length === paginatedUsers.length &&
+                            paginatedUsers.length > 0
+                          }
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedUsers(paginatedUsers.map((u) => u.id))
+                            } else {
+                              setSelectedUsers([])
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedUsers.map((user) => (
+                      <TableRow key={user.id} className="group">
                         <TableCell>
                           <Checkbox
-                            checked={isSelected}
+                            checked={selectedUsers.includes(user.id)}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedUsers((prev) => [...prev, user.id])
+                                setSelectedUsers([...selectedUsers, user.id])
                               } else {
-                                setSelectedUsers((prev) => prev.filter((id) => id !== user.id))
+                                setSelectedUsers(selectedUsers.filter((id) => id !== user.id))
                               }
                             }}
                           />
                         </TableCell>
-
                         <TableCell>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center space-x-3">
                             <UserAvatar user={user} size="sm" />
                             <div>
                               <div className="font-medium">{user.full_name || "No name"}</div>
@@ -787,52 +802,61 @@ export function UserManagement() {
                             </div>
                           </div>
                         </TableCell>
-
                         <TableCell>
                           <UserRoleBadge role={user.role} />
                         </TableCell>
-
                         <TableCell>
                           {user.department ? (
-                            <Badge variant="outline">{user.department}</Badge>
+                            <div className="flex items-center">
+                              <MapPin className="mr-1 h-3 w-3 text-muted-foreground" />
+                              {user.department}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-
                         <TableCell>{getStatusBadge(user.status)}</TableCell>
-
                         <TableCell>
                           {user.last_login ? (
                             <div className="text-sm">
-                              <div>
+                              <div>{format(new Date(user.last_login), "MMM d, yyyy")}</div>
+                              <div className="text-muted-foreground">
                                 {formatDistanceToNow(new Date(user.last_login), {
                                   addSuffix: true,
                                 })}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(user.last_login), "MMM dd, yyyy")}
                               </div>
                             </div>
                           ) : (
                             <span className="text-muted-foreground">Never</span>
                           )}
                         </TableCell>
-
+                        <TableCell>
+                          {user.created_at ? (
+                            <div className="text-sm">
+                              {format(new Date(user.created_at), "MMM d, yyyy")}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
                                 disabled={actionLoading === user.id}
                               >
-                                <MoreHorizontal className="h-4 w-4" />
+                                {actionLoading === user.id ? (
+                                  <LoadingSpinner size="sm" />
+                                ) : (
+                                  <MoreHorizontal className="h-4 w-4" />
+                                )}
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedUser(user)
@@ -842,52 +866,52 @@ export function UserManagement() {
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-
                               <DropdownMenuItem>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit User
                               </DropdownMenuItem>
-
                               <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateUserRole(user.id, user.role === "admin" ? "user" : "admin")
-                                }
-                                disabled={actionLoading === user.id}
-                              >
-                                <Shield className="mr-2 h-4 w-4" />
-                                {user.role === "admin" ? "Remove Admin" : "Make Admin"}
+                              <DropdownMenuItem>
+                                <Key className="mr-2 h-4 w-4" />
+                                Reset Password
                               </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateUserStatus(
-                                    user.id,
-                                    user.status === "active" ? "suspended" : "active"
-                                  )
-                                }
-                                disabled={actionLoading === user.id}
-                              >
-                                <Ban className="mr-2 h-4 w-4" />
-                                {user.status === "active" ? "Suspend" : "Activate"}
+                              <DropdownMenuItem>
+                                <Settings className="mr-2 h-4 w-4" />
+                                Permissions
                               </DropdownMenuItem>
-
                               <DropdownMenuSeparator />
-
+                              {user.status === "active" ? (
+                                <DropdownMenuItem
+                                  onClick={() => updateUserStatus(user.id, "suspended")}
+                                >
+                                  <Ban className="mr-2 h-4 w-4" />
+                                  Suspend User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => updateUserStatus(user.id, "active")}
+                                >
+                                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                                  Activate User
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                                    <span className="text-destructive">Delete</span>
+                                  <DropdownMenuItem
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete User
                                   </DropdownMenuItem>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Delete User</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete {user.full_name || user.email}
-                                      ? This action cannot be undone.
+                                      Are you sure you want to delete {user.full_name || user.email}?
+                                      This action cannot be undone and will remove all associated data.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
@@ -895,9 +919,8 @@ export function UserManagement() {
                                     <AlertDialogAction
                                       onClick={() => deleteUser(user.id)}
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      disabled={actionLoading === user.id}
                                     >
-                                      {actionLoading === user.id ? "Deleting..." : "Delete"}
+                                      Delete
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -906,122 +929,107 @@ export function UserManagement() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
-                {filteredUsers.length} users
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
+                    {filteredUsers.length} users
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const page = i + 1
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        )
+                      })}
+                      {totalPages > 5 && (
+                        <>
+                          <span className="text-muted-foreground">...</span>
+                          <Button
+                            variant={currentPage === totalPages ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {totalPages}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* User Details Modal */}
-      {selectedUser && (
-        <Dialog open={showUserModal} onOpenChange={setShowUserModal}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                User Details: {selectedUser.full_name || selectedUser.email}
-              </DialogTitle>
-              <DialogDescription>Complete user information and activity</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <UserAvatar user={selectedUser} size="lg" />
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {selectedUser.full_name || "No name set"}
-                  </h3>
-                  <p className="text-muted-foreground">{selectedUser.email}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <UserRoleBadge role={selectedUser.role} />
-                    {getStatusBadge(selectedUser.status)}
+      <Dialog open={showUserModal} onOpenChange={setShowUserModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>
+              View and manage user information and settings.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
+              <TabsContent value="profile" className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <UserAvatar user={selectedUser} size="lg" />
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedUser.full_name || "No name"}
+                    </h3>
+                    <p className="text-muted-foreground">{selectedUser.email}</p>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <UserRoleBadge role={selectedUser.role} />
+                      {getStatusBadge(selectedUser.status)}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Department</Label>
-                  <p className="text-sm">{selectedUser.department || "Not set"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Phone</Label>
-                  <p className="text-sm">{selectedUser.phone || "Not set"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Timezone</Label>
-                  <p className="text-sm">{selectedUser.timezone || "Not set"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Language</Label>
-                  <p className="text-sm">{selectedUser.language || "Not set"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Last Login</Label>
-                  <p className="text-sm">
-                    {selectedUser.last_login
-                      ? format(new Date(selectedUser.last_login), "PPpp")
-                      : "Never"}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Created</Label>
-                  <p className="text-sm">
-                    {selectedUser.created_at
-                      ? format(new Date(selectedUser.created_at), "PPP")
-                      : "Unknown"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowUserModal(false)}>
-                Close
-              </Button>
-              <Button>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit User
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

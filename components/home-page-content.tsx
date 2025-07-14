@@ -4,7 +4,19 @@ import React from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp } from "lucide-react" // Removed LogIn from the import
+import { 
+  FileText, 
+  Users, 
+  TrendingUp, 
+  BarChart3,
+  Home,
+  LogIn,
+  LayoutDashboard,
+  UserCheck,
+  User,
+  Settings,
+  Shield
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -24,55 +36,51 @@ interface HomePageContentProps {
   locale: string
 }
 
-const getQuickActions = (
-  t: ReturnType<typeof useTranslations>,
-  locale: string,
-  isAuthenticated: boolean
-) => {
-  const actions = [
+interface QuickAction {
+  title: string
+  description: string
+  href: string
+  icon: React.ReactNode
+  color: string
+  requiresAuth: boolean
+}
+
+// Helper function to get quick actions
+function getQuickActions(t: any, locale: string, isAuthenticated: boolean): QuickAction[] {
+  return [
     {
-      title: t("generateContract"),
-      description: t("generateContractDesc"),
-      icon: <Plus className="h-6 w-6" />,
-      href: `/${locale}/generate-contract`,
+      title: t("quickActions.dashboard"),
+      description: t("quickActions.dashboardDesc"),
+      href: `/${locale}/dashboard`,
+      icon: <LayoutDashboard className="h-6 w-6" />,
       color: "bg-blue-500",
       requiresAuth: true,
     },
     {
-      title: t("manageParties"),
-      description: t("managePartiesDesc"),
-      icon: <Users className="h-6 w-6" />,
-      href: `/${locale}/manage-parties`,
+      title: t("quickActions.contracts"),
+      description: t("quickActions.contractsDesc"),
+      href: `/${locale}/contracts`,
+      icon: <FileText className="h-6 w-6" />,
       color: "bg-green-500",
       requiresAuth: true,
     },
     {
-      title: t("viewReports"),
-      description: t("viewReportsDesc"),
-      icon: <BarChart3 className="h-6 w-6" />,
-      href: `/${locale}/reports`,
+      title: t("quickActions.parties"),
+      description: t("quickActions.partiesDesc"),
+      href: `/${locale}/manage-parties`,
+      icon: <Users className="h-6 w-6" />,
       color: "bg-purple-500",
       requiresAuth: true,
     },
     {
-      title: t("searchContracts"),
-      description: t("searchContractsDesc"),
-      icon: <Search className="h-6 w-6" />,
-      href: `/${locale}/contracts`,
-      color: "bg-orange-500",
-      requiresAuth: true,
+      title: isAuthenticated ? t("quickActions.profile") : t("quickActions.login"),
+      description: isAuthenticated ? t("quickActions.profileDesc") : t("quickActions.loginDesc"),
+      href: isAuthenticated ? `/${locale}/profile` : `/${locale}/login`,
+      icon: isAuthenticated ? <User className="h-6 w-6" /> : <LogIn className="h-6 w-6" />,
+      color: isAuthenticated ? "bg-orange-500" : "bg-gray-500",
+      requiresAuth: false,
     },
   ]
-
-  // Filter actions based on authentication
-  if (!isAuthenticated) {
-    return actions.map((action) => ({
-      ...action,
-      href: `/${locale}/auth/signin?redirect=${encodeURIComponent(action.href)}`,
-    }))
-  }
-
-  return actions
 }
 
 export function HomePageContent({ locale }: HomePageContentProps) {
